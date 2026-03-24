@@ -1,0 +1,1 @@
+3000/student => server.js => studentRoutes =>studentController=> Student.js model =>  mogodb collection of students
