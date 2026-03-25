@@ -1,6 +1,8 @@
 import express from "express"
 import mongoose from "mongoose"
 import userRouter from "./routes/userRoutes.js"
+import orderRouter from "./routes/orderRoutes.js"
+import foodRouter from "./routes/foodRoutes.js"
 import authenticate from "./middleware/authenticate.js"
 
 import dns from "node:dns";
@@ -21,8 +23,10 @@ app.use(express.json()  )
 app.use(authenticate)
 
 
-// Test route
-app.use("/users", userRouter )
+// Routes
+app.use("/users", userRouter)
+app.use("/orders", orderRouter)
+app.use("/foodItem", foodRouter)
 
 // Start server
 app.listen(

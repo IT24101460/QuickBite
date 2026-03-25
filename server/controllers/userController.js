@@ -49,6 +49,7 @@ export async function loginUser(req,res){
         const ispasswordValid =bcrypt.compareSync(password, user.password)
         if(ispasswordValid===true){
             const token = jwt.sign({
+                _id: user._id,
                 isAdmin: user.isAdmin,
                 isBlocked: user.isBlocked,
                 isEmailVerified: user.isEmailVerified,
