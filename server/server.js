@@ -1,6 +1,5 @@
 import express from "express"
 import mongoose from "mongoose"
-import studentRouter from "./routes/studentRoutes.js"
 import userRouter from "./routes/userRoutes.js"
 import authenticate from "./middleware/authenticate.js"
 
@@ -17,13 +16,12 @@ mongoose.connect(MongodbURI).then(
 
 const app = express()
 
-// call functions of Middleware
+// call functions of Middlewarew
 app.use(express.json()  )
 app.use(authenticate)
 
 
 // Test route
-app.use("/students", studentRouter )
 app.use("/users", userRouter )
 
 // Start server
