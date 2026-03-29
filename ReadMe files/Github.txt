@@ -14,7 +14,7 @@ food-item-management
 order-management
 payment-management
 feedback-management
-promotions-management
+promotions-discount-module
 ```
 
 ---
