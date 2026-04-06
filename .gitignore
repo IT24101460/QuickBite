@@ -1,2 +1,7 @@
-node_modules
-package-lock.json
+node_modules/
+client/node_modules/
+server/node_modules/
+
+.env
+dist/
+build/
