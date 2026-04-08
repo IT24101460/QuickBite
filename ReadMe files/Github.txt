@@ -168,7 +168,7 @@ Bad:
 git checkout main
 git pull origin main
 git checkout your-branch
-git merge main
+
 
 code yourself
 
