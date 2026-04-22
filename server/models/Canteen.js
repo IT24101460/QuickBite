@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 const canteenSchema = new mongoose.Schema({
   canteenName: {
@@ -37,4 +37,6 @@ const canteenSchema = new mongoose.Schema({
   }
 }, { timestamps: true });
 
-module.exports = mongoose.model('Canteen', canteenSchema);
+const Canteen = mongoose.model('Canteen', canteenSchema);
+
+export default Canteen;
