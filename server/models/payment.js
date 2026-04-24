@@ -17,12 +17,12 @@ const paymentSchema = new mongoose.Schema({
     },
     paymentMethod: {
         type: String,
-        enum: ["cash", "card", "mobile", "wallet"],
+        enum: ["cash", "card", "mobile", "wallet", "bank"],
         default: "cash"
     },
     paymentStatus: {
         type: String,
-        enum: ["pending", "completed", "failed", "refunded"],
+        enum: ["pending", "paid", "failed", "refunded"],
         default: "pending"
     },
     transactionId: {
@@ -30,16 +30,11 @@ const paymentSchema = new mongoose.Schema({
         unique: true,
         sparse: true
     },
-    createdAt: {
-        type: Date,
-        default: Date.now
-    },
-    updatedAt: {
-        type: Date,
-        default: Date.now
+    paymentProof: {
+        type: String,
+        default: ""
     }
-});
+}, { timestamps: true });
 
 const Payment = mongoose.model("Payment", paymentSchema);
-
 export default Payment;

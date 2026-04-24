@@ -1,282 +1,156 @@
 import React, { useState } from 'react';
 import {
-  View,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  StyleSheet,
-  ActivityIndicator,
-  Alert,
-  ScrollView,
+  View, Text, TextInput, TouchableOpacity, StyleSheet,
+  ActivityIndicator, Alert, ScrollView, KeyboardAvoidingView, Platform,
 } from 'react-native';
 import API from '../services/api';
+import { useAuth } from '../context/AuthContext';
+
+const ORANGE = '#FF6B35';
 
 export default function LoginScreen({ navigation }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
+  const [showPw, setShowPw] = useState(false);
+  const [loginMode, setLoginMode] = useState('user'); // 'user', 'owner', 'admin'
+  const { login } = useAuth();
 
   const handleLogin = async () => {
-    // Validation
-    if (!email.trim()) {
-      Alert.alert('Error', 'Please enter your email');
-      return;
-    }
-    if (!password.trim()) {
-      Alert.alert('Error', 'Please enter your password');
-      return;
-    }
-
+    if (!email.trim()) return Alert.alert('Error', 'Please enter your email');
+    if (!password.trim()) return Alert.alert('Error', 'Please enter your password');
     setLoading(true);
     try {
-      const response = await API.post('/users/login', {
-        email: email.trim(),
-        password: password.trim(),
-      });
+      const res = await API.post('/users/login', { email: email.trim(), password: password.trim() });
+      if (res.data.token) {
 
-      if (response.data.token) {
-        // Store token (in a real app, use AsyncStorage)
-        Alert.alert('Success', 'Login successful!');
-        navigation.navigate('Home');
+        const dbUser = res.data.user || res.data;
+        const actualRole = dbUser.role || (dbUser.isAdmin ? 'admin' : 'student'); // Evaluate true rank
+
+        // Compare against active tab requested
+        if (loginMode === 'owner' && actualRole !== 'owner') {
+          return Alert.alert('Access Denied', 'This account is not registered as a Canteen Owner. Please use the Student login tab!');
+        }
+        if (loginMode === 'admin' && actualRole !== 'admin' && !dbUser.isAdmin) {
+          return Alert.alert('Access Denied', 'This account does not have Admin privileges.');
+        }
+        if (loginMode === 'user' && (actualRole === 'owner' || actualRole === 'admin')) {
+          return Alert.alert('Switch Portals', `Our records indicate you are a(n) ${actualRole}. Please use the correct login tab below.`);
+        }
+
+        await login(res.data.token, dbUser);
       }
-    } catch (error) {
-      const errorMessage =
-        error.response?.data?.message || 'Login failed. Please try again.';
-      Alert.alert('Login Error', errorMessage);
+    } catch (err) {
+      Alert.alert('Login Error', err.response?.data?.message || 'Login failed. Please try again.');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleSignUp = () => {
-    navigation.navigate('SignUp');
-  };
-
   return (
-    <ScrollView contentContainerStyle={styles.scrollContainer}>
-      <View style={styles.container}>
-        {/* Header */}
-        <View style={styles.headerContainer}>
-          <Text style={styles.appTitle}>🍔 QuickBite</Text>
-          <Text style={styles.subtitle}>School Canteen App</Text>
+    <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+      <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
+        <View style={styles.hero}>
+          <Text style={styles.logo}>🍔</Text>
+          <Text style={styles.appName}>QuickBite</Text>
+          <Text style={styles.tagline}>SLIIT Canteen Pre-Order System</Text>
         </View>
 
-        {/* Login Form */}
-        <View style={styles.formContainer}>
-          <Text style={styles.formTitle}>Login</Text>
+        <View style={styles.card}>
+          <Text style={styles.cardTitle}>
+            {loginMode === 'admin' ? 'Admin Portal' :
+              loginMode === 'owner' ? 'Canteen Owner Login' :
+                'Welcome Back'}
+          </Text>
 
-          {/* Email Input */}
-          <View style={styles.inputContainer}>
-            <Text style={styles.label}>Email</Text>
+          <Text style={styles.label}>Email</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="student@sliit.lk"
+            placeholderTextColor="#aaa"
+            value={email}
+            onChangeText={setEmail}
+            keyboardType="email-address"
+            autoCapitalize="none"
+            editable={!loading}
+          />
+
+          <Text style={styles.label}>Password</Text>
+          <View style={styles.pwRow}>
             <TextInput
-              placeholder="Enter your email"
-              placeholderTextColor="#999"
-              style={styles.input}
-              value={email}
-              onChangeText={setEmail}
-              keyboardType="email-address"
+              style={[styles.input, { flex: 1, marginBottom: 0 }]}
+              placeholder="••••••••"
+              placeholderTextColor="#aaa"
+              value={password}
+              onChangeText={setPassword}
+              secureTextEntry={!showPw}
               editable={!loading}
-              autoCapitalize="none"
             />
+            <TouchableOpacity onPress={() => setShowPw(!showPw)} style={styles.eyeBtn}>
+              <Text style={styles.eye}>{showPw ? '👁' : '👁️‍🗨️'}</Text>
+            </TouchableOpacity>
           </View>
 
-          {/* Password Input */}
-          <View style={styles.inputContainer}>
-            <Text style={styles.label}>Password</Text>
-            <View style={styles.passwordInputContainer}>
-              <TextInput
-                placeholder="Enter your password"
-                placeholderTextColor="#999"
-                style={styles.passwordInput}
-                value={password}
-                onChangeText={setPassword}
-                secureTextEntry={!showPassword}
-                editable={!loading}
-              />
-              <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
-                <Text style={styles.eyeIcon}>{showPassword ? '👁️' : '👁️‍🗨️'}</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-
-          {/* Login Button */}
           <TouchableOpacity
-            style={[styles.loginButton, loading && styles.disabledButton]}
+            style={[styles.btn, loading && styles.btnDisabled]}
             onPress={handleLogin}
             disabled={loading}
           >
-            {loading ? (
-              <ActivityIndicator color="#fff" />
-            ) : (
-              <Text style={styles.loginButtonText}>Login</Text>
-            )}
+            {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.btnText}>Login</Text>}
           </TouchableOpacity>
 
-          {/* Divider */}
-          <View style={styles.dividerContainer}>
-            <View style={styles.divider} />
-            <Text style={styles.dividerText}>Or</Text>
-            <View style={styles.divider} />
-          </View>
-
-          {/* Sign Up Link */}
-          <TouchableOpacity
-            style={styles.signupButton}
-            onPress={handleSignUp}
-            disabled={loading}
-          >
-            <Text style={styles.signupButtonText}>Create New Account</Text>
+          <TouchableOpacity style={styles.link} onPress={() => navigation.navigate('SignUp')}>
+            <Text style={styles.linkText}>Don't have an account? <Text style={{ color: ORANGE, fontWeight: 'bold' }}>Sign Up</Text></Text>
           </TouchableOpacity>
 
-          {/* Demo Credentials */}
-          <View style={styles.demoContainer}>
-            <Text style={styles.demoTitle}>Demo Credentials:</Text>
-            <Text style={styles.demoText}>Email: demo@example.com</Text>
-            <Text style={styles.demoText}>Password: password123</Text>
+          <View style={styles.modeSwitcherRow}>
+            <TouchableOpacity onPress={() => setLoginMode('user')} style={[styles.modeBtn, loginMode === 'user' && styles.modeBtnActive]}>
+              <Text style={[styles.modeBtnText, loginMode === 'user' && styles.modeBtnTextActive]}>Student</Text>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => setLoginMode('owner')} style={[styles.modeBtn, loginMode === 'owner' && styles.modeBtnActive]}>
+              <Text style={[styles.modeBtnText, loginMode === 'owner' && styles.modeBtnTextActive]}>Owner</Text>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => setLoginMode('admin')} style={[styles.modeBtn, loginMode === 'admin' && styles.modeBtnActive]}>
+              <Text style={[styles.modeBtnText, loginMode === 'admin' && styles.modeBtnTextActive]}>Admin</Text>
+            </TouchableOpacity>
           </View>
         </View>
-      </View>
-    </ScrollView>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
-  scrollContainer: {
-    flexGrow: 1,
+  scroll: { flexGrow: 1, backgroundColor: ORANGE },
+  hero: { alignItems: 'center', paddingTop: 70, paddingBottom: 40 },
+  logo: { fontSize: 64 },
+  appName: { fontSize: 38, fontWeight: 'bold', color: '#fff', letterSpacing: 1 },
+  tagline: { fontSize: 14, color: 'rgba(255,255,255,0.85)', marginTop: 6 },
+  card: {
+    backgroundColor: '#fff', borderTopLeftRadius: 32, borderTopRightRadius: 32,
+    padding: 28, flex: 1, minHeight: 420,
   },
-  container: {
-    flex: 1,
-    justifyContent: 'center',
-    padding: 20,
-    backgroundColor: '#f5f5f5',
-  },
-  headerContainer: {
-    alignItems: 'center',
-    marginBottom: 40,
-  },
-  appTitle: {
-    fontSize: 48,
-    fontWeight: 'bold',
-    color: '#ff6b35',
-    marginBottom: 8,
-  },
-  subtitle: {
-    fontSize: 16,
-    color: '#666',
-  },
-  formContainer: {
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    padding: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  formTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 24,
-    textAlign: 'center',
-  },
-  inputContainer: {
-    marginBottom: 16,
-  },
-  label: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#333',
-    marginBottom: 8,
-  },
+  cardTitle: { fontSize: 26, fontWeight: 'bold', color: '#222', marginBottom: 24 },
+  label: { fontSize: 13, fontWeight: '600', color: '#555', marginBottom: 6 },
   input: {
-    borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 8,
-    padding: 12,
-    fontSize: 16,
-    backgroundColor: '#f9f9f9',
-    color: '#333',
+    borderWidth: 1.5, borderColor: '#e8e8e8', borderRadius: 12, padding: 13,
+    fontSize: 15, color: '#222', backgroundColor: '#fafafa', marginBottom: 16,
   },
-  passwordInputContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 8,
-    backgroundColor: '#f9f9f9',
+  pwRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 16 },
+  eyeBtn: { padding: 12, marginLeft: 4 },
+  eye: { fontSize: 20 },
+  btn: {
+    backgroundColor: ORANGE, borderRadius: 12, paddingVertical: 15,
+    alignItems: 'center', marginTop: 8, marginBottom: 20,
+    shadowColor: ORANGE, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.35, shadowRadius: 8, elevation: 5,
   },
-  passwordInput: {
-    flex: 1,
-    padding: 12,
-    fontSize: 16,
-    color: '#333',
-  },
-  eyeIcon: {
-    paddingRight: 12,
-    fontSize: 18,
-  },
-  loginButton: {
-    backgroundColor: '#ff6b35',
-    borderRadius: 8,
-    paddingVertical: 14,
-    alignItems: 'center',
-    marginTop: 24,
-  },
-  disabledButton: {
-    opacity: 0.6,
-  },
-  loginButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
-  dividerContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginVertical: 20,
-  },
-  divider: {
-    flex: 1,
-    height: 1,
-    backgroundColor: '#ddd',
-  },
-  dividerText: {
-    marginHorizontal: 10,
-    color: '#999',
-    fontSize: 14,
-  },
-  signupButton: {
-    borderWidth: 1,
-    borderColor: '#ff6b35',
-    borderRadius: 8,
-    paddingVertical: 12,
-    alignItems: 'center',
-  },
-  signupButtonText: {
-    color: '#ff6b35',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  demoContainer: {
-    marginTop: 20,
-    padding: 12,
-    backgroundColor: '#f0f0f0',
-    borderRadius: 8,
-    borderLeftWidth: 4,
-    borderLeftColor: '#ff6b35',
-  },
-  demoTitle: {
-    fontSize: 12,
-    fontWeight: 'bold',
-    color: '#666',
-    marginBottom: 4,
-  },
-  demoText: {
-    fontSize: 12,
-    color: '#999',
-    marginVertical: 2,
-  },
+  btnDisabled: { opacity: 0.6 },
+  btnText: { color: '#fff', fontSize: 16, fontWeight: 'bold', letterSpacing: 0.5 },
+  link: { alignItems: 'center', marginTop: 4, marginBottom: 25 },
+  linkText: { color: '#888', fontSize: 14 },
+  modeSwitcherRow: { flexDirection: 'row', justifyContent: 'center', marginTop: 'auto', borderTopWidth: 1, borderTopColor: '#f0f0f0', paddingTop: 15 },
+  modeBtn: { paddingHorizontal: 12, paddingVertical: 6, borderRadius: 12, marginHorizontal: 4 },
+  modeBtnActive: { backgroundColor: '#FF6B3522' },
+  modeBtnText: { color: '#888', fontSize: 12, fontWeight: '600' },
+  modeBtnTextActive: { color: ORANGE, fontWeight: 'bold' },
 });

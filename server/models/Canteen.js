@@ -26,6 +26,10 @@ const canteenSchema = new mongoose.Schema({
     type: String,
     required: true
   },
+  bankDetails: {
+    type: String,
+    default: ''
+  },
   canteenImage: {
     type: String,       // URL of uploaded image
     default: ''
