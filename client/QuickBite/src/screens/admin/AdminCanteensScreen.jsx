@@ -1,0 +1,143 @@
+import React, { useState, useEffect } from 'react';
+import {
+    View, Text, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator,
+    Alert, TextInput, ScrollView, RefreshControl, Modal, Image,
+} from 'react-native';
+import { launchImageLibrary } from 'react-native-image-picker';
+import API from '../../services/api';
+
+const ORANGE = '#FF6B35';
+
+export default function AdminCanteensScreen({ navigation }) {
+    const [canteens, setCanteens] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [refreshing, setRefreshing] = useState(false);
+    const [modal, setModal] = useState(false);
+    const [editing, setEditing] = useState(null);
+    const [form, setForm] = useState({ canteenName: '', location: '', contactDetails: '', ownerDetails: '', openingTime: '', closingTime: '' });
+    const [image, setImage] = useState(null);
+    const [saving, setSaving] = useState(false);
+
+    const set = k => v => setForm(f => ({ ...f, [k]: v }));
+
+    const fetch = async () => {
+        try {
+            const r = await API.get('/canteens');
+            setCanteens(r.data?.canteens || []);
+        } catch (e) { } finally { setLoading(false); setRefreshing(false); }
+    };
+    useEffect(() => { fetch(); }, []);
+
+    const openAdd = () => { setEditing(null); setForm({ canteenName: '', location: '', contactDetails: '', ownerDetails: '', openingTime: '08:00 AM', closingTime: '05:00 PM' }); setImage(null); setModal(true); };
+    const openEdit = (c) => { setEditing(c); setForm({ canteenName: c.canteenName, location: c.location, contactDetails: c.contactDetails, ownerDetails: c.ownerDetails, openingTime: c.openingTime, closingTime: c.closingTime }); setImage(null); setModal(true); };
+
+    const pickImg = () => launchImageLibrary({ mediaType: 'photo', quality: 0.7 }, r => { if (!r.didCancel && r.assets?.length) setImage(r.assets[0]); });
+
+    const save = async () => {
+        if (!form.canteenName || !form.location || !form.contactDetails || !form.ownerDetails) return Alert.alert('Error', 'Fill all required fields');
+        setSaving(true);
+        try {
+            const fd = new FormData();
+            Object.entries(form).forEach(([k, v]) => fd.append(k, v));
+            if (image) fd.append('canteenImage', { uri: image.uri, name: image.fileName || 'img.jpg', type: image.type || 'image/jpeg' });
+            if (editing) await API.put(`/canteens/${editing._id}`, fd, { headers: { 'Content-Type': 'multipart/form-data' } });
+            else await API.post('/canteens', fd, { headers: { 'Content-Type': 'multipart/form-data' } });
+            setModal(false);
+            fetch();
+        } catch (e) { Alert.alert('Error', e.response?.data?.message || 'Failed to save'); }
+        finally { setSaving(false); }
+    };
+
+    const deleteCanteen = (id) => Alert.alert('Delete', 'Are you sure?', [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Delete', style: 'destructive', onPress: async () => { await API.delete(`/canteens/${id}`); fetch(); } },
+    ]);
+
+    return (
+        <View style={styles.container}>
+            <View style={styles.header}>
+                <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}><Text style={styles.back}>←</Text></TouchableOpacity>
+                <Text style={styles.headerTitle}>🏪 Manage Canteens</Text>
+                <TouchableOpacity style={styles.addBtn} onPress={openAdd}><Text style={styles.addBtnText}>+ Add</Text></TouchableOpacity>
+            </View>
+
+            {loading ? <ActivityIndicator size="large" color={ORANGE} style={{ marginTop: 40 }} /> : (
+                <FlatList
+                    data={canteens}
+                    keyExtractor={i => i._id}
+                    contentContainerStyle={{ padding: 12 }}
+                    refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); fetch(); }} colors={[ORANGE]} />}
+                    renderItem={({ item }) => (
+                        <View style={styles.card}>
+                            <View style={styles.cardInfo}>
+                                <Text style={styles.cardName}>{item.canteenName}</Text>
+                                <Text style={styles.cardSub}>📍 {item.location}</Text>
+                                <Text style={styles.cardSub}>🕐 {item.openingTime} – {item.closingTime}</Text>
+                            </View>
+                            <View style={styles.cardActions}>
+                                <TouchableOpacity style={styles.editBtn} onPress={() => openEdit(item)}><Text style={styles.editBtnText}>Edit</Text></TouchableOpacity>
+                                <TouchableOpacity style={styles.delBtn} onPress={() => deleteCanteen(item._id)}><Text style={styles.delBtnText}>Del</Text></TouchableOpacity>
+                            </View>
+                        </View>
+                    )}
+                    ListEmptyComponent={<Text style={styles.empty}>No canteens yet</Text>}
+                />
+            )}
+
+            <Modal visible={modal} animationType="slide" onRequestClose={() => setModal(false)}>
+                <View style={styles.modalContainer}>
+                    <View style={styles.modalHeader}>
+                        <TouchableOpacity onPress={() => setModal(false)}><Text style={styles.back}>✕</Text></TouchableOpacity>
+                        <Text style={styles.modalTitle}>{editing ? 'Edit Canteen' : 'Add Canteen'}</Text>
+                    </View>
+                    <ScrollView contentContainerStyle={styles.modalScroll}>
+                        {[['Canteen Name *', 'canteenName'], ['Location *', 'location'], ['Contact Details *', 'contactDetails'], ['Owner Details *', 'ownerDetails'], ['Opening Time', 'openingTime'], ['Closing Time', 'closingTime']].map(([label, k]) => (
+                            <View key={k} style={{ marginBottom: 12 }}>
+                                <Text style={styles.label}>{label}</Text>
+                                <TextInput style={styles.input} value={form[k]} onChangeText={set(k)} placeholder={label} placeholderTextColor="#aaa" />
+                            </View>
+                        ))}
+                        <Text style={styles.label}>Canteen Image</Text>
+                        <TouchableOpacity style={styles.imgPicker} onPress={pickImg}>
+                            {image ? <Image source={{ uri: image.uri }} style={styles.imgPreview} resizeMode="cover" /> : <Text style={styles.imgPickerText}>📷 Select Image</Text>}
+                        </TouchableOpacity>
+                        <TouchableOpacity style={[styles.saveBtn, saving && { opacity: 0.6 }]} onPress={save} disabled={saving}>
+                            {saving ? <ActivityIndicator color="#fff" /> : <Text style={styles.saveBtnText}>{editing ? 'Update' : 'Create'} Canteen</Text>}
+                        </TouchableOpacity>
+                    </ScrollView>
+                </View>
+            </Modal>
+        </View>
+    );
+}
+
+const styles = StyleSheet.create({
+    container: { flex: 1, backgroundColor: '#F8F9FA' },
+    header: { backgroundColor: ORANGE, paddingTop: 52, paddingBottom: 16, paddingHorizontal: 16, flexDirection: 'row', alignItems: 'center' },
+    backBtn: { marginRight: 10, padding: 4 },
+    back: { color: '#fff', fontSize: 22, fontWeight: 'bold' },
+    headerTitle: { flex: 1, color: '#fff', fontSize: 18, fontWeight: 'bold' },
+    addBtn: { backgroundColor: 'rgba(255,255,255,0.25)', borderRadius: 8, paddingHorizontal: 12, paddingVertical: 6 },
+    addBtnText: { color: '#fff', fontWeight: 'bold', fontSize: 14 },
+    card: { flexDirection: 'row', backgroundColor: '#fff', borderRadius: 14, padding: 14, marginBottom: 10, elevation: 2 },
+    cardInfo: { flex: 1 },
+    cardName: { fontSize: 15, fontWeight: 'bold', color: '#222', marginBottom: 4 },
+    cardSub: { fontSize: 12, color: '#888', marginBottom: 2 },
+    cardActions: { justifyContent: 'center', gap: 6 },
+    editBtn: { backgroundColor: '#E3F2FD', borderRadius: 8, paddingHorizontal: 12, paddingVertical: 6 },
+    editBtnText: { color: '#1565C0', fontWeight: '600', fontSize: 12 },
+    delBtn: { backgroundColor: '#FFEBEE', borderRadius: 8, paddingHorizontal: 12, paddingVertical: 6 },
+    delBtnText: { color: '#C62828', fontWeight: '600', fontSize: 12 },
+    empty: { textAlign: 'center', color: '#aaa', paddingVertical: 40 },
+    modalContainer: { flex: 1, backgroundColor: '#fff' },
+    modalHeader: { backgroundColor: ORANGE, paddingTop: 52, paddingBottom: 16, paddingHorizontal: 16, flexDirection: 'row', alignItems: 'center', gap: 12 },
+    modalTitle: { color: '#fff', fontSize: 18, fontWeight: 'bold' },
+    modalScroll: { padding: 20 },
+    label: { fontSize: 13, fontWeight: '600', color: '#555', marginBottom: 6 },
+    input: { borderWidth: 1.5, borderColor: '#E8E8E8', borderRadius: 10, padding: 12, fontSize: 14, color: '#222', marginBottom: 2 },
+    imgPicker: { borderWidth: 2, borderColor: ORANGE, borderStyle: 'dashed', borderRadius: 12, height: 120, justifyContent: 'center', alignItems: 'center', marginBottom: 20, overflow: 'hidden' },
+    imgPreview: { width: '100%', height: '100%' },
+    imgPickerText: { color: ORANGE, fontWeight: '600', fontSize: 14 },
+    saveBtn: { backgroundColor: ORANGE, borderRadius: 12, paddingVertical: 14, alignItems: 'center', marginTop: 8 },
+    saveBtnText: { color: '#fff', fontWeight: 'bold', fontSize: 15 },
+});

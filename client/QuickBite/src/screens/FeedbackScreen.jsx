@@ -1,236 +1,183 @@
 import React, { useState } from 'react';
 import {
-  View,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  StyleSheet,
-  ScrollView,
-  ActivityIndicator,
-  Alert,
-  Rating,
+  View, Text, StyleSheet, TouchableOpacity, ScrollView,
+  TextInput, Alert, Image, ActivityIndicator,
 } from 'react-native';
+import { launchImageLibrary } from 'react-native-image-picker';
 import API from '../services/api';
 
-export default function FeedbackScreen({ navigation }) {
+const ORANGE = '#FF6B35';
+
+export default function FeedbackScreen({ navigation, route }) {
+  const { orderId, foodItemId, canteenId, foodName } = route.params || {};
   const [rating, setRating] = useState(0);
   const [comment, setComment] = useState('');
+  const [complaintType, setComplaintType] = useState('general');
+  const [image, setImage] = useState(null);
   const [loading, setLoading] = useState(false);
 
-  const handleSubmitFeedback = async () => {
-    if (rating === 0) {
-      Alert.alert('Error', 'Please select a rating');
-      return;
-    }
+  const TYPES = ['general', 'food_quality', 'service', 'hygiene', 'other'];
 
-    if (!comment.trim()) {
-      Alert.alert('Error', 'Please enter a comment');
-      return;
-    }
+  const pickImage = () => {
+    launchImageLibrary({ mediaType: 'photo', quality: 0.7 }, (res) => {
+      if (!res.didCancel && res.assets?.length > 0) {
+        setImage(res.assets[0]);
+      }
+    });
+  };
+
+  const handleSubmit = async () => {
+    if (rating === 0) return Alert.alert('Error', 'Please select a rating');
+    if (!comment.trim()) return Alert.alert('Error', 'Please enter a comment');
 
     setLoading(true);
     try {
-      const response = await API.post('/feedback', {
-        rating,
-        comment: comment.trim(),
-      });
-
-      if (response.status === 201) {
-        Alert.alert('Success', 'Thank you for your feedback!', [
-          {
-            text: 'OK',
-            onPress: () => {
-              setRating(0);
-              setComment('');
-              navigation.goBack();
-            },
-          },
-        ]);
+      const formData = new FormData();
+      formData.append('rating', String(rating));
+      formData.append('comment', comment.trim());
+      formData.append('complaintType', complaintType);
+      if (foodItemId) formData.append('foodItemId', foodItemId);
+      if (orderId) formData.append('orderId', orderId);
+      if (canteenId) formData.append('canteenId', canteenId);
+      if (image) {
+        formData.append('complaintImage', {
+          uri: image.uri,
+          name: image.fileName || 'complaint.jpg',
+          type: image.type || 'image/jpeg',
+        });
       }
-    } catch (error) {
-      const errorMessage =
-        error.response?.data?.message || 'Failed to submit feedback';
-      Alert.alert('Error', errorMessage);
+
+      await API.post('/feedback', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
+
+      Alert.alert('✅ Thank you!', 'Your feedback has been submitted.', [
+        { text: 'OK', onPress: () => navigation.goBack() },
+      ]);
+    } catch (err) {
+      Alert.alert('Error', err.response?.data?.message || 'Failed to submit feedback');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
-      {/* Header */}
-      <View style={styles.headerContainer}>
-        <TouchableOpacity onPress={() => navigation.goBack()}>
-          <Text style={styles.backButton}>← Back</Text>
+    <View style={styles.container}>
+      <View style={styles.header}>
+        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
+          <Text style={styles.backArrow}>←</Text>
         </TouchableOpacity>
-        <Text style={styles.title}>⭐ Your Feedback</Text>
+        <Text style={styles.headerTitle}>⭐ Feedback</Text>
       </View>
 
-      {/* Feedback Form */}
-      <View style={styles.formContainer}>
-        <Text style={styles.sectionTitle}>How was your experience?</Text>
+      <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
+        {foodName && <Text style={styles.aboutLabel}>Review for: <Text style={styles.aboutItem}>{foodName}</Text></Text>}
 
-        {/* Rating */}
-        <View style={styles.ratingContainer}>
-          <Text style={styles.label}>Rate Us</Text>
-          <View style={styles.starContainer}>
-            {[1, 2, 3, 4, 5].map((star) => (
+        {/* Star Rating */}
+        <View style={styles.card}>
+          <Text style={styles.label}>Your Rating</Text>
+          <View style={styles.stars}>
+            {[1, 2, 3, 4, 5].map(s => (
+              <TouchableOpacity key={s} onPress={() => setRating(s)}>
+                <Text style={[styles.star, s <= rating && styles.starActive]}>★</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+          {rating > 0 && <Text style={styles.ratingLabel}>{'⭐'.repeat(rating)} ({['', 'Poor', 'Fair', 'Good', 'Great', 'Excellent'][rating]})</Text>}
+        </View>
+
+        {/* Complaint Type */}
+        <View style={styles.card}>
+          <Text style={styles.label}>Category</Text>
+          <View style={styles.typeRow}>
+            {TYPES.map(t => (
               <TouchableOpacity
-                key={star}
-                onPress={() => setRating(star)}
+                key={t}
+                style={[styles.typeChip, complaintType === t && styles.typeChipActive]}
+                onPress={() => setComplaintType(t)}
               >
-                <Text style={[styles.star, rating >= star && styles.starFilled]}>
-                  ★
+                <Text style={[styles.typeText, complaintType === t && styles.typeTextActive]}>
+                  {t.replace('_', ' ')}
                 </Text>
               </TouchableOpacity>
             ))}
           </View>
-          {rating > 0 && (
-            <Text style={styles.ratingText}>You rated us {rating} stars</Text>
-          )}
         </View>
 
         {/* Comment */}
-        <View style={styles.inputContainer}>
+        <View style={styles.card}>
           <Text style={styles.label}>Your Comment</Text>
           <TextInput
-            placeholder="Tell us what you think..."
             style={styles.textArea}
+            placeholder="Share your experience..."
+            placeholderTextColor="#aaa"
             multiline
-            numberOfLines={6}
+            numberOfLines={5}
             value={comment}
             onChangeText={setComment}
-            editable={!loading}
             textAlignVertical="top"
           />
         </View>
 
-        {/* Submit Button */}
+        {/* Image Upload */}
+        <View style={styles.card}>
+          <Text style={styles.label}>Attach Image (optional)</Text>
+          <TouchableOpacity style={styles.uploadBtn} onPress={pickImage}>
+            {image ? (
+              <Image source={{ uri: image.uri }} style={styles.preview} resizeMode="cover" />
+            ) : (
+              <Text style={styles.uploadText}>📷 Select Image</Text>
+            )}
+          </TouchableOpacity>
+        </View>
+
         <TouchableOpacity
-          style={[styles.submitButton, loading && styles.disabledButton]}
-          onPress={handleSubmitFeedback}
+          style={[styles.submitBtn, loading && { opacity: 0.7 }]}
+          onPress={handleSubmit}
           disabled={loading}
         >
-          {loading ? (
-            <ActivityIndicator color="#fff" />
-          ) : (
-            <Text style={styles.submitButtonText}>Submit Feedback</Text>
-          )}
+          {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.submitText}>Submit Feedback</Text>}
         </TouchableOpacity>
-
-        {/* Help Text */}
-        <View style={styles.helpText}>
-          <Text style={styles.helpTextContent}>
-            Your feedback helps us improve our service. Thank you for taking the time!
-          </Text>
-        </View>
-      </View>
-    </ScrollView>
+      </ScrollView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flexGrow: 1,
-    backgroundColor: '#f5f5f5',
-    paddingBottom: 20,
+  container: { flex: 1, backgroundColor: '#F8F9FA' },
+  header: {
+    backgroundColor: ORANGE, paddingTop: 52, paddingBottom: 16,
+    paddingHorizontal: 16, flexDirection: 'row', alignItems: 'center',
   },
-  headerContainer: {
-    backgroundColor: '#2196F3',
-    paddingVertical: 16,
-    paddingHorizontal: 20,
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  backButton: {
-    color: '#fff',
-    fontSize: 16,
-    marginRight: 12,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#fff',
-  },
-  formContainer: {
-    backgroundColor: '#fff',
-    margin: 20,
-    padding: 20,
-    borderRadius: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 20,
-  },
-  ratingContainer: {
-    marginBottom: 24,
-  },
-  label: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#333',
-    marginBottom: 12,
-  },
-  starContainer: {
-    flexDirection: 'row',
-    gap: 12,
-  },
-  star: {
-    fontSize: 40,
-    color: '#ddd',
-  },
-  starFilled: {
-    color: '#FFD700',
-  },
-  ratingText: {
-    marginTop: 12,
-    fontSize: 14,
-    color: '#666',
-  },
-  inputContainer: {
-    marginBottom: 24,
-  },
+  backBtn: { marginRight: 12, padding: 4 },
+  backArrow: { color: '#fff', fontSize: 22, fontWeight: 'bold' },
+  headerTitle: { color: '#fff', fontSize: 20, fontWeight: 'bold' },
+  scroll: { padding: 16 },
+  aboutLabel: { fontSize: 14, color: '#666', marginBottom: 14 },
+  aboutItem: { color: ORANGE, fontWeight: 'bold' },
+  card: { backgroundColor: '#fff', borderRadius: 16, padding: 16, marginBottom: 14, elevation: 2 },
+  label: { fontSize: 14, fontWeight: '700', color: '#333', marginBottom: 12 },
+  stars: { flexDirection: 'row', gap: 10, marginBottom: 8 },
+  star: { fontSize: 38, color: '#ddd' },
+  starActive: { color: '#FFB800' },
+  ratingLabel: { fontSize: 13, color: '#888', marginTop: 4 },
+  typeRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  typeChip: { borderWidth: 1.5, borderColor: '#E8E8E8', borderRadius: 20, paddingHorizontal: 12, paddingVertical: 6 },
+  typeChipActive: { backgroundColor: ORANGE, borderColor: ORANGE },
+  typeText: { fontSize: 12, color: '#666', fontWeight: '600' },
+  typeTextActive: { color: '#fff' },
   textArea: {
-    borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 8,
-    padding: 12,
-    fontSize: 14,
-    backgroundColor: '#f9f9f9',
-    color: '#333',
+    borderWidth: 1.5, borderColor: '#E8E8E8', borderRadius: 12, padding: 12,
+    fontSize: 14, color: '#333', minHeight: 100,
   },
-  submitButton: {
-    backgroundColor: '#2196F3',
-    borderRadius: 8,
-    paddingVertical: 12,
-    alignItems: 'center',
-    marginBottom: 16,
+  uploadBtn: {
+    borderWidth: 2, borderColor: ORANGE, borderStyle: 'dashed',
+    borderRadius: 12, height: 120, justifyContent: 'center', alignItems: 'center', overflow: 'hidden',
   },
-  disabledButton: {
-    opacity: 0.6,
+  preview: { width: '100%', height: '100%' },
+  uploadText: { color: ORANGE, fontWeight: '600', fontSize: 15 },
+  submitBtn: {
+    backgroundColor: ORANGE, borderRadius: 14, paddingVertical: 15, alignItems: 'center',
+    shadowColor: ORANGE, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.35, shadowRadius: 8, elevation: 5,
+    marginBottom: 30,
   },
-  submitButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
-  helpText: {
-    backgroundColor: '#e3f2fd',
-    padding: 12,
-    borderRadius: 8,
-    borderLeftWidth: 4,
-    borderLeftColor: '#2196F3',
-  },
-  helpTextContent: {
-    fontSize: 12,
-    color: '#1976D2',
-    fontWeight: '500',
-  },
+  submitText: { color: '#fff', fontSize: 16, fontWeight: 'bold' },
 });
