@@ -2,9 +2,24 @@ import mongoose from "mongoose";
 
 const feedbackSchema = new mongoose.Schema({
     userId: {
-        type: String,
-        required: false,
-        default: "anonymous"
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+        required: true
+    },
+    canteenId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Canteen",
+        default: null
+    },
+    foodItemId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "FoodItem",
+        default: null
+    },
+    orderId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Order",
+        default: null
     },
     rating: {
         type: Number,
@@ -16,12 +31,25 @@ const feedbackSchema = new mongoose.Schema({
         type: String,
         required: true
     },
-    createdAt: {
-        type: Date,
-        default: Date.now
+    complaintType: {
+        type: String,
+        enum: ["general", "food_quality", "service", "hygiene", "other"],
+        default: "general"
+    },
+    complaintImage: {
+        type: String,
+        default: ""
+    },
+    response: {
+        type: String,
+        default: ""
+    },
+    status: {
+        type: String,
+        enum: ["open", "reviewed", "resolved"],
+        default: "open"
     }
-});
+}, { timestamps: true });
 
 const Feedback = mongoose.model("Feedback", feedbackSchema);
-
 export default Feedback;

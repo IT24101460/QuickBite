@@ -1,5 +1,6 @@
 import Order from "../models/orders.js";
 import User from "../models/user.js";
+import Canteen from "../models/canteen.js";
 
 // ─── Place a new order ───────────────────────────────────────────────
 export async function placeOrder(req, res) {
@@ -8,7 +9,7 @@ export async function placeOrder(req, res) {
             return res.status(401).json({ message: "Please login to place an order" });
         }
 
-        const { items, note } = req.body;
+        const { items, note, pickupTime, promotionId, discountAmount, canteenId } = req.body;
 
         if (!items || items.length === 0) {
             return res.status(400).json({ message: "Order must contain at least one item" });
@@ -23,12 +24,22 @@ export async function placeOrder(req, res) {
             (sum, item) => sum + item.price * item.quantity, 0
         );
 
+        const discount = parseFloat(discountAmount) || 0;
+        const finalAmount = parseFloat((totalAmount - discount).toFixed(2));
+        const requestImage = req.file ? `/uploads/${req.file.filename}` : "";
+
         const newOrder = new Order({
             userId: user._id,
             studentName: `${user.firstName} ${user.lastName}`,
             uniId: user.uniId,
+            canteenId: canteenId || null,
             items,
             totalAmount,
+            discountAmount: discount,
+            finalAmount,
+            promotionId: promotionId || null,
+            pickupTime: pickupTime || "",
+            requestImage,
             note: note || ""
         });
 
@@ -82,8 +93,18 @@ export async function getOrderById(req, res) {
 // ─── Update order status (Admin only) ────────────────────────────────
 export async function updateOrderStatus(req, res) {
     try {
-        if (!req.user?.isAdmin) {
-            return res.status(403).json({ message: "Admin access required" });
+        if (!req.user?.isAdmin && req.user?.role !== "owner") {
+            return res.status(403).json({ message: "Access required" });
+        }
+
+        const preOrder = await Order.findById(req.params.id);
+        if (!preOrder) return res.status(404).json({ message: "Order not found" });
+
+        if (req.user?.role === 'owner') {
+            const myCanteen = await Canteen.findOne({ createdBy: req.user._id || req.user.id });
+            if (preOrder.canteenId?.toString() !== myCanteen?._id.toString()) {
+                return res.status(403).json({ message: "You can't update queues outside your canteen" });
+            }
         }
 
         const { status } = req.body;
@@ -147,13 +168,18 @@ export async function cancelOrder(req, res) {
 // ─── Get ALL orders (Admin queue dashboard) ───────────────────────────
 export async function getAllOrders(req, res) {
     try {
-        if (!req.user?.isAdmin) {
-            return res.status(403).json({ message: "Admin access required" });
+        if (!req.user?.isAdmin && req.user?.role !== "owner") {
+            return res.status(403).json({ message: "Access required" });
         }
 
         const filter = {};
         if (req.query.status) {
             filter.status = req.query.status;
+        }
+
+        if (req.user?.role === 'owner') {
+            const myCanteen = await Canteen.findOne({ createdBy: req.user._id || req.user.id });
+            if (myCanteen) filter.canteenId = myCanteen._id;
         }
 
         const orders = await Order.find(filter).sort({ createdAt: -1 });

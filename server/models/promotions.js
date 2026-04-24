@@ -9,6 +9,10 @@ const promotionsSchema = new mongoose.Schema({
         type: String,
         required: true
     },
+    bannerImage: {
+        type: String,
+        default: ""
+    },
     discountType: {
         type: String,
         enum: ["percentage", "fixed"],
@@ -27,6 +31,11 @@ const promotionsSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: "FoodItem"
     }],
+    canteenId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Canteen",
+        default: null
+    },
     startDate: {
         type: Date,
         required: true
@@ -38,13 +47,8 @@ const promotionsSchema = new mongoose.Schema({
     isActive: {
         type: Boolean,
         default: true
-    },
-    createdAt: {
-        type: Date,
-        default: Date.now
     }
-});
+}, { timestamps: true });
 
 const Promotions = mongoose.model("Promotions", promotionsSchema);
-
 export default Promotions;

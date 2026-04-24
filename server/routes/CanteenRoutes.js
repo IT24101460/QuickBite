@@ -1,25 +1,21 @@
-const express = require('express');
-const router = express.Router();
-const {
+import express from "express";
+import upload from "../middleware/upload.js";
+import {
   createCanteen,
   getAllCanteens,
   getCanteenById,
+  getMyCanteen,
   updateCanteen,
   deleteCanteen
-} = require('../controllers/CanteenController');
-const { protect } = require('../middleware/auth');   // provided by auth member
-const upload = require('../middleware/upload');
+} from "../controllers/CanteenController.js";
 
-// All routes require authentication
-router.use(protect);
+const canteenRouter = express.Router();
 
-router.route('/')
-  .get(getAllCanteens)
-  .post(upload.single('canteenImage'), createCanteen);
+canteenRouter.get("/", getAllCanteens);                                    // GET    /canteens
+canteenRouter.get("/my", getMyCanteen);                                    // GET    /canteens/my
+canteenRouter.get("/:id", getCanteenById);                                // GET    /canteens/:id
+canteenRouter.post("/", upload.single("canteenImage"), createCanteen);    // POST   /canteens  (multipart/form-data)
+canteenRouter.put("/:id", upload.single("canteenImage"), updateCanteen);  // PUT    /canteens/:id
+canteenRouter.delete("/:id", deleteCanteen);                              // DELETE /canteens/:id
 
-router.route('/:id')
-  .get(getCanteenById)
-  .put(upload.single('canteenImage'), updateCanteen)
-  .delete(deleteCanteen);
-
-module.exports = router;
+export default canteenRouter;
