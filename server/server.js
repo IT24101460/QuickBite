@@ -1,9 +1,11 @@
+
 import express from "express"
 import mongoose from "mongoose"
 import cors from "cors"
 import path from "path"
 import { fileURLToPath } from "url"
 
+import "./config/env.js";
 import userRouter from "./routes/userRoutes.js"
 import orderRouter from "./routes/orderRoutes.js"
 import foodRouter from "./routes/foodRoutes.js"
@@ -14,6 +16,7 @@ import paymentRouter from "./routes/paymentRoutes.js"
 import reportRouter from "./routes/reportRoutes.js"
 import userPaymentRouter from "./routes/userPaymentRoutes.js"
 import authenticate from "./middleware/authenticate.js"
+
 
 import dns from "node:dns"
 dns.setServers(["1.1.1.1", "8.8.8.8"])
