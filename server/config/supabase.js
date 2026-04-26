@@ -10,7 +10,11 @@ if (!supabaseUrl || !supabaseKey) {
 }
 =======
 const supabaseUrl = 'https://fjedogqftcjvcptkygwb.supabase.co';
+<<<<<<< HEAD
 const supabaseKey = 'sb_secret_4tR-Pb8Da2n1lh6kIK02rQ_ktfHW2DV';
 >>>>>>> 47c8e939 (progress added,but need improve UI to userfriendly)
+=======
+const supabaseKey = SUPABASE_KEY;
+>>>>>>> f587499b (progress added,but need improve UI to userfriendly)
 
 export const supabase = createClient(supabaseUrl, supabaseKey);
