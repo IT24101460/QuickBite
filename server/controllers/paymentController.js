@@ -5,7 +5,7 @@ import { v4 as uuidv4 } from "uuid";
 import Stripe from "stripe";
 import { recordPaymentOptionUsage } from "./userPaymentController.js";
 
-const stripe = new Stripe("sk_test_51TPmcMQU8ZttTVtjc7VXXWPWWpcINp4LoPL57ozg7fHZHc7UJ5BbYIERo3CDuWmTN60bMbhgB0vZ7NbVsh7tWrsu00PvUKsjSb");
+const stripe = new Stripe(STRIPE_SECRET_KEY);
 
 // Create payment for an order
 export async function createPayment(req, res) {
