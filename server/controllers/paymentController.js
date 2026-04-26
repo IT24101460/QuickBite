@@ -2,10 +2,9 @@ import Payment from "../models/payment.js";
 import Order from "../models/orders.js";
 import UserPaymentOption from "../models/userPaymentOption.js";
 import { v4 as uuidv4 } from "uuid";
-import Stripe from "stripe";
 import { recordPaymentOptionUsage } from "./userPaymentController.js";
+import stripe from "../config/stripe.js";
 
-const stripe = new Stripe(STRIPE_SECRET_KEY);
 
 // Create payment for an order
 export async function createPayment(req, res) {
