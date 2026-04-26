@@ -3,19 +3,26 @@ import Order from "../models/orders.js";
 import UserPaymentOption from "../models/userPaymentOption.js";
 import { v4 as uuidv4 } from "uuid";
 <<<<<<< HEAD
+<<<<<<< HEAD
 import { recordPaymentOptionUsage } from "./userPaymentController.js";
 import stripe from "../config/stripe.js";
 
 =======
 import Stripe from "stripe";
+=======
+>>>>>>> ba193764 (.env created for stripe,supabase)
 import { recordPaymentOptionUsage } from "./userPaymentController.js";
+import stripe from "../config/stripe.js";
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 const stripe = new Stripe("sk_test_51TPmcMQU8ZttTVtjc7VXXWPWWpcINp4LoPL57ozg7fHZHc7UJ5BbYIERo3CDuWmTN60bMbhgB0vZ7NbVsh7tWrsu00PvUKsjSb");
 >>>>>>> 47c8e939 (progress added,but need improve UI to userfriendly)
 =======
 const stripe = new Stripe(STRIPE_SECRET_KEY);
 >>>>>>> f587499b (progress added,but need improve UI to userfriendly)
+=======
+>>>>>>> ba193764 (.env created for stripe,supabase)
 
 // Create payment for an order
 export async function createPayment(req, res) {

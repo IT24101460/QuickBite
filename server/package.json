@@ -16,9 +16,13 @@
     "bcrypt": "^6.0.0",
     "cors": "^2.8.6",
 <<<<<<< HEAD
+<<<<<<< HEAD
     "dotenv": "^17.4.2",
 =======
 >>>>>>> 47c8e939 (progress added,but need improve UI to userfriendly)
+=======
+    "dotenv": "^17.4.2",
+>>>>>>> ba193764 (.env created for stripe,supabase)
     "express": "^5.2.1",
     "jsonwebtoken": "^9.0.3",
     "mongoose": "^9.3.1",
