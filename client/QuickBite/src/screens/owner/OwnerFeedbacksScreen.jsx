@@ -4,7 +4,8 @@ import API from '../../services/api';
 
 const ORANGE = '#FF6B35';
 
-export default function OwnerFeedbacksScreen({ navigation }) {
+export default function OwnerFeedbacksScreen({ route, navigation }) {
+    const passedCanteenId = route.params?.canteenId;
     const [feedbacks, setFeedbacks] = useState([]);
     const [loading, setLoading] = useState(true);
     const [replyingTo, setReplyingTo] = useState(null); // the feedback item object
@@ -18,8 +19,11 @@ export default function OwnerFeedbacksScreen({ navigation }) {
     const fetchFeedbacks = async () => {
         try {
             setLoading(true);
-            const menuPromise = await API.get('/canteens/my');
-            const myCanteenId = menuPromise.data.canteen._id;
+            let myCanteenId = passedCanteenId;
+            if (!myCanteenId) {
+                const menuPromise = await API.get('/canteens/my');
+                myCanteenId = menuPromise.data.canteen._id;
+            }
 
             const reqRes = await API.get(`/feedback/canteen/${myCanteenId}`);
             setFeedbacks(reqRes.data.feedback || []);

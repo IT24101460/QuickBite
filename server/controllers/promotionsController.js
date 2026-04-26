@@ -1,5 +1,6 @@
 import Promotions from "../models/promotions.js";
 import Canteen from "../models/canteen.js";
+import { supabase } from "../config/supabase.js";
 
 // ─── Create a new promotion (Admin only) ──────────────────────────────
 export async function createPromotion(req, res) {
@@ -32,7 +33,18 @@ export async function createPromotion(req, res) {
             return res.status(400).json({ message: "End date must be after start date" });
         }
 
-        const bannerImage = req.file ? `/uploads/${req.file.filename}` : (req.body.bannerImage || "");
+        let bannerImage = req.body.bannerImage || "";
+        if (req.file) {
+            const fileName = `promo_${Date.now()}`;
+            const { data, error } = await supabase.storage
+                .from('quickbite-images')
+                .upload(fileName, req.file.buffer, { contentType: req.file.mimetype });
+            if (error) throw error;
+            const { data: publicUrlData } = supabase.storage
+                .from('quickbite-images')
+                .getPublicUrl(fileName);
+            bannerImage = publicUrlData.publicUrl;
+        }
 
         const promotion = new Promotions({
             title,
@@ -113,7 +125,17 @@ export async function updatePromotion(req, res) {
         }
 
         const updateData = { ...req.body };
-        if (req.file) updateData.bannerImage = `/uploads/${req.file.filename}`;
+        if (req.file) {
+            const fileName = `promo_${req.params.id}_${Date.now()}`;
+            const { data, error } = await supabase.storage
+                .from('quickbite-images')
+                .upload(fileName, req.file.buffer, { contentType: req.file.mimetype });
+            if (error) throw error;
+            const { data: publicUrlData } = supabase.storage
+                .from('quickbite-images')
+                .getPublicUrl(fileName);
+            updateData.bannerImage = publicUrlData.publicUrl;
+        }
         if (applicableTo === "all") updateData.foodItems = [];
         else if (applicableTo === "specific") updateData.foodItems = foodItems || [];
 

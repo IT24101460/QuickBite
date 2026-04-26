@@ -6,10 +6,10 @@ import {
 import API from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
-import FloatingCart from '../components/FloatingCart';
+import TopNavBar from '../components/TopNavBar';
 
 const ORANGE = '#FF6B35';
-const { width } = Dimensions.get('window');
+const { width, height } = Dimensions.get('window');
 
 export default function HomeScreen({ navigation }) {
   const { user } = useAuth();
@@ -36,7 +36,12 @@ export default function HomeScreen({ navigation }) {
         API.get('/canteens'),
       ]);
       setFoodItems(foodRes.data?.foodItems || []);
-      setPromotions(promoRes.data?.promotions || []);
+      const samplePromotions = [
+        { _id: 'sunny_promo_1', bannerImage: 'https://images.unsplash.com/photo-1554118811-1e0d58224f24?auto=format&fit=crop&w=800&q=80' },
+        { _id: 'sunny_promo_2', bannerImage: 'https://images.unsplash.com/photo-1554118811-1e0d58224f24?auto=format&fit=crop&w=800&q=80' },
+        { _id: 'sunny_promo_3', bannerImage: 'https://images.unsplash.com/photo-1554118811-1e0d58224f24?auto=format&fit=crop&w=800&q=80' }
+      ];
+      setPromotions(samplePromotions);
       setCanteens(canteenRes.data?.canteens || []);
     } catch (e) {
       console.log('Error fetching home data:', e.message);
@@ -55,7 +60,7 @@ export default function HomeScreen({ navigation }) {
         let nextIndex = (currentPromoIndex + 1) % promotions.length;
         setCurrentPromoIndex(nextIndex);
         bannerRef.current?.scrollToIndex({ index: nextIndex, animated: true });
-      }, 3000);
+      }, 5000);
       return () => clearInterval(interval);
     }
   }, [currentPromoIndex, promotions.length]);
@@ -83,14 +88,8 @@ export default function HomeScreen({ navigation }) {
   const renderPromo = ({ item }) => (
     <TouchableOpacity style={styles.promoBanner} activeOpacity={0.85}>
       {item.bannerImage
-        ? <Image source={{ uri: `http://10.0.2.2:3000${item.bannerImage}` }} style={styles.promoBannerImg} resizeMode="cover" />
+        ? <Image source={{ uri: item.bannerImage.startsWith('http') ? item.bannerImage : `http://10.0.2.2:3000${item.bannerImage}` }} style={styles.promoBannerImg} resizeMode="cover" />
         : <View style={styles.promoBannerPlaceholder} />}
-      <View style={styles.promoOverlay}>
-        <Text style={styles.promoTitle}>{item.title}</Text>
-        <Text style={styles.promoDiscount}>
-          {item.discountType === 'percentage' ? `${item.discountValue}% OFF` : `LKR ${item.discountValue} OFF`}
-        </Text>
-      </View>
     </TouchableOpacity>
   );
 
@@ -101,7 +100,7 @@ export default function HomeScreen({ navigation }) {
       activeOpacity={0.9}
     >
       {item.image
-        ? <Image source={{ uri: `http://10.0.2.2:3000${item.image}` }} style={styles.foodImg} resizeMode="cover" />
+        ? <Image source={{ uri: item.image.startsWith('http') ? item.image : `http://10.0.2.2:3000${item.image}` }} style={styles.foodImg} resizeMode="cover" />
         : <View style={styles.foodImgPlaceholder}><Text style={{ fontSize: 40 }}>🍽️</Text></View>}
       <View style={styles.foodInfo}>
         <Text style={styles.foodName} numberOfLines={1}>{item.name}</Text>
@@ -125,39 +124,12 @@ export default function HomeScreen({ navigation }) {
 
   return (
     <View style={styles.container}>
-      {/* Sleek Navigation Bar */}
-      <View style={styles.navBar}>
-        <TouchableOpacity style={styles.navAvatarBtn} onPress={() => navigation.navigate('Profile')}>
-          {user?.profilePic ? (
-            <Image source={{ uri: `http://10.0.2.2:3000${user.profilePic}` }} style={styles.navAvatar} />
-          ) : (
-            <View style={styles.navAvatarFallback}><Text style={styles.navAvatarEmoji}>👤</Text></View>
-          )}
-        </TouchableOpacity>
-
-        <View style={styles.navSearchContainer}>
-          <TextInput
-            style={styles.navSearchInput}
-            placeholder="🔍 Search amazing food..."
-            placeholderTextColor="#aaa"
-            value={search}
-            onChangeText={setSearch}
-          />
-        </View>
-
-        <TouchableOpacity style={styles.navCartBtn} onPress={() => navigation.toggleDrawer()}>
-          <Text style={styles.navCartEmoji}>🛒</Text>
-          {itemCount > 0 && (
-            <View style={styles.navCartBadge}>
-              <Text style={styles.navCartBadgeText}>{itemCount}</Text>
-            </View>
-          )}
-        </TouchableOpacity>
-      </View>
+      <TopNavBar navigation={navigation} search={search} setSearch={setSearch} hideBottomRow={true} isHome={true} />
 
       <ScrollView
         showsVerticalScrollIndicator={false}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[ORANGE]} />}
+        contentContainerStyle={{ paddingTop: 85, paddingBottom: 20 }}
       >
 
         {/* Promotions Banner - Daraz Style */}
@@ -179,7 +151,14 @@ export default function HomeScreen({ navigation }) {
             {/* Dots */}
             <View style={styles.dotsRow}>
               {promotions.map((_, i) => (
-                <View key={i} style={[styles.dot, currentPromoIndex === i && styles.dotActive]} />
+                <TouchableOpacity
+                  key={i}
+                  style={[styles.dot, currentPromoIndex === i && styles.dotActive]}
+                  onPress={() => {
+                    setCurrentPromoIndex(i);
+                    bannerRef.current?.scrollToIndex({ index: i, animated: true });
+                  }}
+                />
               ))}
             </View>
           </View>
@@ -215,8 +194,8 @@ export default function HomeScreen({ navigation }) {
                   style={styles.canteenChip}
                   onPress={() => navigation.navigate('CanteenDetail', { canteen: item })}
                 >
-                  {item.logo
-                    ? <Image style={styles.canteenSmallLogo} source={{ uri: `http://10.0.2.2:3000${item.logo}` }} />
+                  {item.canteenImage
+                    ? <Image style={styles.canteenSmallLogo} source={{ uri: item.canteenImage.startsWith('http') ? item.canteenImage : `http://10.0.2.2:3000${item.canteenImage}` }} />
                     : <Text>🏬</Text>}
                   <Text style={styles.canteenChipText}>{item.canteenName}</Text>
                 </TouchableOpacity>
@@ -282,40 +261,24 @@ export default function HomeScreen({ navigation }) {
             )}
         </View>
       </ScrollView>
-
-      <FloatingCart />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F8F9FA' },
+  container: { flex: 1, backgroundColor: '#FFF7F3' },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#fff' },
   loadingText: { marginTop: 12, color: '#888', fontSize: 14 },
-  navBar: {
-    backgroundColor: '#fff', paddingTop: 45, paddingBottom: 10,
-    paddingHorizontal: 16, flexDirection: 'row', alignItems: 'center',
-    borderBottomWidth: 1, borderBottomColor: '#F0F0F0', elevation: 2, zIndex: 10
-  },
-  navAvatarBtn: { marginRight: 12 },
-  navAvatar: { width: 38, height: 38, borderRadius: 19 },
-  navAvatarFallback: { width: 38, height: 38, borderRadius: 19, backgroundColor: '#FFE5DB', justifyContent: 'center', alignItems: 'center' },
-  navAvatarEmoji: { fontSize: 20 },
-  navSearchContainer: { flex: 1, marginRight: 12 },
-  navSearchInput: {
-    backgroundColor: '#F5F5F5', borderRadius: 20, paddingHorizontal: 16, paddingVertical: 8,
-    fontSize: 14, color: '#333',
-  },
-  navCartBtn: { position: 'relative', padding: 4 },
-  navCartEmoji: { fontSize: 24, color: '#444' },
-  navCartBadge: {
-    position: 'absolute', top: -4, right: -4,
-    backgroundColor: ORANGE, borderRadius: 10, minWidth: 18, height: 18,
-    justifyContent: 'center', alignItems: 'center', borderWidth: 1.5, borderColor: '#fff'
-  },
-  navCartBadgeText: { fontSize: 10, fontWeight: 'bold', color: '#fff' },
   promoContainer: { width: '100%', alignItems: 'center' },
-  promoBanner: { width: width, height: 150, backgroundColor: '#FFE0D6' },
+  promoBanner: {
+    width: width - 32,
+    height: height * 0.25,
+    backgroundColor: '#FFE0D6',
+    marginHorizontal: 16,
+    marginTop: 10,
+    borderRadius: 10,
+    overflow: 'hidden'
+  },
   promoBannerImg: { width: '100%', height: '100%' },
   promoBannerPlaceholder: { width: '100%', height: '100%', backgroundColor: '#FFD4C2' },
   promoOverlay: {
@@ -324,7 +287,7 @@ const styles = StyleSheet.create({
   },
   promoTitle: { color: '#fff', fontWeight: 'bold', fontSize: 15 },
   promoDiscount: { color: '#FFD700', fontWeight: 'bold', fontSize: 13, marginTop: 2 },
-  dotsRow: { flexDirection: 'row', position: 'absolute', bottom: 10, right: 15 },
+  dotsRow: { flexDirection: 'row', position: 'absolute', bottom: 10, width: '100%', justifyContent: 'center' },
   dot: { width: 6, height: 6, borderRadius: 3, backgroundColor: 'rgba(255,255,255,0.4)', marginLeft: 6 },
   dotActive: { backgroundColor: '#fff', width: 14 },
   section: { marginTop: 15 },

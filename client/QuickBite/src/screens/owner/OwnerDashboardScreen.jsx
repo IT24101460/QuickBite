@@ -8,10 +8,23 @@ const ORANGE = '#FF6B35';
 export default function OwnerDashboardScreen({ navigation }) {
     const { user, logout } = useAuth();
     const [liveStats, setLiveStats] = useState({ ordersToday: 0, revenueToday: 0, rating: '5.0' });
+    const [myCanteens, setMyCanteens] = useState([]);
+    const [selectedCanteenId, setSelectedCanteenId] = useState(null);
 
     useEffect(() => {
         fetchOverview();
+        fetchMyCanteens();
     }, []);
+
+    const fetchMyCanteens = async () => {
+        try {
+            const res = await API.get('/canteens/my-all');
+            setMyCanteens(res.data.canteens || []);
+            if (res.data.canteens?.length > 0) {
+                setSelectedCanteenId(res.data.canteens[0]._id);
+            }
+        } catch (e) { }
+    };
 
     const fetchOverview = async () => {
         try {
@@ -51,6 +64,32 @@ export default function OwnerDashboardScreen({ navigation }) {
 
             <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
 
+                {/* My Canteens */}
+                <Text style={styles.sectionTitle}>Your Assigned Canteens</Text>
+                {myCanteens.length === 0 ? (
+                    <View style={styles.alertCard}>
+                        <Text style={styles.alertIcon}>🏪</Text>
+                        <View style={{ flex: 1, paddingLeft: 12 }}>
+                            <Text style={styles.alertTitle}>No Canteens Assigned</Text>
+                            <Text style={styles.alertDesc}>Please contact the admin to link a canteen to your account.</Text>
+                        </View>
+                    </View>
+                ) : (
+                    <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.canteensScroll}>
+                        {myCanteens.map(c => (
+                            <TouchableOpacity 
+                                key={c._id} 
+                                style={[styles.canteenCard, selectedCanteenId === c._id && styles.canteenCardSelected]}
+                                onPress={() => setSelectedCanteenId(c._id)}
+                            >
+                                <Text style={styles.canteenIcon}>🏪</Text>
+                                <Text style={[styles.canteenName, selectedCanteenId === c._id && styles.canteenNameSelected]}>{c.canteenName}</Text>
+                                <Text style={styles.canteenLoc}>{c.location}</Text>
+                            </TouchableOpacity>
+                        ))}
+                    </ScrollView>
+                )}
+
                 {/* Stats Row */}
                 <Text style={styles.sectionTitle}>Daily Overview</Text>
                 <View style={styles.statsRow}>
@@ -70,7 +109,10 @@ export default function OwnerDashboardScreen({ navigation }) {
                         <TouchableOpacity
                             key={i}
                             style={styles.actionCard}
-                            onPress={() => navigation.navigate(act.route)}
+                            onPress={() => {
+                                if (!selectedCanteenId) return Alert.alert('Error', 'No canteen assigned to you yet.');
+                                navigation.navigate(act.route, { canteenId: selectedCanteenId });
+                            }}
                         >
                             <View style={styles.actionIconBox}>
                                 <Text style={styles.actionIcon}>{act.icon}</Text>
@@ -110,6 +152,14 @@ const styles = StyleSheet.create({
     statIcon: { fontSize: 24, marginBottom: 8 },
     statValue: { fontSize: 18, fontWeight: 'bold', color: ORANGE },
     statTitle: { fontSize: 11, color: '#888', marginTop: 4, textAlign: 'center' },
+
+    canteensScroll: { marginBottom: 20 },
+    canteenCard: { backgroundColor: '#fff', padding: 15, borderRadius: 16, marginRight: 15, width: 140, alignItems: 'center', borderWidth: 2, borderColor: 'transparent', shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 5, elevation: 2 },
+    canteenCardSelected: { borderColor: ORANGE, backgroundColor: '#FFF5F0' },
+    canteenIcon: { fontSize: 30, marginBottom: 8 },
+    canteenName: { fontSize: 14, fontWeight: 'bold', color: '#333', textAlign: 'center' },
+    canteenNameSelected: { color: ORANGE },
+    canteenLoc: { fontSize: 11, color: '#888', textAlign: 'center', marginTop: 4 },
 
     actionGrid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', marginBottom: 20 },
     actionCard: { backgroundColor: '#fff', width: '48%', borderRadius: 16, padding: 16, marginBottom: 15, shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 5, elevation: 2 },

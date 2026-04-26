@@ -4,6 +4,7 @@ import {
     ActivityIndicator, RefreshControl,
 } from 'react-native';
 import API from '../services/api';
+import TopNavBar from '../components/TopNavBar';
 
 const ORANGE = '#FF6B35';
 
@@ -66,9 +67,7 @@ export default function OrdersScreen({ navigation }) {
 
     return (
         <View style={styles.container}>
-            <View style={styles.header}>
-                <Text style={styles.headerTitle}>📦 My Orders</Text>
-            </View>
+            <TopNavBar navigation={navigation} placeholder="📦 My Orders" />
             {orders.length === 0 ? (
                 <View style={styles.empty}>
                     <Text style={{ fontSize: 56 }}>📦</Text>
@@ -95,11 +94,7 @@ export default function OrdersScreen({ navigation }) {
 const styles = StyleSheet.create({
     container: { flex: 1, backgroundColor: '#F8F9FA' },
     center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-    header: {
-        backgroundColor: ORANGE, paddingTop: 52, paddingBottom: 18, paddingHorizontal: 20,
-    },
-    headerTitle: { color: '#fff', fontSize: 22, fontWeight: 'bold' },
-    list: { padding: 12 },
+    list: { padding: 16, paddingTop: 125 },
     orderCard: {
         backgroundColor: '#fff', borderRadius: 16, padding: 16, marginBottom: 12, elevation: 2,
     },

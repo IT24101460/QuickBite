@@ -5,7 +5,8 @@ import API from '../../services/api';
 
 const ORANGE = '#FF6B35';
 
-export default function OwnerPromotionsScreen({ navigation }) {
+export default function OwnerPromotionsScreen({ route, navigation }) {
+    const passedCanteenId = route.params?.canteenId;
     const [promotions, setPromotions] = useState([]);
     const [canteenFoods, setCanteenFoods] = useState([]);
     const [myCanteenId, setMyCanteenId] = useState(null);
@@ -33,11 +34,17 @@ export default function OwnerPromotionsScreen({ navigation }) {
     const fetchData = async () => {
         try {
             setLoading(true);
-            const menuPromise = API.get('/canteens/my').then(res => {
-                const cId = res.data.canteen._id;
-                setMyCanteenId(cId);
-                return API.get(`/food-items?canteenId=${cId}`);
-            });
+            let menuPromise;
+            if (passedCanteenId) {
+                setMyCanteenId(passedCanteenId);
+                menuPromise = API.get(`/foods?canteenId=${passedCanteenId}`);
+            } else {
+                menuPromise = API.get('/canteens/my').then(res => {
+                    const cId = res.data.canteen._id;
+                    setMyCanteenId(cId);
+                    return API.get(`/foods?canteenId=${cId}`);
+                });
+            }
             const promosPromise = API.get('/promotions');
 
             const [menuRes, promosRes] = await Promise.all([menuPromise, promosPromise]);
@@ -165,7 +172,7 @@ export default function OwnerPromotionsScreen({ navigation }) {
                     keyExtractor={item => item._id}
                     renderItem={({ item }) => (
                         <View style={[styles.card, !item.isActive && { opacity: 0.6 }]}>
-                            {item.bannerImage ? <Image source={{ uri: `http://10.0.2.2:3000${item.bannerImage}` }} style={styles.cardImage} /> : null}
+                            {item.bannerImage ? <Image source={{ uri: item.bannerImage.startsWith('http') ? item.bannerImage : `http://10.0.2.2:3000${item.bannerImage}` }} style={styles.cardImage} /> : null}
                             <View style={styles.cardContent}>
                                 <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
                                     <Text style={styles.cardTitle}>{item.title}</Text>

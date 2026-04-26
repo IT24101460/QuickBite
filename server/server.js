@@ -1,9 +1,11 @@
+
 import express from "express"
 import mongoose from "mongoose"
 import cors from "cors"
 import path from "path"
 import { fileURLToPath } from "url"
 
+import "./config/env.js";
 import userRouter from "./routes/userRoutes.js"
 import orderRouter from "./routes/orderRoutes.js"
 import foodRouter from "./routes/foodRoutes.js"
@@ -12,7 +14,9 @@ import promotionsRouter from "./routes/promotionsRoutes.js"
 import canteenRouter from "./routes/CanteenRoutes.js"
 import paymentRouter from "./routes/paymentRoutes.js"
 import reportRouter from "./routes/reportRoutes.js"
+import userPaymentRouter from "./routes/userPaymentRoutes.js"
 import authenticate from "./middleware/authenticate.js"
+
 
 import dns from "node:dns"
 dns.setServers(["1.1.1.1", "8.8.8.8"])
@@ -20,7 +24,7 @@ dns.setServers(["1.1.1.1", "8.8.8.8"])
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 
-const MongodbURI = "mongodb+srv://admin:admin123@cluster0.jo7gf4n.mongodb.net/?appName=Cluster0"
+const MongodbURI = process.env.MONGODB_URI || "mongodb+srv://admin:admin123@cluster0.jo7gf4n.mongodb.net/?appName=Cluster0";
 mongoose.connect(MongodbURI).then(
     () => {
         console.log("Connected to MongoDB successfully !!! ")
@@ -57,6 +61,7 @@ app.use("/promotions", promotionsRouter)
 app.use("/canteens", canteenRouter)
 app.use("/payments", paymentRouter)
 app.use("/reports", reportRouter)
+app.use("/user-payments", userPaymentRouter)
 
 // Health check
 app.get("/health", (req, res) => {

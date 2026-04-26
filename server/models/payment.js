@@ -1,5 +1,6 @@
 import mongoose from "mongoose";
 
+
 const paymentSchema = new mongoose.Schema({
     orderId: {
         type: mongoose.Schema.Types.ObjectId,
@@ -17,7 +18,7 @@ const paymentSchema = new mongoose.Schema({
     },
     paymentMethod: {
         type: String,
-        enum: ["cash", "card", "mobile", "wallet", "bank"],
+        enum: ["cash", "card", "mobile", "wallet", "bank", "bank_transfer", "mobile_money"],
         default: "cash"
     },
     paymentStatus: {
@@ -33,6 +34,12 @@ const paymentSchema = new mongoose.Schema({
     paymentProof: {
         type: String,
         default: ""
+    },
+    // Reference to saved payment option if one was used
+    paymentOptionId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "UserPaymentOption",
+        required: false
     }
 }, { timestamps: true });
 

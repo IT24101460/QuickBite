@@ -1,12 +1,20 @@
 import React, { useState } from 'react';
 import {
   View, Text, StyleSheet, TextInput, TouchableOpacity,
-  ScrollView, ActivityIndicator, Alert, KeyboardAvoidingView, Platform,
+  ScrollView, ActivityIndicator, Alert, KeyboardAvoidingView, Platform, Image, ImageBackground, Dimensions,
 } from 'react-native';
 import API from '../services/api';
 import { useAuth } from '../context/AuthContext';
 
 const ORANGE = '#FF6B35';
+const { width } = Dimensions.get('window');
+
+const FormField = ({ label, k, form, set, loading, ...props }) => (
+  <View style={{ marginBottom: 14 }}>
+    <Text style={styles.label}>{label}</Text>
+    <TextInput style={styles.input} placeholderTextColor="#aaa" value={form[k]} onChangeText={set(k)} editable={!loading} {...props} />
+  </View>
+);
 
 export default function SignUpScreen({ navigation }) {
   const [form, setForm] = useState({ firstName: '', lastName: '', email: '', uniId: '', phoneNumber: '', password: '', confirmPassword: '' });
@@ -25,48 +33,57 @@ export default function SignUpScreen({ navigation }) {
 
     setLoading(true);
     try {
-      const res = await API.post('/users/signup', { firstName, lastName, email, uniId, phoneNumber: Number(phoneNumber), password });
+      const res = await API.post('/users', { firstName, lastName, email, uniId, phoneNumber: Number(phoneNumber), password });
       if (res.data.token) {
         await login(res.data.token, res.data.user || res.data);
       } else {
         Alert.alert('Registered!', 'Please login.', [{ text: 'OK', onPress: () => navigation.navigate('Login') }]);
       }
     } catch (err) {
-      Alert.alert('Error', err.response?.data?.message || 'Registration failed');
+      Alert.alert('Error', err.response?.data?.error || err.response?.data?.message || 'Registration failed');
     } finally {
       setLoading(false);
     }
   };
 
-  const Field = ({ label, k, ...props }) => (
-    <View style={{ marginBottom: 14 }}>
-      <Text style={styles.label}>{label}</Text>
-      <TextInput style={styles.input} placeholderTextColor="#aaa" value={form[k]} onChangeText={set(k)} editable={!loading} {...props} />
-    </View>
-  );
-
   return (
-    <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-      <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
+    <ImageBackground
+      source={{ uri: 'https://images.unsplash.com/photo-1495521821757-a1efb6729352?auto=format&fit=crop&w=1000&q=80' }}
+      style={styles.backgroundImage}
+      resizeMode="cover"
+    >
+      <View style={styles.overlay} />
+      <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+        <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
+          <TouchableOpacity
+            style={styles.backButton}
+            onPress={() => navigation.goBack()}
+          >
+            <Text style={styles.backButtonText}>←</Text>
+          </TouchableOpacity>
         <View style={styles.hero}>
-          <Text style={styles.logo}>🍔</Text>
-          <Text style={styles.appName}>QuickBite</Text>
+
+          <Image
+            source={require('../assets/my-logo.png')}
+            style={{ width: 100, height: 100, resizeMode: 'contain' }} />
+
+          <Text style={styles.appName}>Canteen sagaya</Text>
         </View>
         <View style={styles.card}>
           <Text style={styles.cardTitle}>Create Account</Text>
           <View style={styles.row}>
             <View style={{ flex: 1, marginRight: 8 }}>
-              <Field label="First Name" k="firstName" placeholder="John" />
+              <FormField label="First Name" k="firstName" form={form} set={set} loading={loading} placeholder="John" />
             </View>
             <View style={{ flex: 1 }}>
-              <Field label="Last Name" k="lastName" placeholder="Doe" />
+              <FormField label="Last Name" k="lastName" form={form} set={set} loading={loading} placeholder="Doe" />
             </View>
           </View>
-          <Field label="Email" k="email" placeholder="student@sliit.lk" keyboardType="email-address" autoCapitalize="none" />
-          <Field label="Student ID" k="uniId" placeholder="IT/IT/2024/001" />
-          <Field label="Phone Number" k="phoneNumber" placeholder="0712345678" keyboardType="phone-pad" />
-          <Field label="Password" k="password" placeholder="••••••••" secureTextEntry />
-          <Field label="Confirm Password" k="confirmPassword" placeholder="••••••••" secureTextEntry />
+          <FormField label="Email" k="email" form={form} set={set} loading={loading} placeholder="student@sliit.lk" keyboardType="email-address" autoCapitalize="none" />
+          <FormField label="Student ID" k="uniId" form={form} set={set} loading={loading} placeholder="IT/IT/2024/001" />
+          <FormField label="Phone Number" k="phoneNumber" form={form} set={set} loading={loading} placeholder="0712345678" keyboardType="phone-pad" />
+          <FormField label="Password" k="password" form={form} set={set} loading={loading} placeholder="••••••••" secureTextEntry />
+          <FormField label="Confirm Password" k="confirmPassword" form={form} set={set} loading={loading} placeholder="••••••••" secureTextEntry />
 
           <TouchableOpacity style={[styles.btn, loading && { opacity: 0.6 }]} onPress={handleRegister} disabled={loading}>
             {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.btnText}>Create Account</Text>}
@@ -75,15 +92,45 @@ export default function SignUpScreen({ navigation }) {
           <TouchableOpacity style={styles.link} onPress={() => navigation.navigate('Login')}>
             <Text style={styles.linkText}>Already have an account? <Text style={{ color: ORANGE, fontWeight: 'bold' }}>Login</Text></Text>
           </TouchableOpacity>
+
+          <Text style={styles.footerText}>© {new Date().getFullYear()} Canteen sagaya. All rights reserved.</Text>
         </View>
-      </ScrollView>
-    </KeyboardAvoidingView>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </ImageBackground>
   );
 }
 
 const styles = StyleSheet.create({
-  scroll: { flexGrow: 1, backgroundColor: ORANGE },
-  hero: { alignItems: 'center', paddingTop: 50, paddingBottom: 24 },
+  backgroundImage: { flex: 1, width: '100%', height: '100%' },
+  overlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.4)',
+  },
+  backButton: {
+    position: 'absolute',
+    top: 50,
+    left: 20,
+    zIndex: 100,
+    padding: 10,
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    borderRadius: 24,
+    width: 44,
+    height: 44,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  backButtonText: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    color: ORANGE,
+  },
+  scroll: { flexGrow: 1, backgroundColor: 'transparent' },
+  hero: { alignItems: 'center', paddingTop: 100, paddingBottom: 40 },
   logo: { fontSize: 48 },
   appName: { fontSize: 30, fontWeight: 'bold', color: '#fff', letterSpacing: 1 },
   card: { backgroundColor: '#fff', borderTopLeftRadius: 32, borderTopRightRadius: 32, padding: 24, flex: 1 },
@@ -100,6 +147,7 @@ const styles = StyleSheet.create({
     shadowColor: ORANGE, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 6, elevation: 4,
   },
   btnText: { color: '#fff', fontSize: 16, fontWeight: 'bold' },
-  link: { alignItems: 'center' },
+  link: { alignItems: 'center', marginBottom: 15 },
   linkText: { color: '#888', fontSize: 14 },
+  footerText: { textAlign: 'center', fontSize: 12, color: '#aaa', marginTop: 10 },
 });

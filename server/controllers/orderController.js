@@ -101,8 +101,8 @@ export async function updateOrderStatus(req, res) {
         if (!preOrder) return res.status(404).json({ message: "Order not found" });
 
         if (req.user?.role === 'owner') {
-            const myCanteen = await Canteen.findOne({ createdBy: req.user._id || req.user.id });
-            if (preOrder.canteenId?.toString() !== myCanteen?._id.toString()) {
+            const canteen = await Canteen.findById(preOrder.canteenId);
+            if (!canteen || canteen.createdBy?.toString() !== (req.user._id || req.user.id).toString()) {
                 return res.status(403).json({ message: "You can't update queues outside your canteen" });
             }
         }
@@ -178,8 +178,13 @@ export async function getAllOrders(req, res) {
         }
 
         if (req.user?.role === 'owner') {
-            const myCanteen = await Canteen.findOne({ createdBy: req.user._id || req.user.id });
-            if (myCanteen) filter.canteenId = myCanteen._id;
+            if (req.query.canteenId) {
+                const canteen = await Canteen.findOne({ _id: req.query.canteenId, createdBy: req.user._id || req.user.id });
+                if (canteen) filter.canteenId = canteen._id;
+            } else {
+                const myCanteen = await Canteen.findOne({ createdBy: req.user._id || req.user.id });
+                if (myCanteen) filter.canteenId = myCanteen._id;
+            }
         }
 
         const orders = await Order.find(filter).sort({ createdAt: -1 });

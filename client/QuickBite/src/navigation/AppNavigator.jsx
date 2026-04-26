@@ -15,6 +15,7 @@ import HomeScreen from '../screens/HomeScreen';
 import CartScreen from '../screens/CartScreen';
 import OrdersScreen from '../screens/OrdersScreen';
 import ProfileScreen from '../screens/ProfileScreen';
+import SettingsScreen from '../screens/SettingsScreen';
 
 // Stack screens
 import FoodDetailScreen from '../screens/FoodDetailScreen';
@@ -23,6 +24,9 @@ import OrderDetailScreen from '../screens/OrderDetailScreen';
 import FeedbackScreen from '../screens/FeedbackScreen';
 import CanteenListScreen from '../screens/CanteenListScreen';
 import CanteenDetailScreen from '../screens/CanteenDetailScreen';
+import AddCardScreen from '../screens/AddCardScreen';
+import OTPScreen from '../screens/OTPScreen';
+import PaymentOptionsScreen from '../screens/PaymentOptionsScreen';
 
 // Admin screens
 import AdminDashboardScreen from '../screens/admin/AdminDashboardScreen';
@@ -30,6 +34,7 @@ import AdminCanteensScreen from '../screens/admin/AdminCanteensScreen';
 import AdminFoodItemsScreen from '../screens/admin/AdminFoodItemsScreen';
 import AdminOrdersScreen from '../screens/admin/AdminOrdersScreen';
 import AdminPromotionsScreen from '../screens/admin/AdminPromotionsScreen';
+import AdminOwnersScreen from '../screens/admin/AdminOwnersScreen';
 
 // Owner screens
 import OwnerDashboardScreen from '../screens/owner/OwnerDashboardScreen';
@@ -40,7 +45,7 @@ import OwnerPromotionsScreen from '../screens/owner/OwnerPromotionsScreen';
 import OwnerFeedbacksScreen from '../screens/owner/OwnerFeedbacksScreen';
 import OwnerSupportScreen from '../screens/owner/OwnerSupportScreen';
 
-import SidebarCart from '../components/SidebarCart';
+import SidebarMenu from '../components/SidebarMenu';
 
 const Stack = createNativeStackNavigator();
 const Drawer = createDrawerNavigator();
@@ -52,9 +57,9 @@ const ORANGE = '#FF6B35';
 function UserDrawerFlow() {
   return (
     <Drawer.Navigator
-      drawerContent={(props) => <SidebarCart {...props} />}
+      drawerContent={(props) => <SidebarMenu {...props} />}
       screenOptions={{
-        drawerPosition: 'right',
+        drawerPosition: 'left',
         headerShown: false,
         drawerType: 'front'
       }}
@@ -66,12 +71,16 @@ function UserDrawerFlow() {
             <Stack.Screen name="Cart" component={CartScreen} />
             <Stack.Screen name="Orders" component={OrdersScreen} />
             <Stack.Screen name="Profile" component={ProfileScreen} />
+            <Stack.Screen name="Settings" component={SettingsScreen} />
             <Stack.Screen name="FoodDetail" component={FoodDetailScreen} />
             <Stack.Screen name="Checkout" component={CheckoutScreen} />
             <Stack.Screen name="OrderDetail" component={OrderDetailScreen} />
             <Stack.Screen name="Feedback" component={FeedbackScreen} />
             <Stack.Screen name="CanteenList" component={CanteenListScreen} />
             <Stack.Screen name="CanteenDetail" component={CanteenDetailScreen} />
+            <Stack.Screen name="AddCard" component={AddCardScreen} />
+            <Stack.Screen name="PaymentOptions" component={PaymentOptionsScreen} />
+            <Stack.Screen name="OTPVerification" component={OTPScreen} />
           </Stack.Navigator>
         )}
       </Drawer.Screen>
@@ -88,6 +97,7 @@ function AdminFlow() {
       <Stack.Screen name="AdminFoodItems" component={AdminFoodItemsScreen} />
       <Stack.Screen name="AdminOrders" component={AdminOrdersScreen} />
       <Stack.Screen name="AdminPromotions" component={AdminPromotionsScreen} />
+      <Stack.Screen name="AdminOwners" component={AdminOwnersScreen} />
     </Stack.Navigator>
   );
 }
@@ -121,17 +131,17 @@ export default function AppNavigator() {
   return (
     <NavigationContainer>
       <GlobalStack.Navigator screenOptions={{ headerShown: false }}>
-        {!user ? (
-          <>
-            <GlobalStack.Screen name="Login" component={LoginScreen} />
-            <GlobalStack.Screen name="SignUp" component={SignUpScreen} />
-          </>
+        {user?.role === 'admin' ? (
+            <GlobalStack.Screen name="Admin" component={AdminFlow} />
+        ) : user?.role === 'owner' ? (
+            <GlobalStack.Screen name="Owner" component={OwnerFlow} />
+        ) : user ? (
+            <GlobalStack.Screen name="User" component={UserDrawerFlow} />
         ) : (
-          <>
-            {user.role === 'admin' && <GlobalStack.Screen name="Admin" component={AdminFlow} />}
-            {user.role === 'owner' && <GlobalStack.Screen name="Owner" component={OwnerFlow} />}
-            {(user.role === 'student' || user.role === 'user' || !user.role) && <GlobalStack.Screen name="User" component={UserDrawerFlow} />}
-          </>
+            <>
+              <GlobalStack.Screen name="Login" component={LoginScreen} />
+              <GlobalStack.Screen name="SignUp" component={SignUpScreen} />
+            </>
         )}
       </GlobalStack.Navigator>
     </NavigationContainer>

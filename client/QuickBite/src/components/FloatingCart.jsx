@@ -7,70 +7,111 @@ const ORANGE = '#FF6B35';
 
 export default function FloatingCart() {
     const navigation = useNavigation();
-    const { itemCount } = useCart();
+    const { itemCount, finalTotal } = useCart();
 
     if (itemCount === 0) return null;
 
     return (
-        <TouchableOpacity
-            style={styles.fab}
-            activeOpacity={0.9}
-            onPress={() => {
-                if (navigation.toggleDrawer) {
-                    navigation.toggleDrawer();
-                } else {
-                    navigation.navigate('Cart');
-                }
-            }}
-        >
-            <View style={styles.badge}>
-                <Text style={styles.badgeText}>{itemCount}</Text>
-            </View>
-            <Text style={styles.icon}>🛒</Text>
-        </TouchableOpacity>
+        <View style={styles.container}>
+            <TouchableOpacity
+                style={styles.pill}
+                activeOpacity={0.9}
+                onPress={() => {
+                    if (navigation.toggleDrawer) {
+                        navigation.toggleDrawer();
+                    } else {
+                        navigation.navigate('Cart');
+                    }
+                }}
+            >
+                <View style={styles.leftSection}>
+                    <View style={styles.badge}>
+                        <Text style={styles.badgeText}>{itemCount}</Text>
+                    </View>
+                    <Text style={styles.cartIcon}>🛒</Text>
+                    <Text style={styles.viewCartText}>View Cart</Text>
+                </View>
+
+                <View style={styles.divider} />
+
+                <View style={styles.rightSection}>
+                    <Text style={styles.totalText}>LKR {finalTotal ? finalTotal.toFixed(2) : '0.00'}</Text>
+                    <Text style={styles.arrowIcon}>→</Text>
+                </View>
+            </TouchableOpacity>
+        </View>
     );
 }
 
 const styles = StyleSheet.create({
-    fab: {
+    container: {
         position: 'absolute',
         bottom: 25,
-        right: 20,
-        backgroundColor: ORANGE,
-        justifyContent: 'center',
+        width: '100%',
         alignItems: 'center',
-        width: 60,
-        height: 60,
+        zIndex: 9999,
+    },
+    pill: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#fff',
+        borderWidth: 1.5,
+        borderColor: ORANGE,
+        paddingVertical: 10,
+        paddingHorizontal: 16,
         borderRadius: 30,
         elevation: 8,
         shadowColor: ORANGE,
         shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.4,
-        shadowRadius: 6,
-        zIndex: 9999,
+        shadowOpacity: 0.25,
+        shadowRadius: 8,
     },
-    icon: {
-        fontSize: 26,
-        color: '#fff',
-        marginLeft: -2,
+    leftSection: {
+        flexDirection: 'row',
+        alignItems: 'center',
     },
     badge: {
-        position: 'absolute',
-        top: 0,
-        right: 0,
-        backgroundColor: '#fff',
-        borderWidth: 2,
-        borderColor: ORANGE,
+        backgroundColor: ORANGE,
         borderRadius: 12,
-        minWidth: 24,
-        height: 24,
+        minWidth: 22,
+        height: 22,
         justifyContent: 'center',
         alignItems: 'center',
-        zIndex: 10,
+        marginRight: 6,
     },
     badgeText: {
+        color: '#fff',
+        fontWeight: 'bold',
+        fontSize: 12,
+    },
+    cartIcon: {
+        fontSize: 16,
+        marginRight: 4,
+    },
+    viewCartText: {
         color: ORANGE,
         fontWeight: 'bold',
-        fontSize: 10,
+        fontSize: 14,
+    },
+    divider: {
+        width: 1,
+        height: 14,
+        backgroundColor: '#FFE0D6',
+        marginHorizontal: 10,
+    },
+    rightSection: {
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
+    totalText: {
+        color: ORANGE,
+        fontWeight: 'bold',
+        fontSize: 14,
+        marginRight: 6,
+    },
+    arrowIcon: {
+        color: ORANGE,
+        fontSize: 16,
+        fontWeight: 'bold',
     }
 });
