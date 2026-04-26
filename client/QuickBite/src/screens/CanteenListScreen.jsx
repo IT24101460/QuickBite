@@ -3,6 +3,7 @@ import {
     View, Text, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator, RefreshControl,
 } from 'react-native';
 import API from '../services/api';
+import TopNavBar from '../components/TopNavBar';
 
 const ORANGE = '#FF6B35';
 
@@ -23,12 +24,7 @@ export default function CanteenListScreen({ navigation }) {
 
     return (
         <View style={styles.container}>
-            <View style={styles.header}>
-                <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
-                    <Text style={styles.backArrow}>←</Text>
-                </TouchableOpacity>
-                <Text style={styles.headerTitle}>🏪 Canteens</Text>
-            </View>
+            <TopNavBar navigation={navigation} placeholder="🏪 All Canteens" />
             {loading ? <ActivityIndicator size="large" color={ORANGE} style={{ marginTop: 40 }} /> : (
                 <FlatList
                     data={canteens}
@@ -55,13 +51,6 @@ export default function CanteenListScreen({ navigation }) {
 
 const styles = StyleSheet.create({
     container: { flex: 1, backgroundColor: '#F8F9FA' },
-    header: {
-        backgroundColor: ORANGE, paddingTop: 52, paddingBottom: 16,
-        paddingHorizontal: 16, flexDirection: 'row', alignItems: 'center',
-    },
-    backBtn: { marginRight: 12, padding: 4 },
-    backArrow: { color: '#fff', fontSize: 22, fontWeight: 'bold' },
-    headerTitle: { color: '#fff', fontSize: 20, fontWeight: 'bold' },
     card: {
         flexDirection: 'row', backgroundColor: '#fff', borderRadius: 14, padding: 14,
         marginBottom: 10, elevation: 2, alignItems: 'center',

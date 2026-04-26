@@ -34,9 +34,14 @@ export default function OrderDetailScreen({ navigation, route }) {
                 <View style={styles.card}>
                     <Text style={styles.cardTitle}>🍽️ Items</Text>
                     {order.items?.map((item, idx) => (
-                        <View key={idx} style={styles.itemRow}>
-                            <Text style={styles.itemName}>{item.name} ×{item.quantity}</Text>
-                            <Text style={styles.itemPrice}>LKR {(item.price * item.quantity).toFixed(2)}</Text>
+                        <View key={idx} style={{ paddingVertical: 6 }}>
+                            <View style={[styles.itemRow, { paddingVertical: 0 }]}>
+                                <Text style={styles.itemName}>{item.name} ×{item.quantity}</Text>
+                                <Text style={styles.itemPrice}>LKR {(item.price * item.quantity).toFixed(2)}</Text>
+                            </View>
+                            {item.note ? (
+                                <Text style={{ fontSize: 13, color: '#888', marginTop: 2 }}>↳ Note: {item.note}</Text>
+                            ) : null}
                         </View>
                     ))}
                     <View style={styles.divider} />

@@ -1,4 +1,5 @@
 import Canteen from "../models/canteen.js";
+import { supabase } from "../config/supabase.js";
 
 // Create a new canteen (Admin only)
 export async function createCanteen(req, res) {
@@ -8,7 +9,18 @@ export async function createCanteen(req, res) {
     }
 
     const { canteenName, location, contactDetails, ownerDetails, openingTime, closingTime } = req.body;
-    const canteenImage = req.file ? `/uploads/${req.file.filename}` : "";
+    let canteenImage = "";
+    if (req.file) {
+        const fileName = `canteen_${Date.now()}`;
+        const { data, error } = await supabase.storage
+            .from('quickbite-images')
+            .upload(fileName, req.file.buffer, { contentType: req.file.mimetype });
+        if (error) throw error;
+        const { data: publicUrlData } = supabase.storage
+            .from('quickbite-images')
+            .getPublicUrl(fileName);
+        canteenImage = publicUrlData.publicUrl;
+    }
 
     const canteen = new Canteen({
       canteenName,
@@ -18,7 +30,7 @@ export async function createCanteen(req, res) {
       openingTime,
       closingTime,
       canteenImage,
-      createdBy: req.user._id || req.user.id
+      createdBy: req.body.createdBy || req.user._id || req.user.id
     });
 
     await canteen.save();
@@ -51,6 +63,19 @@ export async function getCanteenById(req, res) {
       return res.status(404).json({ message: "Canteen not found" });
     }
     res.status(200).json({ canteen });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+}
+
+// Get My Canteens (Owner Specific - multiple)
+export async function getAllMyCanteens(req, res) {
+  try {
+    if (req.user?.role !== 'owner') {
+      return res.status(403).json({ message: "Owners only" });
+    }
+    const canteens = await Canteen.find({ createdBy: req.user._id || req.user.id });
+    res.status(200).json({ canteens });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -90,7 +115,15 @@ export async function updateCanteen(req, res) {
 
     const updateData = { ...req.body };
     if (req.file) {
-      updateData.canteenImage = `/uploads/${req.file.filename}`;
+        const fileName = `canteen_${req.params.id}_${Date.now()}`;
+        const { data, error } = await supabase.storage
+            .from('quickbite-images')
+            .upload(fileName, req.file.buffer, { contentType: req.file.mimetype });
+        if (error) throw error;
+        const { data: publicUrlData } = supabase.storage
+            .from('quickbite-images')
+            .getPublicUrl(fileName);
+        updateData.canteenImage = publicUrlData.publicUrl;
     }
 
     const updated = await Canteen.findByIdAndUpdate(req.params.id, updateData, {

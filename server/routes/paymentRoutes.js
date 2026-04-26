@@ -6,11 +6,13 @@ import {
     getMyPayments,
     getAllPayments,
     updatePaymentStatus,
-    deletePayment
+    deletePayment,
+    createPaymentIntent
 } from "../controllers/paymentController.js";
 
 const paymentRouter = express.Router();
 
+paymentRouter.post("/create-intent", createPaymentIntent);                      // POST   /payments/create-intent (Stripe 3DS)
 paymentRouter.post("/", upload.single("paymentProof"), createPayment);           // POST   /payments  (with optional proof image)
 paymentRouter.get("/my", getMyPayments);                                          // GET    /payments/my
 paymentRouter.get("/order/:orderId", getPaymentByOrder);                          // GET    /payments/order/:orderId

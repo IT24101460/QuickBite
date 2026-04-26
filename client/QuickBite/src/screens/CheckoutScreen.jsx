@@ -4,8 +4,11 @@ import {
     ActivityIndicator, Alert, TextInput, Modal, FlatList
 } from 'react-native';
 import { launchImageLibrary } from 'react-native-image-picker';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import API from '../services/api';
 import { useCart } from '../context/CartContext';
+import { useAuth } from '../context/AuthContext';
+import TopNavBar from '../components/TopNavBar';
 
 const ORANGE = '#FF6B35';
 const METHODS = [
@@ -14,8 +17,9 @@ const METHODS = [
     { id: 'bank', label: '🏦 Bank Transfer', desc: 'Upload payment slip' },
 ];
 
-export default function CheckoutScreen({ navigation }) {
+export default function CheckoutScreen({ route, navigation }) {
     const { cartItems, finalTotal, discountAmount, appliedPromotion, clearCart } = useCart();
+    const { user } = useAuth();
     const [method, setMethod] = useState('cash');
 
     // Time Picker States
@@ -25,11 +29,33 @@ export default function CheckoutScreen({ navigation }) {
     const [showTimeModal, setShowTimeModal] = useState(false);
 
     // Card Payment States
-    const [savedCards] = useState([
-        { id: '1', type: 'Visa', last4: '4242' },
-        { id: '2', type: 'Mastercard', last4: '8888' }
-    ]);
-    const [selectedCard, setSelectedCard] = useState('1');
+    const [savedCards, setSavedCards] = useState([]);
+    const [selectedCard, setSelectedCard] = useState(null);
+
+    // Initialize saved cards only for authenticated users
+    useEffect(() => {
+        const loadCards = async () => {
+            if (user) {
+                try {
+                    const existingCards = await AsyncStorage.getItem('@saved_cards');
+                    if (existingCards) {
+                        const cards = JSON.parse(existingCards);
+                        setSavedCards(cards);
+                        if (cards.length > 0) {
+                            setSelectedCard(cards[0].id);
+                        }
+                    }
+                } catch (e) {
+                    console.error("Failed to load cards", e);
+                }
+            } else {
+                // User logged out - clear saved cards
+                setSavedCards([]);
+                setSelectedCard(null);
+            }
+        };
+        loadCards();
+    }, [user]);
 
     const [paymentProof, setPaymentProof] = useState(null);
     const [loading, setLoading] = useState(false);
@@ -48,6 +74,15 @@ export default function CheckoutScreen({ navigation }) {
         if (h < 12 && mode === 'PM') h += 12;
         return h * 60 + m;
     };
+
+    useEffect(() => {
+        if (route.params?.newlyAddedCard) {
+            const newCard = route.params.newlyAddedCard;
+            setSavedCards(prev => [...prev, newCard]);
+            setSelectedCard(newCard.id);
+            navigation.setParams({ newlyAddedCard: null });
+        }
+    }, [route.params?.newlyAddedCard]);
 
     useEffect(() => {
         // Fetch the bank details for the canteen related to the first item
@@ -103,6 +138,7 @@ export default function CheckoutScreen({ navigation }) {
                     name: i.name,
                     price: i.price,
                     quantity: i.quantity,
+                    note: i.note || "",
                 })),
                 pickupTime: selectedFormattedTime,
                 discountAmount: discountAmount || 0,
@@ -114,7 +150,14 @@ export default function CheckoutScreen({ navigation }) {
             const order = orderRes.data.order;
 
             // 2. Create payment
-            if (method !== 'cash') {
+            if (method === 'card') {
+                // Mock Card Gateway API Hit
+                await API.post('/payments', {
+                    orderId: order._id,
+                    paymentMethod: method
+                });
+
+            } else if (method !== 'cash') {
                 if (paymentProof) {
                     const payFormData = new FormData();
                     payFormData.append('orderId', order._id);
@@ -155,14 +198,9 @@ export default function CheckoutScreen({ navigation }) {
 
     return (
         <View style={styles.container}>
-            <View style={styles.header}>
-                <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
-                    <Text style={styles.backArrow}>←</Text>
-                </TouchableOpacity>
-                <Text style={styles.headerTitle}>Provide Checkout Details</Text>
-            </View>
+            <TopNavBar navigation={navigation} hideBottomRow={true} />
 
-            <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ padding: 16 }}>
+            <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ padding: 16, paddingTop: 85 }}>
 
                 {/* Pickup Time Option */}
                 <View style={styles.card}>
@@ -263,8 +301,8 @@ export default function CheckoutScreen({ navigation }) {
                         </TouchableOpacity>
                     ))}
 
-                    {/* Card Selection UI */}
-                    {method === 'card' && (
+                    {/* Card Selection UI - Only for authenticated users */}
+                    {method === 'card' && user && (
                         <View style={styles.bankContainer}>
                             <Text style={styles.bankTitle}>Select a Card:</Text>
                             {savedCards.map(c => (
@@ -279,24 +317,29 @@ export default function CheckoutScreen({ navigation }) {
                                 </TouchableOpacity>
                             ))}
                             <TouchableOpacity
-                                style={[styles.savedCardRow, selectedCard === 'new' && styles.savedCardRowActive]}
-                                onPress={() => setSelectedCard('new')}
+                                style={styles.savedCardRow}
+                                onPress={() => navigation.navigate('AddCard')}
                             >
                                 <Text style={styles.savedCardIcon}>➕</Text>
                                 <Text style={styles.savedCardText}>Add a New Card</Text>
-                                {selectedCard === 'new' && <Text style={styles.checkIcon}>✅</Text>}
+                                <Text style={{ fontSize: 16, color: '#aaa' }}>→</Text>
                             </TouchableOpacity>
+                        </View>
+                    )}
 
-                            {selectedCard === 'new' && (
-                                <View style={styles.newCardForm}>
-                                    <TextInput style={styles.stripeInput} placeholder="Cardholder Name" placeholderTextColor="#aaa" />
-                                    <TextInput style={styles.stripeInput} placeholder="Card Number" keyboardType="numeric" placeholderTextColor="#aaa" />
-                                    <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-                                        <TextInput style={[styles.stripeInput, { flex: 0.48 }]} placeholder="Expiry (MM/YY)" placeholderTextColor="#aaa" />
-                                        <TextInput style={[styles.stripeInput, { flex: 0.48 }]} placeholder="CVV" keyboardType="numeric" secureTextEntry placeholderTextColor="#aaa" />
-                                    </View>
-                                </View>
-                            )}
+                    {/* Guest Payment Notice */}
+                    {method === 'card' && !user && (
+                        <View style={styles.guestNotice}>
+                            <Text style={styles.guestNoticeText}>Please log in to save and use payment cards</Text>
+                            <TouchableOpacity
+                                style={styles.guestLoginBtn}
+                                onPress={() => navigation.reset({
+                                    index: 0,
+                                    routes: [{ name: 'Login' }],
+                                })}
+                            >
+                                <Text style={styles.guestLoginBtnText}>Login Now</Text>
+                            </TouchableOpacity>
                         </View>
                     )}
 
@@ -334,13 +377,6 @@ export default function CheckoutScreen({ navigation }) {
 
 const styles = StyleSheet.create({
     container: { flex: 1, backgroundColor: '#F8F9FA' },
-    header: {
-        backgroundColor: ORANGE, paddingTop: 52, paddingBottom: 16,
-        paddingHorizontal: 16, flexDirection: 'row', alignItems: 'center',
-    },
-    backBtn: { marginRight: 12, padding: 4 },
-    backArrow: { color: '#fff', fontSize: 22, fontWeight: 'bold' },
-    headerTitle: { color: '#fff', fontSize: 18, fontWeight: 'bold' },
     card: { backgroundColor: '#fff', borderRadius: 16, padding: 16, marginBottom: 14, elevation: 2 },
     cardTitle: { fontSize: 15, fontWeight: 'bold', color: '#222', marginBottom: 8 },
     descText: { fontSize: 13, color: '#888', marginBottom: 10 },
@@ -392,6 +428,10 @@ const styles = StyleSheet.create({
     savedCardIcon: { fontSize: 16, marginRight: 10 },
     savedCardText: { flex: 1, fontSize: 14, fontWeight: '500', color: '#333' },
     checkIcon: { fontSize: 14 },
+    guestNotice: { backgroundColor: '#FFF3E0', marginTop: 10, padding: 16, borderRadius: 10, borderWidth: 1, borderColor: '#FFB74D', alignItems: 'center' },
+    guestNoticeText: { fontSize: 14, color: '#E65100', fontWeight: '600', marginBottom: 12, textAlign: 'center' },
+    guestLoginBtn: { backgroundColor: ORANGE, borderRadius: 8, paddingHorizontal: 16, paddingVertical: 10 },
+    guestLoginBtnText: { color: '#fff', fontSize: 13, fontWeight: 'bold' },
     newCardForm: { marginTop: 10, borderTopWidth: 1, borderTopColor: '#eee', paddingTop: 12 },
     stripeInput: { borderWidth: 1, borderColor: '#ddd', borderRadius: 8, padding: 10, fontSize: 14, color: '#333', backgroundColor: '#fff', marginBottom: 10 },
     footer: { backgroundColor: '#fff', padding: 16, borderTopWidth: 1, borderTopColor: '#F0F0F0' },
