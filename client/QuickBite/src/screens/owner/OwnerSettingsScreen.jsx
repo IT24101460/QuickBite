@@ -5,7 +5,8 @@ import API from '../../services/api';
 
 const ORANGE = '#FF6B35';
 
-export default function OwnerSettingsScreen({ navigation }) {
+export default function OwnerSettingsScreen({ route, navigation }) {
+    const passedCanteenId = route.params?.canteenId;
     const [canteenId, setCanteenId] = useState(null);
     const [name, setName] = useState('');
     const [location, setLocation] = useState('');
@@ -25,9 +26,14 @@ export default function OwnerSettingsScreen({ navigation }) {
 
     const fetchMyCanteen = async () => {
         try {
-            // New Owner getMyCanteen router
-            const res = await API.get('/canteens/my');
-            const data = res.data.canteen;
+            let data;
+            if (passedCanteenId) {
+                const res = await API.get(`/canteens/${passedCanteenId}`);
+                data = res.data.canteen;
+            } else {
+                const res = await API.get('/canteens/my');
+                data = res.data.canteen;
+            }
             if (data) {
                 setCanteenId(data._id);
                 setName(data.canteenName);
@@ -37,7 +43,7 @@ export default function OwnerSettingsScreen({ navigation }) {
                 setClosing(data.closingTime);
                 setBankLabel(data.bankDetails || '');
                 if (data.canteenImage) {
-                    setCanteenImage(`http://10.0.2.2:3000${data.canteenImage}`);
+                    setCanteenImage(data.canteenImage.startsWith('http') ? data.canteenImage : `http://10.0.2.2:3000${data.canteenImage}`);
                 }
             }
         } catch (error) {

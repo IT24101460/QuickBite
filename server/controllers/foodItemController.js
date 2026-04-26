@@ -1,5 +1,6 @@
 import FoodItem from "../models/foodItems.js";
 import Canteen from "../models/canteen.js";
+import { supabase } from "../config/supabase.js";
 
 export async function createFoodItem(req, res) {
     if (!req.user?.isAdmin && req.user?.role !== "owner") {
@@ -7,15 +8,31 @@ export async function createFoodItem(req, res) {
     }
     try {
         if (req.user?.role === 'owner') {
-            const myCanteen = await Canteen.findOne({ createdBy: req.user._id || req.user.id });
-            if (!myCanteen) return res.status(400).json({ message: "You don't have a canteen assigned yet!" });
-            req.body.canteenId = myCanteen._id; // Lock payload explicitly
+            if (req.body.canteenId) {
+                const canteen = await Canteen.findOne({ _id: req.body.canteenId, createdBy: req.user._id || req.user.id });
+                if (!canteen) return res.status(403).json({ message: "You don't own this canteen!" });
+            } else {
+                const myCanteen = await Canteen.findOne({ createdBy: req.user._id || req.user.id });
+                if (!myCanteen) return res.status(400).json({ message: "You don't have a canteen assigned yet!" });
+                req.body.canteenId = myCanteen._id; // Lock payload explicitly
+            }
         }
         const existing = await FoodItem.findOne({ foodItemId: req.body.foodItemId });
         if (existing) {
             return res.status(400).json({ message: "Food item with this ID already exists" });
         }
-        const imageUrl = req.file ? `/uploads/${req.file.filename}` : (req.body.image || "");
+        let imageUrl = req.body.image || "";
+        if (req.file) {
+            const fileName = `food_${req.body.foodItemId}_${Date.now()}`;
+            const { data, error } = await supabase.storage
+                .from('quickbite-images')
+                .upload(fileName, req.file.buffer, { contentType: req.file.mimetype });
+            if (error) throw error;
+            const { data: publicUrlData } = supabase.storage
+                .from('quickbite-images')
+                .getPublicUrl(fileName);
+            imageUrl = publicUrlData.publicUrl;
+        }
         const newFoodItem = new FoodItem({ ...req.body, image: imageUrl });
         await newFoodItem.save();
         res.status(201).json({ message: "Food item created successfully", foodItem: newFoodItem });
@@ -70,14 +87,23 @@ export async function updateFoodItem(req, res) {
         if (!itemToEdit) return res.status(404).json({ message: "Food item not found" });
 
         if (req.user?.role === 'owner') {
-            const myCanteen = await Canteen.findOne({ createdBy: req.user._id || req.user.id });
-            if (itemToEdit.canteenId?.toString() !== myCanteen?._id.toString()) {
+            const canteen = await Canteen.findById(itemToEdit.canteenId);
+            if (!canteen || canteen.createdBy?.toString() !== (req.user._id || req.user.id).toString()) {
                 return res.status(403).json({ message: "You can exclusively edit foods inside your canteen." });
             }
-            req.body.canteenId = myCanteen._id;
         }
         const updateData = { ...req.body };
-        if (req.file) updateData.image = `/uploads/${req.file.filename}`;
+        if (req.file) {
+            const fileName = `food_${req.params.id}_${Date.now()}`;
+            const { data, error } = await supabase.storage
+                .from('quickbite-images')
+                .upload(fileName, req.file.buffer, { contentType: req.file.mimetype });
+            if (error) throw error;
+            const { data: publicUrlData } = supabase.storage
+                .from('quickbite-images')
+                .getPublicUrl(fileName);
+            updateData.image = publicUrlData.publicUrl;
+        }
         const updated = await FoodItem.findOneAndUpdate(
             { foodItemId: req.params.id },
             updateData,
@@ -99,8 +125,8 @@ export async function deleteFoodItem(req, res) {
         if (!itemToDelete) return res.status(404).json({ message: "Food item not found" });
 
         if (req.user?.role === 'owner') {
-            const myCanteen = await Canteen.findOne({ createdBy: req.user._id || req.user.id });
-            if (itemToDelete.canteenId?.toString() !== myCanteen?._id.toString()) {
+            const canteen = await Canteen.findById(itemToDelete.canteenId);
+            if (!canteen || canteen.createdBy?.toString() !== (req.user._id || req.user.id).toString()) {
                 return res.status(403).json({ message: "You can exclusively delete foods inside your canteen." });
             }
         }

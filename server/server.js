@@ -12,6 +12,7 @@ import promotionsRouter from "./routes/promotionsRoutes.js"
 import canteenRouter from "./routes/CanteenRoutes.js"
 import paymentRouter from "./routes/paymentRoutes.js"
 import reportRouter from "./routes/reportRoutes.js"
+import userPaymentRouter from "./routes/userPaymentRoutes.js"
 import authenticate from "./middleware/authenticate.js"
 
 import dns from "node:dns"
@@ -57,6 +58,7 @@ app.use("/promotions", promotionsRouter)
 app.use("/canteens", canteenRouter)
 app.use("/payments", paymentRouter)
 app.use("/reports", reportRouter)
+app.use("/user-payments", userPaymentRouter)
 
 // Health check
 app.get("/health", (req, res) => {

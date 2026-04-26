@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity, StyleSheet,
-  ActivityIndicator, Alert, ScrollView, KeyboardAvoidingView, Platform,
+  ActivityIndicator, Alert, ScrollView, KeyboardAvoidingView, Platform, Image, ImageBackground, Dimensions,
 } from 'react-native';
 import API from '../services/api';
 import { useAuth } from '../context/AuthContext';
 
 const ORANGE = '#FF6B35';
+const { width } = Dimensions.get('window');
 
 export default function LoginScreen({ navigation }) {
   const [email, setEmail] = useState('');
@@ -48,10 +49,22 @@ export default function LoginScreen({ navigation }) {
   };
 
   return (
-    <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-      <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
+    <ImageBackground
+      source={{ uri: 'https://images.unsplash.com/photo-1495521821757-a1efb6729352?auto=format&fit=crop&w=1000&q=80' }}
+      style={styles.backgroundImage}
+      resizeMode="cover"
+    >
+      <View style={styles.overlay} />
+      <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+        <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
+          <TouchableOpacity
+            style={styles.backButton}
+            onPress={() => navigation.goBack()}
+          >
+            <Text style={styles.backButtonText}>←</Text>
+          </TouchableOpacity>
         <View style={styles.hero}>
-          <Text style={styles.logo}>🍔</Text>
+          <Image source={require('../assets/my-logo.png')} style={{ width: 100, height: 100, resizeMode: 'contain' }} />
           <Text style={styles.appName}>QuickBite</Text>
           <Text style={styles.tagline}>SLIIT Canteen Pre-Order System</Text>
         </View>
@@ -114,15 +127,45 @@ export default function LoginScreen({ navigation }) {
               <Text style={[styles.modeBtnText, loginMode === 'admin' && styles.modeBtnTextActive]}>Admin</Text>
             </TouchableOpacity>
           </View>
+
+          <Text style={styles.footerText}>© {new Date().getFullYear()} Canteen sagaya. All rights reserved.</Text>
         </View>
-      </ScrollView>
-    </KeyboardAvoidingView>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </ImageBackground>
   );
 }
 
 const styles = StyleSheet.create({
-  scroll: { flexGrow: 1, backgroundColor: ORANGE },
-  hero: { alignItems: 'center', paddingTop: 70, paddingBottom: 40 },
+  backgroundImage: { flex: 1, width: '100%', height: '100%' },
+  overlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.4)',
+  },
+  backButton: {
+    position: 'absolute',
+    top: 50,
+    left: 20,
+    zIndex: 100,
+    padding: 10,
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    borderRadius: 24,
+    width: 44,
+    height: 44,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  backButtonText: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    color: ORANGE,
+  },
+  scroll: { flexGrow: 1, backgroundColor: 'transparent' },
+  hero: { alignItems: 'center', paddingTop: 100, paddingBottom: 40 },
   logo: { fontSize: 64 },
   appName: { fontSize: 38, fontWeight: 'bold', color: '#fff', letterSpacing: 1 },
   tagline: { fontSize: 14, color: 'rgba(255,255,255,0.85)', marginTop: 6 },
@@ -148,9 +191,10 @@ const styles = StyleSheet.create({
   btnText: { color: '#fff', fontSize: 16, fontWeight: 'bold', letterSpacing: 0.5 },
   link: { alignItems: 'center', marginTop: 4, marginBottom: 25 },
   linkText: { color: '#888', fontSize: 14 },
-  modeSwitcherRow: { flexDirection: 'row', justifyContent: 'center', marginTop: 'auto', borderTopWidth: 1, borderTopColor: '#f0f0f0', paddingTop: 15 },
+  modeSwitcherRow: { flexDirection: 'row', justifyContent: 'center', marginTop: 'auto', borderTopWidth: 1, borderTopColor: '#f0f0f0', paddingTop: 15, paddingBottom: 15 },
   modeBtn: { paddingHorizontal: 12, paddingVertical: 6, borderRadius: 12, marginHorizontal: 4 },
   modeBtnActive: { backgroundColor: '#FF6B3522' },
   modeBtnText: { color: '#888', fontSize: 12, fontWeight: '600' },
   modeBtnTextActive: { color: ORANGE, fontWeight: 'bold' },
+  footerText: { textAlign: 'center', fontSize: 12, color: '#aaa', marginTop: 10 },
 });

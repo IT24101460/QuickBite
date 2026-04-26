@@ -5,7 +5,7 @@ import {
 } from 'react-native';
 import API from '../services/api';
 import { useCart } from '../context/CartContext';
-import FloatingCart from '../components/FloatingCart';
+import TopNavBar from '../components/TopNavBar';
 
 const ORANGE = '#FF6B35';
 
@@ -52,19 +52,16 @@ export default function FoodDetailScreen({ navigation, route }) {
 
     return (
         <View style={styles.container}>
-            {/* Back header */}
-            <View style={styles.header}>
-                <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
-                    <Text style={styles.backArrow}>←</Text>
-                </TouchableOpacity>
-                <Text style={styles.headerTitle} numberOfLines={1}>{food.name}</Text>
-            </View>
+            <TopNavBar navigation={navigation} placeholder={food.name} />
+            
 
-            <ScrollView showsVerticalScrollIndicator={false}>
+            <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingTop: 85, paddingBottom: 20 }}>
                 {/* Food Image */}
                 {food.image
-                    ? <Image source={{ uri: `http://10.0.2.2:3000${food.image}` }} style={styles.heroImg} resizeMode="cover" />
+                    ? <Image source={{ uri: food.image.startsWith('http') ? food.image : `http://10.0.2.2:3000${food.image}` }} style={styles.heroImg} resizeMode="cover" />
                     : <View style={styles.heroPlaceholder}><Text style={{ fontSize: 80 }}>🍽️</Text></View>}
+
+
 
                 {/* Details Card */}
                 <View style={styles.details}>
@@ -143,22 +140,12 @@ export default function FoodDetailScreen({ navigation, route }) {
                     )}
                 </View>
             </ScrollView>
-
-            <FloatingCart />
         </View>
     );
 }
 
 const styles = StyleSheet.create({
     container: { flex: 1, backgroundColor: '#F8F9FA' },
-    header: {
-        backgroundColor: '#fff', flexDirection: 'row', alignItems: 'center',
-        paddingTop: 45, paddingBottom: 12, paddingHorizontal: 16,
-        borderBottomWidth: 1, borderBottomColor: '#F0F0F0', elevation: 2, zIndex: 10
-    },
-    backBtn: { marginRight: 12, padding: 4 },
-    backArrow: { color: ORANGE, fontSize: 24, fontWeight: 'bold' },
-    headerTitle: { color: '#333', fontSize: 16, fontWeight: 'bold', flex: 1 },
     heroImg: { width: '100%', height: 240 },
     heroPlaceholder: { width: '100%', height: 240, backgroundColor: '#FFF0E8', justifyContent: 'center', alignItems: 'center' },
     details: { backgroundColor: '#fff', borderRadius: 20, margin: 12, padding: 20, elevation: 3 },

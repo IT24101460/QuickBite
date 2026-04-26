@@ -5,12 +5,13 @@ import {
 } from 'react-native';
 import { useCart } from '../context/CartContext';
 import API from '../services/api';
+import TopNavBar from '../components/TopNavBar';
 
 const ORANGE = '#FF6B35';
 
 export default function CartScreen({ navigation }) {
     const {
-        cartItems, removeFromCart, updateQty, cartTotal, finalTotal,
+        cartItems, removeFromCart, updateQty, updateItemNote, cartTotal, finalTotal,
         itemCount, appliedPromotion, discountAmount, applyPromotion, removePromotion,
     } = useCart();
     const [promoCode, setPromoCode] = useState('');
@@ -38,28 +39,39 @@ export default function CartScreen({ navigation }) {
     };
 
     const renderItem = ({ item }) => (
-        <View style={styles.cartItem}>
-            {item.image
-                ? <Image source={{ uri: `http://10.0.2.2:3000${item.image}` }} style={styles.itemImg} resizeMode="cover" />
-                : <View style={styles.itemImgPlaceholder}><Text style={{ fontSize: 28 }}>🍽️</Text></View>}
-            <View style={styles.itemInfo}>
-                <Text style={styles.itemName} numberOfLines={2}>{item.name}</Text>
-                <Text style={styles.itemPrice}>LKR {item.price.toFixed(2)} each</Text>
-            </View>
-            <View style={styles.itemRight}>
-                <View style={styles.qtyControl}>
-                    <TouchableOpacity style={styles.qtyBtn} onPress={() => updateQty(item._id || item.foodItemId, item.quantity - 1)}>
-                        <Text style={styles.qtyBtnText}>−</Text>
-                    </TouchableOpacity>
-                    <Text style={styles.qtyNum}>{item.quantity}</Text>
-                    <TouchableOpacity style={styles.qtyBtn} onPress={() => updateQty(item._id || item.foodItemId, item.quantity + 1)}>
-                        <Text style={styles.qtyBtnText}>+</Text>
+        <View style={styles.cartItemWrapper}>
+            <View style={styles.cartItem}>
+                {item.image
+                    ? <Image source={{ uri: `http://10.0.2.2:3000${item.image}` }} style={styles.itemImg} resizeMode="cover" />
+                    : <View style={styles.itemImgPlaceholder}><Text style={{ fontSize: 28 }}>🍽️</Text></View>}
+                <View style={styles.itemInfo}>
+                    <Text style={styles.itemName} numberOfLines={2}>{item.name}</Text>
+                    <Text style={styles.itemPrice}>LKR {item.price.toFixed(2)} each</Text>
+                </View>
+                <View style={styles.itemRight}>
+                    <View style={styles.qtyControl}>
+                        <TouchableOpacity style={styles.qtyBtn} onPress={() => updateQty(item._id || item.foodItemId, item.quantity - 1)}>
+                            <Text style={styles.qtyBtnText}>−</Text>
+                        </TouchableOpacity>
+                        <Text style={styles.qtyNum}>{item.quantity}</Text>
+                        <TouchableOpacity style={styles.qtyBtn} onPress={() => updateQty(item._id || item.foodItemId, item.quantity + 1)}>
+                            <Text style={styles.qtyBtnText}>+</Text>
+                        </TouchableOpacity>
+                    </View>
+                    <Text style={styles.lineTotal}>LKR {(item.price * item.quantity).toFixed(2)}</Text>
+                    <TouchableOpacity onPress={() => removeFromCart(item._id || item.foodItemId)}>
+                        <Text style={styles.removeBtn}>🗑</Text>
                     </TouchableOpacity>
                 </View>
-                <Text style={styles.lineTotal}>LKR {(item.price * item.quantity).toFixed(2)}</Text>
-                <TouchableOpacity onPress={() => removeFromCart(item._id || item.foodItemId)}>
-                    <Text style={styles.removeBtn}>🗑</Text>
-                </TouchableOpacity>
+            </View>
+            <View style={styles.noteContainer}>
+                <TextInput
+                    style={styles.noteInput}
+                    placeholder="Add note (e.g. extra cheese, less sugar)..."
+                    placeholderTextColor="#999"
+                    value={item.note || ''}
+                    onChangeText={(text) => updateItemNote(item._id || item.foodItemId, text)}
+                />
             </View>
         </View>
     );
@@ -79,12 +91,9 @@ export default function CartScreen({ navigation }) {
 
     return (
         <View style={styles.container}>
-            <View style={styles.header}>
-                <Text style={styles.headerTitle}>🛒 My Cart</Text>
-                <Text style={styles.headerCount}>{itemCount} items</Text>
-            </View>
+            <TopNavBar navigation={navigation} hideBottomRow={true} />
 
-            <ScrollView showsVerticalScrollIndicator={false}>
+            <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingTop: 85, paddingBottom: 20 }}>
                 <FlatList
                     data={cartItems}
                     renderItem={renderItem}
@@ -171,16 +180,21 @@ export default function CartScreen({ navigation }) {
 
 const styles = StyleSheet.create({
     container: { flex: 1, backgroundColor: '#F8F9FA' },
-    header: {
-        backgroundColor: ORANGE, paddingTop: 52, paddingBottom: 18,
-        paddingHorizontal: 20, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
-    },
-    headerTitle: { color: '#fff', fontSize: 22, fontWeight: 'bold' },
-    headerCount: { color: 'rgba(255,255,255,0.85)', fontSize: 14 },
     list: { padding: 12 },
+    cartItemWrapper: {
+        backgroundColor: '#fff', borderRadius: 14, marginBottom: 12, elevation: 2,
+        shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 4,
+    },
     cartItem: {
-        flexDirection: 'row', backgroundColor: '#fff', borderRadius: 14, padding: 12,
-        marginBottom: 10, elevation: 2, alignItems: 'center',
+        flexDirection: 'row', padding: 12, alignItems: 'center',
+    },
+    noteContainer: {
+        paddingHorizontal: 12, paddingBottom: 12, paddingTop: 4,
+        borderTopWidth: 1, borderTopColor: '#F0F0F0',
+    },
+    noteInput: {
+        backgroundColor: '#F8F9FA', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 6,
+        fontSize: 13, color: '#333',
     },
     itemImg: { width: 64, height: 64, borderRadius: 10 },
     itemImgPlaceholder: { width: 64, height: 64, borderRadius: 10, backgroundColor: '#FFF0E8', justifyContent: 'center', alignItems: 'center' },

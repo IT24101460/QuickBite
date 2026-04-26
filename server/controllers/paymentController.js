@@ -1,6 +1,11 @@
 import Payment from "../models/payment.js";
 import Order from "../models/orders.js";
+import UserPaymentOption from "../models/userPaymentOption.js";
 import { v4 as uuidv4 } from "uuid";
+import Stripe from "stripe";
+import { recordPaymentOptionUsage } from "./userPaymentController.js";
+
+const stripe = new Stripe("sk_test_51TPmcMQU8ZttTVtjc7VXXWPWWpcINp4LoPL57ozg7fHZHc7UJ5BbYIERo3CDuWmTN60bMbhgB0vZ7NbVsh7tWrsu00PvUKsjSb");
 
 // Create payment for an order
 export async function createPayment(req, res) {
@@ -9,7 +14,7 @@ export async function createPayment(req, res) {
             return res.status(401).json({ message: "Please login to make a payment" });
         }
 
-        const { orderId, paymentMethod } = req.body;
+        const { orderId, paymentMethod, paymentOptionId } = req.body;
 
         if (!orderId) {
             return res.status(400).json({ message: "Order ID is required" });
@@ -33,14 +38,37 @@ export async function createPayment(req, res) {
 
         const paymentProof = req.file ? `/uploads/${req.file.filename}` : "";
 
+        // If paymentOptionId is provided, validate it belongs to the user
+        let selectedPaymentMethod = paymentMethod || "cash";
+        if (paymentOptionId) {
+            const paymentOption = await UserPaymentOption.findById(paymentOptionId);
+            if (!paymentOption || paymentOption.isDeleted) {
+                return res.status(404).json({ message: "Payment option not found" });
+            }
+
+            if (paymentOption.userId.toString() !== userId.toString()) {
+                return res.status(403).json({ message: "This payment option does not belong to you" });
+            }
+
+            if (!paymentOption.isActive) {
+                return res.status(400).json({ message: "This payment option is not active" });
+            }
+
+            selectedPaymentMethod = paymentOption.paymentType;
+
+            // Record usage of this payment option
+            recordPaymentOptionUsage(paymentOptionId);
+        }
+
         const payment = new Payment({
             orderId,
             userId,
             amount: order.finalAmount || order.totalAmount,
-            paymentMethod: paymentMethod || "cash",
+            paymentMethod: selectedPaymentMethod,
             paymentStatus: "pending",
             transactionId: uuidv4(),
-            paymentProof
+            paymentProof,
+            paymentOptionId: paymentOptionId || undefined
         });
 
         await payment.save();
@@ -139,5 +167,22 @@ export async function deletePayment(req, res) {
         res.status(200).json({ message: "Payment deleted" });
     } catch (error) {
         res.status(500).json({ message: "Error deleting payment", error: error.message });
+    }
+}
+
+// Generate Stripe Payment Intent for 3D Secure
+export async function createPaymentIntent(req, res) {
+    try {
+        const { amount, currency = "lkr" } = req.body;
+
+        const paymentIntent = await stripe.paymentIntents.create({
+            amount: Math.round(Number(amount) * 100), // convert to cents
+            currency: currency,
+            payment_method_types: ["card"],
+        });
+
+        res.status(200).json({ clientSecret: paymentIntent.client_secret });
+    } catch (error) {
+        res.status(400).json({ message: "Failed to initialize Stripe", error: error.message });
     }
 }
