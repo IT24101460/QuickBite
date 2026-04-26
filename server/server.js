@@ -24,7 +24,7 @@ dns.setServers(["1.1.1.1", "8.8.8.8"])
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 
-const MongodbURI = "mongodb+srv://admin:admin123@cluster0.jo7gf4n.mongodb.net/?appName=Cluster0"
+const MongodbURI = process.env.MONGODB_URI || "mongodb+srv://admin:admin123@cluster0.jo7gf4n.mongodb.net/?appName=Cluster0";
 mongoose.connect(MongodbURI).then(
     () => {
         console.log("Connected to MongoDB successfully !!! ")
