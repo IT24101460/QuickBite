@@ -37,6 +37,14 @@ export function CartProvider({ children }) {
         );
     };
 
+    const updateItemNote = (itemId, note) => {
+        setCartItems(prev =>
+            prev.map(i =>
+                (i._id === itemId || i.foodItemId === itemId) ? { ...i, note: note } : i
+            )
+        );
+    };
+
     const clearCart = () => {
         setCartItems([]);
         setAppliedPromotion(null);
@@ -63,6 +71,7 @@ export function CartProvider({ children }) {
             addToCart,
             removeFromCart,
             updateQty,
+            updateItemNote,
             clearCart,
             cartTotal,
             finalTotal,

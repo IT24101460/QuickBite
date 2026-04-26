@@ -5,7 +5,8 @@ import API from '../../services/api';
 const ORANGE = '#FF6B35';
 const TABS = ['Pending', 'Preparing', 'Ready', 'Completed'];
 
-export default function OwnerLiveOrdersScreen({ navigation }) {
+export default function OwnerLiveOrdersScreen({ route, navigation }) {
+    const passedCanteenId = route.params?.canteenId;
     const [orders, setOrders] = useState([]);
     const [loading, setLoading] = useState(true);
     const [activeTab, setActiveTab] = useState('Pending');
@@ -20,7 +21,8 @@ export default function OwnerLiveOrdersScreen({ navigation }) {
 
     const fetchOrders = async () => {
         try {
-            const res = await API.get('/orders');
+            const url = passedCanteenId ? `/orders?canteenId=${passedCanteenId}` : '/orders';
+            const res = await API.get(url);
             setOrders(res.data.orders || []);
         } catch (error) {
             console.log("Error loading queue:", error);
@@ -104,9 +106,16 @@ export default function OwnerLiveOrdersScreen({ navigation }) {
 
                             <View style={styles.itemList}>
                                 {item.items.map((cartItem, idx) => (
-                                    <Text key={idx} style={styles.foodText}>
-                                        {cartItem.quantity}x {cartItem.name}
-                                    </Text>
+                                    <View key={idx} style={{ marginBottom: 4 }}>
+                                        <Text style={styles.foodText}>
+                                            {cartItem.quantity}x {cartItem.name}
+                                        </Text>
+                                        {cartItem.note ? (
+                                            <Text style={{ fontSize: 13, color: '#e67e22', fontStyle: 'italic', marginLeft: 8 }}>
+                                                ↳ {cartItem.note}
+                                            </Text>
+                                        ) : null}
+                                    </View>
                                 ))}
                             </View>
 

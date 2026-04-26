@@ -14,7 +14,8 @@ export default function AdminCanteensScreen({ navigation }) {
     const [refreshing, setRefreshing] = useState(false);
     const [modal, setModal] = useState(false);
     const [editing, setEditing] = useState(null);
-    const [form, setForm] = useState({ canteenName: '', location: '', contactDetails: '', ownerDetails: '', openingTime: '', closingTime: '' });
+    const [owners, setOwners] = useState([]);
+    const [form, setForm] = useState({ canteenName: '', location: '', contactDetails: '', ownerDetails: '', openingTime: '', closingTime: '', createdBy: '' });
     const [image, setImage] = useState(null);
     const [saving, setSaving] = useState(false);
 
@@ -26,15 +27,21 @@ export default function AdminCanteensScreen({ navigation }) {
             setCanteens(r.data?.canteens || []);
         } catch (e) { } finally { setLoading(false); setRefreshing(false); }
     };
-    useEffect(() => { fetch(); }, []);
+    const fetchOwners = async () => {
+        try {
+            const r = await API.get('/users/owners');
+            setOwners(r.data || []);
+        } catch (e) { }
+    };
+    useEffect(() => { fetch(); fetchOwners(); }, []);
 
-    const openAdd = () => { setEditing(null); setForm({ canteenName: '', location: '', contactDetails: '', ownerDetails: '', openingTime: '08:00 AM', closingTime: '05:00 PM' }); setImage(null); setModal(true); };
-    const openEdit = (c) => { setEditing(c); setForm({ canteenName: c.canteenName, location: c.location, contactDetails: c.contactDetails, ownerDetails: c.ownerDetails, openingTime: c.openingTime, closingTime: c.closingTime }); setImage(null); setModal(true); };
+    const openAdd = () => { setEditing(null); setForm({ canteenName: '', location: '', contactDetails: '', ownerDetails: '', openingTime: '08:00 AM', closingTime: '05:00 PM', createdBy: '' }); setImage(null); setModal(true); };
+    const openEdit = (c) => { setEditing(c); setForm({ canteenName: c.canteenName, location: c.location, contactDetails: c.contactDetails, ownerDetails: c.ownerDetails, openingTime: c.openingTime, closingTime: c.closingTime, createdBy: c.createdBy }); setImage(null); setModal(true); };
 
     const pickImg = () => launchImageLibrary({ mediaType: 'photo', quality: 0.7 }, r => { if (!r.didCancel && r.assets?.length) setImage(r.assets[0]); });
 
     const save = async () => {
-        if (!form.canteenName || !form.location || !form.contactDetails || !form.ownerDetails) return Alert.alert('Error', 'Fill all required fields');
+        if (!form.canteenName || !form.location || !form.contactDetails || !form.ownerDetails || !form.createdBy) return Alert.alert('Error', 'Fill all required fields including assigning an owner');
         setSaving(true);
         try {
             const fd = new FormData();
@@ -91,12 +98,27 @@ export default function AdminCanteensScreen({ navigation }) {
                         <Text style={styles.modalTitle}>{editing ? 'Edit Canteen' : 'Add Canteen'}</Text>
                     </View>
                     <ScrollView contentContainerStyle={styles.modalScroll}>
-                        {[['Canteen Name *', 'canteenName'], ['Location *', 'location'], ['Contact Details *', 'contactDetails'], ['Owner Details *', 'ownerDetails'], ['Opening Time', 'openingTime'], ['Closing Time', 'closingTime']].map(([label, k]) => (
+                        {[['Canteen Name *', 'canteenName'], ['Location *', 'location'], ['Contact Details *', 'contactDetails'], ['Owner Details (Text) *', 'ownerDetails'], ['Opening Time', 'openingTime'], ['Closing Time', 'closingTime']].map(([label, k]) => (
                             <View key={k} style={{ marginBottom: 12 }}>
                                 <Text style={styles.label}>{label}</Text>
                                 <TextInput style={styles.input} value={form[k]} onChangeText={set(k)} placeholder={label} placeholderTextColor="#aaa" />
                             </View>
                         ))}
+                        
+                        <Text style={styles.label}>Assign Owner Account *</Text>
+                        <View style={styles.ownersList}>
+                            {owners.map(o => (
+                                <TouchableOpacity 
+                                    key={o._id} 
+                                    style={[styles.ownerItem, form.createdBy === o._id && styles.ownerItemSelected]}
+                                    onPress={() => set('createdBy')(o._id)}
+                                >
+                                    <Text style={[styles.ownerItemText, form.createdBy === o._id && styles.ownerItemTextSelected]}>
+                                        {o.firstName} {o.lastName} ({o.email})
+                                    </Text>
+                                </TouchableOpacity>
+                            ))}
+                        </View>
                         <Text style={styles.label}>Canteen Image</Text>
                         <TouchableOpacity style={styles.imgPicker} onPress={pickImg}>
                             {image ? <Image source={{ uri: image.uri }} style={styles.imgPreview} resizeMode="cover" /> : <Text style={styles.imgPickerText}>📷 Select Image</Text>}
@@ -140,4 +162,9 @@ const styles = StyleSheet.create({
     imgPickerText: { color: ORANGE, fontWeight: '600', fontSize: 14 },
     saveBtn: { backgroundColor: ORANGE, borderRadius: 12, paddingVertical: 14, alignItems: 'center', marginTop: 8 },
     saveBtnText: { color: '#fff', fontWeight: 'bold', fontSize: 15 },
+    ownersList: { marginBottom: 20, gap: 8 },
+    ownerItem: { padding: 12, borderRadius: 10, borderWidth: 1, borderColor: '#E8E8E8', backgroundColor: '#F8F9FA' },
+    ownerItemSelected: { borderColor: ORANGE, backgroundColor: '#FFF3E0' },
+    ownerItemText: { fontSize: 14, color: '#444' },
+    ownerItemTextSelected: { color: ORANGE, fontWeight: 'bold' },
 });
