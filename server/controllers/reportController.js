@@ -1,6 +1,6 @@
 import Order from "../models/orders.js";
 import Feedback from "../models/feedback.js";
-import Canteen from "../models/canteen.js";
+import Canteen from "../models/Canteen.js";
 
 export async function getOwnerStats(req, res) {
     try {

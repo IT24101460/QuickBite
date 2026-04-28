@@ -1,5 +1,5 @@
 import Promotions from "../models/promotions.js";
-import Canteen from "../models/canteen.js";
+import Canteen from "../models/Canteen.js";
 import { supabase } from "../config/supabase.js";
 
 // ─── Create a new promotion (Admin only) ──────────────────────────────
