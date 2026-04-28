@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useAuth } from '../context/AuthContext';
 
-const ORANGE = '#FF6B35';
+const ORANGE = '#e45927c8';
 
 export default function SidebarMenu({ navigation }) {
     const { user, logout } = useAuth();
