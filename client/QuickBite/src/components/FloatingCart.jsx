@@ -3,7 +3,7 @@ import { TouchableOpacity, Text, StyleSheet, View } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useCart } from '../context/CartContext';
 
-const ORANGE = '#FF6B35';
+const ORANGE = '#e8602fee';
 
 export default function FloatingCart() {
     const navigation = useNavigation();

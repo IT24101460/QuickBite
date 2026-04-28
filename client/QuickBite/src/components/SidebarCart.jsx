@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
 import API from '../services/api';
 
-const ORANGE = '#FF6B35';
+const ORANGE = '#dc5a2ae7';
 
 export default function SidebarCart({ navigation }) {
     const { user } = useAuth();
