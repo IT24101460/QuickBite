@@ -31,19 +31,36 @@ export default function HomeScreen({ navigation }) {
 
   const fetchData = useCallback(async () => {
     try {
-      const [foodRes, promoRes, canteenRes] = await Promise.all([
+      setLoading(true);
+      // Fetch data individually using allSettled so one failure doesn't stop the whole screen
+      const results = await Promise.allSettled([
         API.get('/foods'),
         API.get('/promotions'),
         API.get('/canteens'),
       ]);
-      setFoodItems(foodRes.data?.foodItems || []);
-      const samplePromotions = [
-        { _id: 'sunny_promo_1', bannerImage: 'https://images.unsplash.com/photo-1554118811-1e0d58224f24?auto=format&fit=crop&w=800&q=80' },
-        { _id: 'sunny_promo_2', bannerImage: 'https://images.unsplash.com/photo-1554118811-1e0d58224f24?auto=format&fit=crop&w=800&q=80' },
-        { _id: 'sunny_promo_3', bannerImage: 'https://images.unsplash.com/photo-1554118811-1e0d58224f24?auto=format&fit=crop&w=800&q=80' }
-      ];
-      setPromotions(samplePromotions);
-      setCanteens(canteenRes.data?.canteens || []);
+
+      const foodRes = results[0];
+      const promoRes = results[1];
+      const canteenRes = results[2];
+
+      const foodItemsData = foodRes.status === 'fulfilled' ? (foodRes.value.data?.foodItems || []) : [];
+      const promotionsData = promoRes.status === 'fulfilled' ? (promoRes.value.data?.promotions || []) : [];
+      const canteensData = canteenRes.status === 'fulfilled' ? (canteenRes.value.data?.canteens || []) : [];
+
+      setFoodItems(foodItemsData);
+      setCanteens(canteensData);
+
+      // Use backend promotions if they exist, otherwise fallback to high-quality sample ones
+      if (promotionsData.length > 0) {
+        setPromotions(promotionsData);
+      } else {
+        const samplePromotions = [
+          { _id: 'sample_1', bannerImage: 'https://images.unsplash.com/photo-1554118811-1e0d58224f24?auto=format&fit=crop&w=800&q=80' },
+          { _id: 'sample_2', bannerImage: 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=800&q=80' },
+          { _id: 'sample_3', bannerImage: 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=800&q=80' }
+        ];
+        setPromotions(samplePromotions);
+      }
     } catch (e) {
       console.log('Error fetching home data:', e.message);
     } finally {
@@ -52,7 +69,7 @@ export default function HomeScreen({ navigation }) {
     }
   }, []);
 
-  useEffect(() => { fetchData(); }, []);
+  useEffect(() => { fetchData(); }, [fetchData]);
 
   // Daraz style auto-changing banner
   useEffect(() => {
@@ -70,19 +87,18 @@ export default function HomeScreen({ navigation }) {
 
   // Filter and Sort Logic
   let filteredItems = foodItems.filter(item => {
-    const matchSearch = item.name.toLowerCase().includes(search.toLowerCase());
+    const matchSearch = (item.name || '').toLowerCase().includes(search.toLowerCase());
     const matchCat = category === 'All' || item.category === category;
     return matchSearch && matchCat && item.isAvailable;
   });
 
   if (sortBy === 'A-Z') {
-    filteredItems.sort((a, b) => a.name.localeCompare(b.name));
+    filteredItems.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
   } else if (sortBy === 'priceAsc') {
-    filteredItems.sort((a, b) => a.price - b.price);
+    filteredItems.sort((a, b) => (a.price || 0) - (b.price || 0));
   } else if (sortBy === 'priceDesc') {
-    filteredItems.sort((a, b) => b.price - a.price);
+    filteredItems.sort((a, b) => (b.price || 0) - (a.price || 0));
   } else if (sortBy === 'rating') {
-    // Assuming ratings might exist on averageRating field. 
     filteredItems.sort((a, b) => (b.averageRating || 0) - (a.averageRating || 0));
   }
 
@@ -106,7 +122,7 @@ export default function HomeScreen({ navigation }) {
       <View style={styles.foodInfo}>
         <Text style={styles.foodName} numberOfLines={1}>{item.name}</Text>
         <Text style={styles.foodCat}>{item.category || 'General'}</Text>
-        <Text style={styles.foodPrice}>LKR {item.price.toFixed(2)}</Text>
+        <Text style={styles.foodPrice}>LKR {item.price ? item.price.toFixed(2) : '0.00'}</Text>
         <View style={styles.ratingRow}>
           <Text style={styles.ratingText}>⭐ {item.averageRating ? item.averageRating.toFixed(1) : 'New'}</Text>
         </View>
@@ -140,7 +156,7 @@ export default function HomeScreen({ navigation }) {
               ref={bannerRef}
               data={promotions}
               renderItem={renderPromo}
-              keyExtractor={i => i._id}
+              keyExtractor={i => i._id || Math.random().toString()}
               horizontal
               pagingEnabled
               showsHorizontalScrollIndicator={false}
@@ -166,7 +182,6 @@ export default function HomeScreen({ navigation }) {
         ) : (
           <View style={styles.promoContainer}>
             <TouchableOpacity style={styles.promoBanner} activeOpacity={1}>
-              {/* Fallback Banner Graphic */}
               <View style={[styles.promoBannerPlaceholder, { backgroundColor: '#FF8A65', justifyContent: 'center', alignItems: 'center' }]}>
                 <Text style={{ fontSize: 50 }}>🎉</Text>
               </View>
@@ -254,7 +269,7 @@ export default function HomeScreen({ navigation }) {
               <FlatList
                 data={filteredItems}
                 renderItem={renderFood}
-                keyExtractor={i => i._id || i.foodItemId}
+                keyExtractor={i => i._id || i.foodItemId || Math.random().toString()}
                 numColumns={2}
                 scrollEnabled={false}
                 contentContainerStyle={styles.foodGrid}

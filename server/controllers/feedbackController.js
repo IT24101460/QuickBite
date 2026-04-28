@@ -1,5 +1,6 @@
 import Feedback from "../models/feedback.js";
 import Canteen from "../models/Canteen.js";
+import { supabase } from "../config/supabase.js";
 
 // Submit feedback (authenticated users)
 export async function createFeedback(req, res) {
@@ -14,7 +15,25 @@ export async function createFeedback(req, res) {
             return res.status(400).json({ message: "Rating and comment are required" });
         }
 
-        const complaintImage = req.file ? `/uploads/${req.file.filename}` : "";
+        let complaintImage = "";
+        if (req.file) {
+            // Uploading to Supabase bucket 'quickbite-images'
+            const fileName = `feedback_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
+            const { data, error } = await supabase.storage
+                .from('quickbite-images')
+                .upload(fileName, req.file.buffer, { contentType: req.file.mimetype });
+            
+            if (error) {
+                console.error("Supabase feedback upload error:", error);
+                throw error;
+            }
+
+            const { data: publicUrlData } = supabase.storage
+                .from('quickbite-images')
+                .getPublicUrl(fileName);
+                
+            complaintImage = publicUrlData.publicUrl;
+        }
 
         const feedback = new Feedback({
             userId: req.user._id || req.user.id,
@@ -30,6 +49,7 @@ export async function createFeedback(req, res) {
         await feedback.save();
         res.status(201).json({ message: "Feedback submitted successfully", feedback });
     } catch (error) {
+        console.error("Feedback creation error:", error);
         res.status(500).json({ message: "Error creating feedback", error: error.message });
     }
 }
@@ -88,19 +108,18 @@ export async function updateFeedback(req, res) {
         if (!feedback) return res.status(404).json({ message: "Feedback not found" });
 
         if (req.user?.role === 'owner') {
-            // Retrieve the Canteen Schema to dynamically construct the security constraint check
             const myCanteen = await Canteen.findOne({ createdBy: req.user._id || req.user.id });
             if (!myCanteen || myCanteen._id.toString() !== feedback.canteenId?.toString()) {
-                return res.status(403).json({ message: "Unauthorized cross-canteen feedback manipulation detected!" });
+                return res.status(403).json({ message: "Unauthorized access" });
             }
         }
 
         const { response, status } = req.body;
-        feedback.response = response;
+        if (response !== undefined) feedback.response = response;
         if (status) feedback.status = status;
 
         await feedback.save();
-        res.status(200).json({ message: "Feedback replied successfully", feedback });
+        res.status(200).json({ message: "Feedback updated successfully", feedback });
     } catch (error) {
         res.status(500).json({ message: "Error updating feedback", error: error.message });
     }
