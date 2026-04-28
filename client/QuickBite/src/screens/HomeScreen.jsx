@@ -7,6 +7,7 @@ import API from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
 import TopNavBar from '../components/TopNavBar';
+import { getImageUrl } from '../utils/imageUtils';
 
 const ORANGE = '#FF6B35';
 const { width, height } = Dimensions.get('window');
@@ -83,7 +84,7 @@ export default function HomeScreen({ navigation }) {
   const renderPromo = ({ item }) => (
     <TouchableOpacity style={styles.promoBanner} activeOpacity={0.85}>
       {item.bannerImage
-        ? <Image source={{ uri: item.bannerImage.startsWith('http') ? item.bannerImage : `http://10.0.2.2:3000${item.bannerImage}` }} style={styles.promoBannerImg} resizeMode="cover" />
+        ? <Image source={{ uri: getImageUrl(item.bannerImage) }} style={styles.promoBannerImg} resizeMode="cover" />
         : <View style={styles.promoBannerPlaceholder} />}
     </TouchableOpacity>
   );
@@ -95,7 +96,7 @@ export default function HomeScreen({ navigation }) {
       activeOpacity={0.9}
     >
       {item.image
-        ? <Image source={{ uri: item.image.startsWith('http') ? item.image : `http://10.0.2.2:3000${item.image}` }} style={styles.foodImg} resizeMode="cover" />
+        ? <Image source={{ uri: getImageUrl(item.image) }} style={styles.foodImg} resizeMode="cover" />
         : <View style={styles.foodImgPlaceholder}><Text style={{ fontSize: 40 }}>🍽️</Text></View>}
       <View style={styles.foodInfo}>
         <Text style={styles.foodName} numberOfLines={1}>{item.name}</Text>
@@ -195,7 +196,7 @@ export default function HomeScreen({ navigation }) {
                   onPress={() => navigation.navigate('CanteenDetail', { canteen: item })}
                 >
                   {item.canteenImage
-                    ? <Image style={styles.canteenSmallLogo} source={{ uri: item.canteenImage.startsWith('http') ? item.canteenImage : `http://10.0.2.2:3000${item.canteenImage}` }} />
+                    ? <Image style={styles.canteenSmallLogo} source={{ uri: getImageUrl(item.canteenImage) }} />
                     : <Text>🏬</Text>}
                   <Text style={styles.canteenChipText}>{item.canteenName}</Text>
                 </TouchableOpacity>

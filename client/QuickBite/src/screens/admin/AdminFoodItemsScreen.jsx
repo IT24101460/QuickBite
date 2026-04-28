@@ -5,6 +5,7 @@ import {
 } from 'react-native';
 import { launchImageLibrary } from 'react-native-image-picker';
 import API from '../../services/api';
+import { getImageUrl } from '../../utils/imageUtils';
 
 const ORANGE = '#FF6B35';
 
@@ -71,7 +72,7 @@ export default function AdminFoodItemsScreen({ navigation }) {
                     renderItem={({ item }) => (
                         <View style={styles.card}>
                             {item.image
-                                ? <Image source={{ uri: `http://10.0.2.2:3000${item.image}` }} style={styles.itemImg} resizeMode="cover" />
+                                ? <Image source={{ uri: getImageUrl(item.image) }} style={styles.itemImg} resizeMode="cover" />
                                 : <View style={styles.itemImgPlaceholder}><Text style={{ fontSize: 24 }}>🍽️</Text></View>}
                             <View style={styles.cardInfo}>
                                 <Text style={styles.cardName}>{item.name}</Text>

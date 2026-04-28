@@ -1,5 +1,5 @@
 import Feedback from "../models/feedback.js";
-import Canteen from "../models/canteen.js";
+import Canteen from "../models/Canteen.js";
 import { supabase } from "../config/supabase.js";
 
 // Submit feedback (authenticated users)

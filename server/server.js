@@ -68,11 +68,11 @@ app.get("/health", (req, res) => {
     res.status(200).json({ message: "Server is running" })
 })
 
-// Start server
+const PORT = process.env.PORT || 3000;
 app.listen(
-    3000,
+    PORT,
     () => {
         console.log(`Server started Successfully`)
-        console.log(`Listening on port 3000`)
+        console.log(`Listening on port ${PORT}`)
     }
 )
