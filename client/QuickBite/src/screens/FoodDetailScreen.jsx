@@ -6,6 +6,7 @@ import {
 import API from '../services/api';
 import { useCart } from '../context/CartContext';
 import TopNavBar from '../components/TopNavBar';
+import { getImageUrl } from '../utils/imageUtils';
 
 const ORANGE = '#FF6B35';
 
@@ -58,7 +59,7 @@ export default function FoodDetailScreen({ navigation, route }) {
             <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingTop: 85, paddingBottom: 20 }}>
                 {/* Food Image */}
                 {food.image
-                    ? <Image source={{ uri: food.image.startsWith('http') ? food.image : `http://10.0.2.2:3000${food.image}` }} style={styles.heroImg} resizeMode="cover" />
+                    ? <Image source={{ uri: getImageUrl(food.image) }} style={styles.heroImg} resizeMode="cover" />
                     : <View style={styles.heroPlaceholder}><Text style={{ fontSize: 80 }}>🍽️</Text></View>}
 
 
@@ -129,7 +130,7 @@ export default function FoodDetailScreen({ navigation, route }) {
                                 <Text style={styles.reviewComment}>{fb.comment}</Text>
                                 {fb.complaintImage ? (
                                     <Image
-                                        source={{ uri: `http://10.0.2.2:3000${fb.complaintImage}` }}
+                                        source={{ uri: getImageUrl(fb.complaintImage) }}
                                         style={styles.reviewImg}
                                         resizeMode="cover"
                                     />

@@ -1,8 +1,10 @@
 import axios from 'axios';
 import { getToken } from '../utils/auth';
 
+export const BASE_URL = 'https://quickbite-production-cc3e.up.railway.app';
+
 const API = axios.create({
-  baseURL: 'http://10.0.2.2:3000',
+  baseURL: BASE_URL,
 });
 
 // Attach auth token to every request

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useAuth } from '../context/AuthContext';
+import { getImageUrl } from '../utils/imageUtils';
 
 const ORANGE = '#FF6B35';
 
@@ -43,7 +44,7 @@ export default function SidebarMenu({ navigation }) {
             <View style={styles.header}>
                 <View style={styles.userIcon}>
                     {(user?.image || user?.profilePic) ? (
-                        <Image source={{ uri: (user?.image || user?.profilePic).startsWith('http') ? (user?.image || user?.profilePic) : `http://10.0.2.2:3000${user?.image || user?.profilePic}` }} style={styles.avatar} />
+                        <Image source={{ uri: getImageUrl(user?.image || user?.profilePic) }} style={styles.avatar} />
                     ) : (
                         <Text style={{ fontSize: 32 }}>👤</Text>
                     )}

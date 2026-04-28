@@ -5,6 +5,7 @@ import {
 } from 'react-native';
 import { launchImageLibrary } from 'react-native-image-picker';
 import API from '../../services/api';
+import { getImageUrl } from '../../utils/imageUtils';
 
 const ORANGE = '#FF6B35';
 
@@ -74,7 +75,7 @@ export default function AdminPromotionsScreen({ navigation }) {
                     renderItem={({ item }) => (
                         <View style={styles.card}>
                             {item.bannerImage
-                                ? <Image source={{ uri: `http://10.0.2.2:3000${item.bannerImage}` }} style={styles.banner} resizeMode="cover" />
+                                ? <Image source={{ uri: getImageUrl(item.bannerImage) }} style={styles.banner} resizeMode="cover" />
                                 : <View style={styles.bannerPlaceholder}><Text style={{ fontSize: 28 }}>🎁</Text></View>}
                             <View style={styles.cardBody}>
                                 <View style={styles.cardTop}>
