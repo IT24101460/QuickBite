@@ -1,11 +1,14 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, TextInput, TouchableOpacity, Alert, SafeAreaView, Keyboard } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import API from '../services/api';
+import { useAuth } from '../context/AuthContext';
 
 const ORANGE = '#FF6B35';
 
 export default function OTPScreen({ route, navigation }) {
     const { newCard } = route.params || {};
+    const { token } = useAuth();
 
     const [otp, setOtp] = useState(['', '', '', '']);
     const inputs = useRef([]);
@@ -38,37 +41,40 @@ export default function OTPScreen({ route, navigation }) {
         // Check for duplicate card before saving
         const checkAndSaveCard = async () => {
             try {
+                // 1. Save to Backend (Priority)
+                try {
+                    const [month, year] = (newCard.expiry || "01/25").split('/');
+                    const fullYear = year ? `20${year}` : "2025";
+
+                    await API.post('/user-payments', {
+                        paymentType: 'card',
+                        cardholderName: newCard.cardholderName || 'Card Holder',
+                        cardNumber: newCard.cardNumber,
+                        expiryMonth: month,
+                        expiryYear: fullYear,
+                        last4: newCard.last4,
+                        type: newCard.type
+                    }, {
+                        headers: { Authorization: `Bearer ${token}` }
+                    });
+                } catch (apiErr) {
+                    console.warn('Backend save failed:', apiErr.response?.data || apiErr.message);
+                }
+
+                // 2. Save to Local Storage
                 const existingCards = await AsyncStorage.getItem('@saved_cards');
                 let cards = existingCards ? JSON.parse(existingCards) : [];
                 
-                // Check if this card already exists (same last 4 digits and type)
-                const isDuplicate = cards.some(card => 
+                const isDuplicate = cards.some(card =>
                     card.last4 === newCard.last4 && card.type === newCard.type
                 );
                 
-                if (isDuplicate) {
-                    return Alert.alert(
-                        'Card Already Saved',
-                        `A ${newCard.type} card ending in ${newCard.last4} is already saved in your payment options.`,
-                        [
-                            {
-                                text: 'Go Back',
-                                onPress: () => navigation.goBack(),
-                                style: 'cancel'
-                            },
-                            {
-                                text: 'View Profile',
-                                onPress: () => navigation.navigate('Profile')
-                            }
-                        ]
-                    );
+                if (!isDuplicate) {
+                    cards.push(newCard);
+                    await AsyncStorage.setItem('@saved_cards', JSON.stringify(cards));
                 }
-                
-                // Card is unique, save it
-                cards.push(newCard);
-                await AsyncStorage.setItem('@saved_cards', JSON.stringify(cards));
-                
-                Alert.alert('Verified!', 'Your card has been verified and saved successfully.', [
+
+                Alert.alert('Success!', 'Your card has been verified and saved successfully.', [
                     {
                         text: 'OK',
                         onPress: () => navigation.navigate('Profile')
@@ -81,9 +87,9 @@ export default function OTPScreen({ route, navigation }) {
         };
 
         // Dummy Verification Success
-        Alert.alert('Verified!', 'Your card has been verified successfully.', [
+        Alert.alert('Verified!', 'The SMS code is correct.', [
             {
-                text: 'OK',
+                text: 'Proceed',
                 onPress: checkAndSaveCard
             }
         ]);

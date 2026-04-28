@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, Modal, TextInput, ActivityIndicator, Alert, KeyboardAvoidingView, Platform } from 'react-native';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, Modal, TextInput, ActivityIndicator, Alert, KeyboardAvoidingView, Platform, Image } from 'react-native';
 import API from '../../services/api';
 
 const ORANGE = '#FF6B35';
@@ -90,6 +90,18 @@ export default function OwnerFeedbacksScreen({ route, navigation }) {
 
                             <Text style={styles.comment}>"{item.comment}"</Text>
 
+                            {item.complaintImage && (
+                                <Image
+                                    source={{
+                                        uri: item.complaintImage.startsWith('http')
+                                            ? item.complaintImage
+                                            : `http://10.0.2.2:3000${item.complaintImage.startsWith('/') ? item.complaintImage : '/' + item.complaintImage}`
+                                    }}
+                                    style={styles.feedbackImage}
+                                    resizeMode="cover"
+                                />
+                            )}
+
                             {item.foodItemId && (
                                 <Text style={styles.foodTag}>Related to: {item.foodItemId.name}</Text>
                             )}
@@ -155,6 +167,7 @@ const styles = StyleSheet.create({
     studentName: { fontSize: 16, fontWeight: 'bold', color: '#222' },
     dateText: { fontSize: 12, color: '#999' },
     comment: { fontSize: 15, color: '#333', marginTop: 10, fontStyle: 'italic' },
+    feedbackImage: { width: '100%', height: 180, borderRadius: 10, marginTop: 10 },
     foodTag: { fontSize: 12, color: '#666', marginTop: 8, backgroundColor: '#f0f0f0', alignSelf: 'flex-start', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4 },
 
     replyBtn: { marginTop: 15, backgroundColor: ORANGE, padding: 10, borderRadius: 8, alignItems: 'center' },

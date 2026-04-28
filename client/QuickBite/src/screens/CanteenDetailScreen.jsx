@@ -34,12 +34,8 @@ export default function CanteenDetailScreen({ navigation, route }) {
         ])
             .then(([foodRes, promoRes]) => {
                 setFoodItems(foodRes.data?.foodItems || []);
-                const samplePromotions = [
-                    { _id: 'canteen_promo_1', bannerImage: 'https://images.unsplash.com/photo-1554118811-1e0d58224f24?auto=format&fit=crop&w=800&q=80' },
-                    { _id: 'canteen_promo_2', bannerImage: 'https://images.unsplash.com/photo-1554118811-1e0d58224f24?auto=format&fit=crop&w=800&q=80' },
-                    { _id: 'canteen_promo_3', bannerImage: 'https://images.unsplash.com/photo-1554118811-1e0d58224f24?auto=format&fit=crop&w=800&q=80' }
-                ];
-                setPromotions(samplePromotions);
+                const canteenPromos = (promoRes.data?.promotions || []).filter(p => p.canteenId?._id === canteen._id || p.canteenId === canteen._id);
+                setPromotions(canteenPromos);
             })
             .catch(() => setFoodItems([]))
             .finally(() => setLoading(false));

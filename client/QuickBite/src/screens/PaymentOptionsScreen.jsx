@@ -139,11 +139,14 @@ export default function PaymentOptionsScreen({ navigation }) {
 
     const getPaymentDisplay = (option) => {
         if (option.paymentType === 'card') {
-            return `${option.display?.cardholderName} - ${option.display?.expiryDisplay}`;
+            const holder = option.display?.cardholderName || option.cardholderName || 'Card';
+            const expiry = option.display?.expiryDisplay || option.expiry || 'MM/YY';
+            const last4 = option.display?.last4 || option.last4 || '****';
+            return `${holder} - ${last4} (${expiry})`;
         } else if (option.paymentType === 'wallet') {
-            return `${option.display?.provider} - ${option.last4}`;
+            return `${option.display?.provider || 'Wallet'} - ${option.last4}`;
         } else if (option.paymentType === 'bank_transfer') {
-            return `${option.display?.bank} - ${option.display?.accountName}`;
+            return `${option.display?.bank || 'Bank'} - ${option.display?.accountName || 'Account'}`;
         }
         return option.cardholderName || 'Payment Method';
     };
