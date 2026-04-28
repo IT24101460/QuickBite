@@ -128,7 +128,7 @@ export default function LoginScreen({ navigation }) {
             </TouchableOpacity>
           </View>
 
-          <Text style={styles.footerText}>© {new Date().getFullYear()} Canteen sagaya. All rights reserved.</Text>
+
         </View>
         </ScrollView>
       </KeyboardAvoidingView>

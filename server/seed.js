@@ -5,7 +5,7 @@ import dns from "node:dns";
 dns.setServers(["1.1.1.1", "8.8.8.8"]);
 
 import User from "./models/user.js";
-import Canteen from "./models/canteen.js";
+import Canteen from "./models/Canteen.js";
 import FoodItem from "./models/foodItems.js";
 import Promotions from "./models/promotions.js";
 

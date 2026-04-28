@@ -49,11 +49,16 @@ app.use(express.json())
 // Serve uploaded files statically
 app.use("/uploads", express.static(path.join(__dirname, "uploads")))
 
-// Public routes
-app.use("/users", userRouter)
+// Health check
+app.get("/health", (req, res) => {
+    res.status(200).json({ message: "Server is running" })
+})
 
-// Auth-protected routes
+// Apply Smart Authenticate to ALL routes
+// (It now allows public GETs but protects POST/PUT/DELETE)
 app.use(authenticate)
+
+app.use("/users", userRouter)
 app.use("/orders", orderRouter)
 app.use("/foods", foodRouter)
 app.use("/feedback", feedbackRouter)
@@ -62,11 +67,6 @@ app.use("/canteens", canteenRouter)
 app.use("/payments", paymentRouter)
 app.use("/reports", reportRouter)
 app.use("/user-payments", userPaymentRouter)
-
-// Health check
-app.get("/health", (req, res) => {
-    res.status(200).json({ message: "Server is running" })
-})
 
 const PORT = process.env.PORT || 3000;
 app.listen(

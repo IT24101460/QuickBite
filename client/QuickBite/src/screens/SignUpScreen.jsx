@@ -67,7 +67,7 @@ export default function SignUpScreen({ navigation }) {
             source={require('../assets/my-logo.png')}
             style={{ width: 100, height: 100, resizeMode: 'contain' }} />
 
-          <Text style={styles.appName}>Canteen sagaya</Text>
+          <Text style={styles.appName}>QuickBite</Text>
         </View>
         <View style={styles.card}>
           <Text style={styles.cardTitle}>Create Account</Text>
@@ -93,7 +93,7 @@ export default function SignUpScreen({ navigation }) {
             <Text style={styles.linkText}>Already have an account? <Text style={{ color: ORANGE, fontWeight: 'bold' }}>Login</Text></Text>
           </TouchableOpacity>
 
-          <Text style={styles.footerText}>© {new Date().getFullYear()} Canteen sagaya. All rights reserved.</Text>
+          <Text style={styles.footerText}>© {new Date().getFullYear()} QuickBite. All rights reserved.</Text>
         </View>
         </ScrollView>
       </KeyboardAvoidingView>
