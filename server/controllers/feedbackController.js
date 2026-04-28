@@ -1,5 +1,5 @@
 import Feedback from "../models/feedback.js";
-import Canteen from "../models/canteen.js";
+import Canteen from "../models/Canteen.js";
 
 // Submit feedback (authenticated users)
 export async function createFeedback(req, res) {
