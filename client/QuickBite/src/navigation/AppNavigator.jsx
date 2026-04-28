@@ -35,6 +35,7 @@ import AdminFoodItemsScreen from '../screens/admin/AdminFoodItemsScreen';
 import AdminOrdersScreen from '../screens/admin/AdminOrdersScreen';
 import AdminPromotionsScreen from '../screens/admin/AdminPromotionsScreen';
 import AdminOwnersScreen from '../screens/admin/AdminOwnersScreen';
+import AdminFeedbackScreen from '../screens/admin/AdminFeedbackScreen';
 
 // Owner screens
 import OwnerDashboardScreen from '../screens/owner/OwnerDashboardScreen';
@@ -98,6 +99,7 @@ function AdminFlow() {
       <Stack.Screen name="AdminOrders" component={AdminOrdersScreen} />
       <Stack.Screen name="AdminPromotions" component={AdminPromotionsScreen} />
       <Stack.Screen name="AdminOwners" component={AdminOwnersScreen} />
+      <Stack.Screen name="AdminFeedback" component={AdminFeedbackScreen} />
     </Stack.Navigator>
   );
 }
