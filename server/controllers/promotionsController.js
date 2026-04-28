@@ -1,5 +1,5 @@
 import Promotions from "../models/promotions.js";
-import Canteen from "../models/canteen.js";
+import Canteen from "../models/Canteen.js";
 import { supabase } from "../config/supabase.js";
 
 // ─── Create a new promotion (Admin only) ──────────────────────────────
@@ -71,8 +71,8 @@ export async function getAllPromotions(req, res) {
     try {
         let filter = {};
         if (!req.user?.isAdmin && req.user?.role !== "owner") {
-            const now = new Date();
-            filter = { isActive: true, startDate: { $lte: now }, endDate: { $gte: now } };
+            // For customers, show all active promotions
+            filter = { isActive: true };
         } else if (req.user?.role === 'owner') {
             const myCanteen = await Canteen.findOne({ createdBy: req.user._id || req.user.id });
             if (myCanteen) filter.canteenId = myCanteen._id;

@@ -5,6 +5,7 @@ import {
 import API from '../services/api';
 import { useCart } from '../context/CartContext';
 import TopNavBar from '../components/TopNavBar';
+import { getImageUrl } from '../utils/imageUtils';
 
 const ORANGE = '#FF6B35';
 const { width, height } = Dimensions.get('window');
@@ -72,7 +73,7 @@ export default function CanteenDetailScreen({ navigation, route }) {
     const renderPromo = ({ item }) => (
         <TouchableOpacity style={styles.promoBanner} activeOpacity={0.9}>
             {item.bannerImage
-                ? <Image source={{ uri: item.bannerImage.startsWith('http') ? item.bannerImage : `http://10.0.2.2:3000${item.bannerImage}` }} style={styles.promoBannerImg} resizeMode="cover" />
+                ? <Image source={{ uri: getImageUrl(item.bannerImage) }} style={styles.promoBannerImg} resizeMode="cover" />
                 : <View style={styles.promoBannerPlaceholder} />}
         </TouchableOpacity>
     );
@@ -84,13 +85,13 @@ export default function CanteenDetailScreen({ navigation, route }) {
             <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingTop: 100, paddingBottom: 20 }}>
                 {/* Hero Banner */}
                 {canteen.canteenImage
-                    ? <Image source={{ uri: canteen.canteenImage.startsWith('http') ? canteen.canteenImage : `http://10.0.2.2:3000${canteen.canteenImage}` }} style={styles.heroImg} resizeMode="cover" />
+                    ? <Image source={{ uri: getImageUrl(canteen.canteenImage) }} style={styles.heroImg} resizeMode="cover" />
                     : <View style={styles.heroPlaceholder}><Text style={{ fontSize: 60 }}>🏪</Text></View>}
 
                 {/* Info Card */}
                 <View style={styles.infoCard}>
                     <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
-                        {canteen.canteenImage && <Image source={{ uri: canteen.canteenImage.startsWith('http') ? canteen.canteenImage : `http://10.0.2.2:3000${canteen.canteenImage}` }} style={{ width: 40, height: 40, borderRadius: 20, marginRight: 10 }} />}
+                        {canteen.canteenImage && <Image source={{ uri: getImageUrl(canteen.canteenImage) }} style={{ width: 40, height: 40, borderRadius: 20, marginRight: 10 }} />}
                         <View>
                             <Text style={styles.canteenName}>{canteen.canteenName}</Text>
                             <Text style={styles.detail}>📍 {canteen.location}</Text>
@@ -182,7 +183,7 @@ export default function CanteenDetailScreen({ navigation, route }) {
                                 onPress={() => navigation.navigate('FoodDetail', { item })}
                             >
                                 {item.image
-                                    ? <Image source={{ uri: item.image.startsWith('http') ? item.image : `http://10.0.2.2:3000${item.image}` }} style={styles.foodImg} resizeMode="cover" />  
+                                    ? <Image source={{ uri: getImageUrl(item.image) }} style={styles.foodImg} resizeMode="cover" />  
                                     : <View style={styles.foodImgPlaceholder}><Text style={{ fontSize: 32 }}>🍽️</Text></View>}
                                 <View style={{ padding: 8 }}>
                                     <Text style={styles.foodName} numberOfLines={1}>{item.name}</Text>

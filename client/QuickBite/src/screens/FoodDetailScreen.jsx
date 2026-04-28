@@ -6,6 +6,7 @@ import {
 import API from '../services/api';
 import { useCart } from '../context/CartContext';
 import TopNavBar from '../components/TopNavBar';
+import { getImageUrl } from '../utils/imageUtils';
 
 const ORANGE = '#FF6B35';
 
@@ -59,7 +60,7 @@ export default function FoodDetailScreen({ navigation, route }) {
             <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingTop: 85, paddingBottom: 20 }}>
                 {/* Food Image */}
                 {food.image
-                    ? <Image source={{ uri: food.image.startsWith('http') ? food.image : `http://10.0.2.2:3000${food.image}` }} style={styles.heroImg} resizeMode="cover" />
+                    ? <Image source={{ uri: getImageUrl(food.image) }} style={styles.heroImg} resizeMode="cover" />
                     : <View style={styles.heroPlaceholder}><Text style={{ fontSize: 80 }}>🍽️</Text></View>}
 
 
@@ -133,6 +134,7 @@ export default function FoodDetailScreen({ navigation, route }) {
                                 </View>
                                 <Text style={styles.reviewComment}>{fb.comment}</Text>
                                 {fb.complaintImage ? (
+<<<<<<< HEAD
                                     <View style={styles.reviewImgContainer}>
                                         <Image
                                             source={{
@@ -144,6 +146,13 @@ export default function FoodDetailScreen({ navigation, route }) {
                                             resizeMode="cover"
                                         />
                                     </View>
+=======
+                                    <Image
+                                        source={{ uri: getImageUrl(fb.complaintImage) }}
+                                        style={styles.reviewImg}
+                                        resizeMode="cover"
+                                    />
+>>>>>>> cd34fc7e0c0ea71e0d85ef23f454dafb59901f2f
                                 ) : null}
                                 <Text style={styles.reviewDate}>{new Date(fb.createdAt).toLocaleDateString()}</Text>
                             </View>

@@ -7,6 +7,7 @@ import { useAuth } from '../context/AuthContext';
 import API from '../services/api';
 import { useFocusEffect } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { getImageUrl } from '../utils/imageUtils';
 
 const ORANGE = '#FF6B35';
 
@@ -183,7 +184,7 @@ export default function ProfileScreen({ navigation }) {
                         {uploading ? (
                             <View style={styles.avatar}><ActivityIndicator color="#fff" /></View>
                         ) : (user?.image || user?.profilePic) ? (
-                            <Image source={{ uri: (user?.image || user?.profilePic).startsWith('http') ? (user?.image || user?.profilePic) : `http://10.0.2.2:3000${user?.image || user?.profilePic}` }} style={styles.avatarImage} />
+                            <Image source={{ uri: getImageUrl(user?.image || user?.profilePic) }} style={styles.avatarImage} />
                         ) : (
                             <View style={styles.avatar}>
                                 <Text style={styles.avatarText}>{user?.firstName?.[0]?.toUpperCase() || '👤'}</Text>
