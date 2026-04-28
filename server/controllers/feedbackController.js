@@ -1,5 +1,6 @@
 import Feedback from "../models/feedback.js";
 import Canteen from "../models/Canteen.js";
+import { supabase } from "../config/supabase.js";
 
 // Submit feedback (authenticated users)
 export async function createFeedback(req, res) {
@@ -14,7 +15,21 @@ export async function createFeedback(req, res) {
             return res.status(400).json({ message: "Rating and comment are required" });
         }
 
-        const complaintImage = req.file ? `/uploads/${req.file.filename}` : "";
+        let complaintImage = "";
+        if (req.file) {
+            const fileName = `feedback_${Date.now()}_${Math.random().toString(36).substring(7)}`;
+            const { data, error } = await supabase.storage
+                .from('quickbite-images')
+                .upload(fileName, req.file.buffer, { contentType: req.file.mimetype });
+
+            if (error) throw error;
+
+            const { data: publicUrlData } = supabase.storage
+                .from('quickbite-images')
+                .getPublicUrl(fileName);
+
+            complaintImage = publicUrlData.publicUrl;
+        }
 
         const feedback = new Feedback({
             userId: req.user._id || req.user.id,

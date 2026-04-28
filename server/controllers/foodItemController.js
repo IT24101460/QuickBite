@@ -1,6 +1,18 @@
 import FoodItem from "../models/foodItems.js";
 import Canteen from "../models/Canteen.js";
+import Feedback from "../models/feedback.js";
 import { supabase } from "../config/supabase.js";
+
+async function attachAverageRatings(foodItems) {
+    const enrichedItems = await Promise.all(foodItems.map(async (item) => {
+        const feedbacks = await Feedback.find({ foodItemId: item._id });
+        const avg = feedbacks.length > 0
+            ? feedbacks.reduce((acc, curr) => acc + curr.rating, 0) / feedbacks.length
+            : 0;
+        return { ...item.toObject(), averageRating: avg, totalReviews: feedbacks.length };
+    }));
+    return enrichedItems;
+}
 
 export async function createFoodItem(req, res) {
     if (!req.user?.isAdmin && req.user?.role !== "owner") {
@@ -47,8 +59,11 @@ export async function getFoodItems(req, res) {
         if (req.query.canteenId) filter.canteenId = req.query.canteenId;
         if (req.query.category) filter.category = { $regex: req.query.category, $options: "i" };
         if (req.query.search) filter.name = { $regex: req.query.search, $options: "i" };
+
         const foodItems = await FoodItem.find(filter).populate("canteenId", "canteenName location");
-        res.status(200).json({ foodItems });
+        const foodWithRatings = await attachAverageRatings(foodItems);
+
+        res.status(200).json({ foodItems: foodWithRatings });
     } catch (error) {
         res.status(500).json({ message: "Error fetching food items", error: error.message });
     }
@@ -60,7 +75,15 @@ export async function getFoodItemById(req, res) {
         if (!foodItem) {
             return res.status(404).json({ message: "Food item not found" });
         }
-        res.status(200).json({ foodItem });
+
+        const feedbacks = await Feedback.find({ foodItemId: foodItem._id });
+        const avg = feedbacks.length > 0
+            ? feedbacks.reduce((acc, curr) => acc + curr.rating, 0) / feedbacks.length
+            : 0;
+
+        res.status(200).json({
+            foodItem: { ...foodItem.toObject(), averageRating: avg, totalReviews: feedbacks.length }
+        });
     } catch (error) {
         res.status(500).json({ message: "Error fetching food item", error: error.message });
     }
@@ -72,7 +95,15 @@ export async function getFoodItemByMongoId(req, res) {
         if (!foodItem) {
             return res.status(404).json({ message: "Food item not found" });
         }
-        res.status(200).json({ foodItem });
+
+        const feedbacks = await Feedback.find({ foodItemId: foodItem._id });
+        const avg = feedbacks.length > 0
+            ? feedbacks.reduce((acc, curr) => acc + curr.rating, 0) / feedbacks.length
+            : 0;
+
+        res.status(200).json({
+            foodItem: { ...foodItem.toObject(), averageRating: avg, totalReviews: feedbacks.length }
+        });
     } catch (error) {
         res.status(500).json({ message: "Error fetching food item", error: error.message });
     }

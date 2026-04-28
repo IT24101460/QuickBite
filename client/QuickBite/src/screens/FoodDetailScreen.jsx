@@ -25,6 +25,7 @@ export default function FoodDetailScreen({ navigation, route }) {
     const fetchFeedback = async () => {
         try {
             const res = await API.get(`/feedback/food/${food._id}`);
+            console.log("FEEDBACK DATA RECEIVED:", res.data?.feedback);
             setFeedbacks(res.data?.feedback || []);
         } catch (e) {
             setFeedbacks([]);
@@ -102,7 +103,11 @@ export default function FoodDetailScreen({ navigation, route }) {
                     <View style={styles.reviewHeader}>
                         <View>
                             <Text style={styles.sectionTitle}>⭐ Reviews</Text>
-                            {avgRating && <Text style={styles.avgRating}>{avgRating} / 5.0 ({feedbacks.length})</Text>}
+                            {(food.averageRating > 0 || feedbacks.length > 0) && (
+                                <Text style={styles.avgRating}>
+                                    {(food.averageRating || 0).toFixed(1)} / 5.0 ({food.totalReviews || feedbacks.length})
+                                </Text>
+                            )}
                         </View>
                         <TouchableOpacity
                             style={styles.writeReviewBtn}
@@ -129,11 +134,25 @@ export default function FoodDetailScreen({ navigation, route }) {
                                 </View>
                                 <Text style={styles.reviewComment}>{fb.comment}</Text>
                                 {fb.complaintImage ? (
+<<<<<<< HEAD
+                                    <View style={styles.reviewImgContainer}>
+                                        <Image
+                                            source={{
+                                                uri: fb.complaintImage.startsWith('http')
+                                                    ? fb.complaintImage
+                                                    : `http://10.0.2.2:3000${fb.complaintImage.startsWith('/') ? fb.complaintImage : '/' + fb.complaintImage}`
+                                            }}
+                                            style={styles.reviewImg}
+                                            resizeMode="cover"
+                                        />
+                                    </View>
+=======
                                     <Image
                                         source={{ uri: getImageUrl(fb.complaintImage) }}
                                         style={styles.reviewImg}
                                         resizeMode="cover"
                                     />
+>>>>>>> cd34fc7e0c0ea71e0d85ef23f454dafb59901f2f
                                 ) : null}
                                 <Text style={styles.reviewDate}>{new Date(fb.createdAt).toLocaleDateString()}</Text>
                             </View>
@@ -182,6 +201,7 @@ const styles = StyleSheet.create({
     reviewer: { fontWeight: 'bold', color: '#333', fontSize: 14 },
     stars: { color: '#FFB800', fontSize: 14 },
     reviewComment: { color: '#555', fontSize: 14, lineHeight: 20 },
-    reviewImg: { width: '100%', height: 140, borderRadius: 8, marginTop: 8 },
+    reviewImgContainer: { width: '100%', height: 160, marginTop: 10, borderRadius: 10, overflow: 'hidden', backgroundColor: '#f0f0f0' },
+    reviewImg: { width: '100%', height: '100%' },
     reviewDate: { fontSize: 11, color: '#bbb', marginTop: 6 },
 });

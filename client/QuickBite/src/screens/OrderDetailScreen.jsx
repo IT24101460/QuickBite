@@ -60,9 +60,13 @@ export default function OrderDetailScreen({ navigation, route }) {
                 {/* Info */}
                 <View style={styles.card}>
                     <Text style={styles.cardTitle}>ℹ️ Details</Text>
-                    {order.pickupTime ? <Text style={styles.detailRow}>⏰ Pickup: {order.pickupTime}</Text> : null}
+                    {order.pickupTime === 'Immediate' ? (
+                        <Text style={styles.detailRow}>🚀 Preparation: Immediate</Text>
+                    ) : order.pickupTime ? (
+                        <Text style={styles.detailRow}>⏰ Pickup: {order.pickupTime}</Text>
+                    ) : null}
                     {order.note ? <Text style={styles.detailRow}>📝 Note: {order.note}</Text> : null}
-                    <Text style={styles.detailRow}>📅 {new Date(order.createdAt).toLocaleString()}</Text>
+                    <Text style={styles.detailRow}>📅 Ordered: {new Date(order.createdAt).toLocaleString()}</Text>
                 </View>
 
                 {/* Feedback Button */}

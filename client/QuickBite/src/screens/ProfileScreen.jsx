@@ -35,10 +35,11 @@ export default function ProfileScreen({ navigation }) {
             };
             loadCards();
             loadPaymentOptions();
-        }, [])
+        }, [token])
     );
 
     const loadPaymentOptions = async () => {
+        if (!token) return;
         try {
             setLoading(true);
             const response = await API.get('/user-payments', {
@@ -169,7 +170,7 @@ export default function ProfileScreen({ navigation }) {
             <View style={styles.header}>
                 <TouchableOpacity 
                     style={styles.backButton}
-                    onPress={() => navigation.openDrawer()}
+                    onPress={() => navigation.goBack()}
                 >
                     <Text style={styles.backButtonText}>← Back</Text>
                 </TouchableOpacity>
@@ -216,11 +217,12 @@ export default function ProfileScreen({ navigation }) {
                         <View style={{ alignItems: 'center', paddingVertical: 20 }}>
                             <ActivityIndicator size="small" color={ORANGE} />
                         </View>
-                    ) : paymentOptions.length > 0 ? (
+                    ) : (paymentOptions.length > 0 || savedCards.length > 0) ? (
                         <>
-                            {paymentOptions.slice(0, 3).map((option) => {
-                                const displayName = option.paymentType === 'card' 
-                                    ? `${option.cardholderName} - •••• ${option.last4}`
+                            {[...paymentOptions, ...savedCards.filter(sc => !paymentOptions.find(po => po.last4 === sc.last4))].slice(0, 3).map((option, idx) => {
+                                const isLocal = !option._id;
+                                const displayName = option.paymentType === 'card' || isLocal
+                                    ? `${option.cardholderName || 'Card'} - •••• ${option.last4}`
                                     : option.paymentType === 'wallet'
                                     ? `${option.walletProvider || 'Wallet'} - ${option.last4}`
                                     : option.paymentType === 'bank_transfer'
@@ -228,21 +230,24 @@ export default function ProfileScreen({ navigation }) {
                                     : option.cardholderName;
 
                                 return (
-                                    <View key={option._id} style={styles.payMethod}>
+                                    <View key={option._id || `local_${idx}`} style={styles.payMethod}>
                                         <View style={styles.paymentInfo}>
                                             <Text style={styles.payBank}>{displayName}</Text>
                                             <Text style={styles.payType}>
-                                                {option.paymentType.replace('_', ' ').toUpperCase()}
+                                                {(option.paymentType || 'card').replace('_', ' ').toUpperCase()}
                                                 {option.isDefault && ' • DEFAULT'}
+                                                {isLocal && ' • SYNCING...'}
                                             </Text>
                                         </View>
                                         <View style={styles.paymentActions}>
-                                            <TouchableOpacity
-                                                style={[styles.miniBtn, styles.editMiniBtn]}
-                                                onPress={() => handleEdit(option)}
-                                            >
-                                                <Text style={styles.miniBtnText}>✏️</Text>
-                                            </TouchableOpacity>
+                                            {!isLocal && (
+                                                <TouchableOpacity
+                                                    style={[styles.miniBtn, styles.editMiniBtn]}
+                                                    onPress={() => handleEdit(option)}
+                                                >
+                                                    <Text style={styles.miniBtnText}>✏️</Text>
+                                                </TouchableOpacity>
+                                            )}
                                             <TouchableOpacity
                                                 style={[styles.miniBtn, styles.deleteMiniBtn]}
                                                 onPress={() => handleDelete(option._id, displayName)}
@@ -253,10 +258,10 @@ export default function ProfileScreen({ navigation }) {
                                     </View>
                                 );
                             })}
-                            {paymentOptions.length > 3 && (
+                            {(paymentOptions.length + savedCards.length) > 3 && (
                                 <TouchableOpacity onPress={() => navigation.navigate('PaymentOptions')}>
                                     <Text style={{color: ORANGE, fontSize: 12, fontWeight: '600', marginTop: 8}}>
-                                        +{paymentOptions.length - 3} more • View All →
+                                        View All →
                                     </Text>
                                 </TouchableOpacity>
                             )}
