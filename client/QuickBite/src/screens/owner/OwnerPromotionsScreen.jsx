@@ -135,7 +135,7 @@ export default function OwnerPromotionsScreen({ route, navigation }) {
 
     const toggleStatus = async (id) => {
         try {
-            await API.put(`/promotions/${id}/toggle`);
+            await API.patch(`/promotions/${id}/toggle`);
             fetchData();
         } catch (e) { Alert.alert("Error", "Could not toggle the promotion status"); }
     }
@@ -156,7 +156,7 @@ export default function OwnerPromotionsScreen({ route, navigation }) {
         <View style={styles.container}>
             <View style={styles.header}>
                 <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}><Text style={styles.backArrow}>←</Text></TouchableOpacity>
-                <Text style={styles.title}>Promotions HQ</Text>
+                <Text style={styles.title}>QuickBite Promotions</Text>
             </View>
 
             <View style={styles.actionRow}>
