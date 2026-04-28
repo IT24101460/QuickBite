@@ -49,7 +49,11 @@ export default function OrdersScreen({ navigation }) {
             <Text style={styles.itemsText} numberOfLines={1}>
                 {item.items?.map(i => `${i.name} ×${i.quantity}`).join(', ')}
             </Text>
-            {item.pickupTime ? <Text style={styles.pickupTime}>⏰ Pickup: {item.pickupTime}</Text> : null}
+            {item.pickupTime === 'Immediate' ? (
+                <Text style={styles.pickupTime}>🚀 Immediate Preparation</Text>
+            ) : item.pickupTime ? (
+                <Text style={styles.pickupTime}>⏰ Pickup: {item.pickupTime}</Text>
+            ) : null}
             <View style={styles.orderBottom}>
                 <Text style={styles.amount}>LKR {(item.finalAmount || item.totalAmount || 0).toFixed(2)}</Text>
                 <Text style={styles.date}>{new Date(item.createdAt).toLocaleDateString()}</Text>

@@ -22,58 +22,58 @@ export default function CheckoutScreen({ route, navigation }) {
     const { user } = useAuth();
     const [method, setMethod] = useState('cash');
 
-    // Time Picker States
-    const [selHour, setSelHour] = useState('10');
-    const [selMin, setSelMin] = useState('00');
-    const [selPeriod, setSelPeriod] = useState('AM');
-    const [showTimeModal, setShowTimeModal] = useState(false);
-
     // Card Payment States
     const [savedCards, setSavedCards] = useState([]);
+    const [paymentOptions, setPaymentOptions] = useState([]);
     const [selectedCard, setSelectedCard] = useState(null);
+    const [loadingPayments, setLoadingPayments] = useState(false);
 
-    // Initialize saved cards only for authenticated users
+    // Initialize saved cards and fetch from backend
     useEffect(() => {
-        const loadCards = async () => {
-            if (user) {
+        const loadData = async () => {
+            if (user && token) {
                 try {
-                    const existingCards = await AsyncStorage.getItem('@saved_cards');
-                    if (existingCards) {
-                        const cards = JSON.parse(existingCards);
-                        setSavedCards(cards);
-                        if (cards.length > 0) {
-                            setSelectedCard(cards[0].id);
-                        }
+                    setLoadingPayments(true);
+
+                    // Load local cards
+                    const localData = await AsyncStorage.getItem('@saved_cards');
+                    const localCards = localData ? JSON.parse(localData) : [];
+                    setSavedCards(localCards);
+
+                    // Load backend cards
+                    const response = await API.get('/user-payments', {
+                        headers: { Authorization: `Bearer ${token}` }
+                    });
+                    const backendOptions = response.data.paymentOptions || [];
+                    setPaymentOptions(backendOptions);
+
+                    // Auto-select first available or default
+                    const defaultOpt = backendOptions.find(o => o.isDefault);
+                    if (defaultOpt) {
+                        setSelectedCard(defaultOpt._id);
+                    } else if (backendOptions.length > 0) {
+                        setSelectedCard(backendOptions[0]._id);
+                    } else if (localCards.length > 0) {
+                        setSelectedCard(localCards[0].id);
                     }
                 } catch (e) {
-                    console.error("Failed to load cards", e);
+                    console.error("Failed to load payments", e);
+                } finally {
+                    setLoadingPayments(false);
                 }
             } else {
-                // User logged out - clear saved cards
                 setSavedCards([]);
+                setPaymentOptions([]);
                 setSelectedCard(null);
             }
         };
-        loadCards();
-    }, [user]);
+        loadData();
+    }, [user, token]);
 
     const [paymentProof, setPaymentProof] = useState(null);
     const [loading, setLoading] = useState(false);
     const [canteen, setCanteen] = useState(null);
     const [canteenBankDetails, setCanteenBankDetails] = useState('');
-
-    // Time Validation Helper
-    const timeToMinutes = (timeStr) => {
-        if (!timeStr) return 0;
-        const match = timeStr.match(/(\d+):(\d+)\s*(AM|PM)/i);
-        if (!match) return 0;
-        let h = parseInt(match[1]);
-        let m = parseInt(match[2]);
-        let mode = match[3].toUpperCase();
-        if (h === 12 && mode === 'AM') h = 0;
-        if (h < 12 && mode === 'PM') h += 12;
-        return h * 60 + m;
-    };
 
     useEffect(() => {
         if (route.params?.newlyAddedCard) {
@@ -113,22 +113,6 @@ export default function CheckoutScreen({ route, navigation }) {
     };
 
     const handleConfirm = async () => {
-        const selectedFormattedTime = `${selHour}:${selMin} ${selPeriod}`;
-
-        // Validate pickup time against canteen open/close hours
-        if (canteen) {
-            const chosenMin = timeToMinutes(selectedFormattedTime);
-            const openMin = timeToMinutes(canteen.openingTime || '08:00 AM');
-            const closeMin = timeToMinutes(canteen.closingTime || '05:00 PM');
-
-            if (chosenMin < openMin || chosenMin > closeMin) {
-                return Alert.alert(
-                    'Invalid Pickup Time',
-                    `Canteen operating hours are ${canteen.openingTime || '08:00 AM'} to ${canteen.closingTime || '05:00 PM'}. Please select a time within this window.`
-                );
-            }
-        }
-
         setLoading(true);
         try {
             // 1. Place order
@@ -140,7 +124,7 @@ export default function CheckoutScreen({ route, navigation }) {
                     quantity: i.quantity,
                     note: i.note || "",
                 })),
-                pickupTime: selectedFormattedTime,
+                pickupTime: "Immediate",
                 discountAmount: discountAmount || 0,
                 promotionId: appliedPromotion ? appliedPromotion._id : null,
                 canteenId: cartItems[0].canteenId || null
@@ -179,7 +163,7 @@ export default function CheckoutScreen({ route, navigation }) {
             clearCart();
             Alert.alert(
                 '🎉 Order Confirmed!',
-                `Queue #${order.queueNumber}\nPickup: ${selectedFormattedTime}\nTotal: LKR ${finalTotal.toFixed(2)}`,
+                `Queue #${order.queueNumber}\nPreparation: Immediate\nTotal: LKR ${finalTotal.toFixed(2)}`,
                 [{
                     text: 'View Orders', onPress: () => {
                         navigation.goBack(); // Back to drawer home
@@ -202,71 +186,41 @@ export default function CheckoutScreen({ route, navigation }) {
 
             <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ padding: 16, paddingTop: 85 }}>
 
-                {/* Pickup Time Option */}
-                <View style={styles.card}>
-                    <Text style={styles.cardTitle}>⏰ Preferred Pickup Time</Text>
-                    <Text style={styles.descText}>
-                        Canteen Hours: {canteen?.openingTime || '08:00 AM'} - {canteen?.closingTime || '05:00 PM'}
+                {/* Important Notice */}
+                <View style={[styles.card, { backgroundColor: '#FFF9C4', borderColor: '#FBC02D', borderWidth: 1 }]}>
+                    <Text style={[styles.cardTitle, { color: '#F57F17' }]}>ℹ️ Preparation Notice</Text>
+                    <Text style={{ fontSize: 13, color: '#5D4037', lineHeight: 18 }}>
+                        Once you proceed to pay, your order will be sent directly to the canteen for immediate preparation.
+                        Please ensure you are ready to collect your items shortly.
                     </Text>
-
-                    <TouchableOpacity
-                        style={styles.timeSelectBtn}
-                        onPress={() => setShowTimeModal(true)}
-                    >
-                        <Text style={styles.timeSelectText}>{selHour}:{selMin} {selPeriod}</Text>
-                        <Text style={styles.timeSelectIcon}>▼</Text>
-                    </TouchableOpacity>
                 </View>
-
-                {/* Time Picker Modal */}
-                <Modal visible={showTimeModal} transparent animationType="slide">
-                    <TouchableOpacity style={styles.modalBg} activeOpacity={1} onPress={() => setShowTimeModal(false)}>
-                        <View style={styles.modalContent} onStartShouldSetResponder={() => true}>
-                            <Text style={styles.modalTitle}>Select Pickup Time</Text>
-
-                            <View style={styles.pickerCols}>
-                                {/* Hours */}
-                                <ScrollView style={styles.pickerList} nestedScrollEnabled showsVerticalScrollIndicator={false}>
-                                    {['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12'].map(h => (
-                                        <TouchableOpacity key={h} onPress={() => setSelHour(h)} style={[styles.timeItem, selHour === h && styles.timeItemActive]}>
-                                            <Text style={[styles.timeItemText, selHour === h && styles.timeItemTextActive]}>{h}</Text>
-                                        </TouchableOpacity>
-                                    ))}
-                                </ScrollView>
-
-                                {/* Minutes */}
-                                <ScrollView style={styles.pickerList} nestedScrollEnabled showsVerticalScrollIndicator={false}>
-                                    {['00', '05', '10', '15', '20', '25', '30', '35', '40', '45', '50', '55'].map(m => (
-                                        <TouchableOpacity key={m} onPress={() => setSelMin(m)} style={[styles.timeItem, selMin === m && styles.timeItemActive]}>
-                                            <Text style={[styles.timeItemText, selMin === m && styles.timeItemTextActive]}>{m}</Text>
-                                        </TouchableOpacity>
-                                    ))}
-                                </ScrollView>
-
-                                {/* Period */}
-                                <View style={styles.periodCol}>
-                                    {['AM', 'PM'].map(p => (
-                                        <TouchableOpacity key={p} onPress={() => setSelPeriod(p)} style={[styles.periodItem, selPeriod === p && styles.timeItemActive]}>
-                                            <Text style={[styles.timeItemText, selPeriod === p && styles.timeItemTextActive]}>{p}</Text>
-                                        </TouchableOpacity>
-                                    ))}
-                                </View>
-                            </View>
-
-                            <TouchableOpacity style={styles.modalDone} onPress={() => setShowTimeModal(false)}>
-                                <Text style={styles.modalDoneText}>Confirm Time</Text>
-                            </TouchableOpacity>
-                        </View>
-                    </TouchableOpacity>
-                </Modal>
 
                 {/* Order Summary */}
                 <View style={styles.card}>
-                    <Text style={styles.cardTitle}>📋 Order Summary</Text>
+                    <Text style={styles.cardTitle}>📋 Order Details</Text>
+
+                    {/* User Info */}
+                    <View style={styles.userInfoBox}>
+                        <Text style={styles.userInfoLabel}>Customer Name:</Text>
+                        <Text style={styles.userInfoText}>{user?.name || 'Guest User'}</Text>
+                        <Text style={[styles.userInfoLabel, { marginTop: 4 }]}>Email Address:</Text>
+                        <Text style={styles.userInfoText}>{user?.email || 'N/A'}</Text>
+                    </View>
+
+                    <View style={styles.divider} />
+
+                    <Text style={[styles.cardTitle, { fontSize: 13, marginTop: 8 }]}>Items in Order:</Text>
                     {cartItems.map((item, idx) => (
-                        <View key={idx} style={styles.summaryItem}>
-                            <Text style={styles.summaryItemName} numberOfLines={1}>{item.name} ×{item.quantity}</Text>
-                            <Text style={styles.summaryItemPrice}>LKR {(item.price * item.quantity).toFixed(2)}</Text>
+                        <View key={idx} style={{ marginBottom: 10 }}>
+                            <View style={styles.summaryItem}>
+                                <Text style={styles.summaryItemName} numberOfLines={1}>{item.name} ×{item.quantity}</Text>
+                                <Text style={styles.summaryItemPrice}>LKR {(item.price * item.quantity).toFixed(2)}</Text>
+                            </View>
+                            {item.note ? (
+                                <View style={styles.noteContainer}>
+                                    <Text style={styles.noteText}>📝 {item.note}</Text>
+                                </View>
+                            ) : null}
                         </View>
                     ))}
                     <View style={styles.divider} />
@@ -305,17 +259,32 @@ export default function CheckoutScreen({ route, navigation }) {
                     {method === 'card' && user && (
                         <View style={styles.bankContainer}>
                             <Text style={styles.bankTitle}>Select a Card:</Text>
-                            {savedCards.map(c => (
-                                <TouchableOpacity
-                                    key={c.id}
-                                    style={[styles.savedCardRow, selectedCard === c.id && styles.savedCardRowActive]}
-                                    onPress={() => setSelectedCard(c.id)}
-                                >
-                                    <Text style={styles.savedCardIcon}>{c.type === 'Visa' ? '💳' : '🏧'}</Text>
-                                    <Text style={styles.savedCardText}>{c.type} ending in {c.last4}</Text>
-                                    {selectedCard === c.id && <Text style={styles.checkIcon}>✅</Text>}
-                                </TouchableOpacity>
-                            ))}
+                            {loadingPayments ? (
+                                <ActivityIndicator size="small" color={ORANGE} style={{ marginVertical: 10 }} />
+                            ) : (
+                                <>
+                                    {[...paymentOptions, ...savedCards.filter(sc => !paymentOptions.find(po => po.last4 === sc.last4))].map((c, idx) => {
+                                        const isLocal = !c._id;
+                                        const cardId = c._id || c.id;
+                                        return (
+                                            <TouchableOpacity
+                                                key={cardId || `card_${idx}`}
+                                                style={[styles.savedCardRow, selectedCard === cardId && styles.savedCardRowActive]}
+                                                onPress={() => setSelectedCard(cardId)}
+                                            >
+                                                <Text style={styles.savedCardIcon}>{c.type === 'Visa' ? '💳' : '🏧'}</Text>
+                                                <View style={{ flex: 1 }}>
+                                                    <Text style={styles.savedCardText}>
+                                                        {c.type || 'Card'} ending in {c.last4}
+                                                    </Text>
+                                                    {isLocal && <Text style={{ fontSize: 10, color: ORANGE, fontWeight: 'bold' }}>SYNCING...</Text>}
+                                                </View>
+                                                {selectedCard === cardId && <Text style={styles.checkIcon}>✅</Text>}
+                                            </TouchableOpacity>
+                                        );
+                                    })}
+                                </>
+                            )}
                             <TouchableOpacity
                                 style={styles.savedCardRow}
                                 onPress={() => navigation.navigate('AddCard')}
@@ -402,6 +371,11 @@ const styles = StyleSheet.create({
     summaryItem: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 },
     summaryItemName: { flex: 1, fontSize: 14, color: '#444', marginRight: 8 },
     summaryItemPrice: { fontSize: 14, fontWeight: '600', color: '#333' },
+    userInfoBox: { backgroundColor: '#F0F4F8', padding: 12, borderRadius: 10, marginVertical: 4 },
+    userInfoLabel: { fontSize: 11, color: '#666', fontWeight: 'bold', textTransform: 'uppercase' },
+    userInfoText: { fontSize: 14, color: '#333', fontWeight: '600' },
+    noteContainer: { backgroundColor: '#FFF9C4', padding: 6, borderRadius: 6, marginTop: 2, marginLeft: 10 },
+    noteText: { fontSize: 12, color: '#7B5E00', fontStyle: 'italic' },
     divider: { height: 1, backgroundColor: '#F0F0F0', marginVertical: 8 },
     totalLabel: { fontSize: 16, fontWeight: 'bold', color: '#222' },
     totalValue: { fontSize: 17, fontWeight: 'bold', color: ORANGE },

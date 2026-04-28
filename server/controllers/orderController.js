@@ -1,6 +1,6 @@
 import Order from "../models/orders.js";
 import User from "../models/user.js";
-import Canteen from "../models/canteen.js";
+import Canteen from "../models/Canteen.js";
 
 // ─── Place a new order ───────────────────────────────────────────────
 export async function placeOrder(req, res) {

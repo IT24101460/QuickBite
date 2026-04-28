@@ -36,12 +36,7 @@ export default function HomeScreen({ navigation }) {
         API.get('/canteens'),
       ]);
       setFoodItems(foodRes.data?.foodItems || []);
-      const samplePromotions = [
-        { _id: 'sunny_promo_1', bannerImage: 'https://images.unsplash.com/photo-1554118811-1e0d58224f24?auto=format&fit=crop&w=800&q=80' },
-        { _id: 'sunny_promo_2', bannerImage: 'https://images.unsplash.com/photo-1554118811-1e0d58224f24?auto=format&fit=crop&w=800&q=80' },
-        { _id: 'sunny_promo_3', bannerImage: 'https://images.unsplash.com/photo-1554118811-1e0d58224f24?auto=format&fit=crop&w=800&q=80' }
-      ];
-      setPromotions(samplePromotions);
+      setPromotions(promoRes.data?.promotions || []);
       setCanteens(canteenRes.data?.canteens || []);
     } catch (e) {
       console.log('Error fetching home data:', e.message);
@@ -107,7 +102,12 @@ export default function HomeScreen({ navigation }) {
         <Text style={styles.foodCat}>{item.category || 'General'}</Text>
         <Text style={styles.foodPrice}>LKR {item.price.toFixed(2)}</Text>
         <View style={styles.ratingRow}>
-          <Text style={styles.ratingText}>⭐ {item.averageRating ? item.averageRating.toFixed(1) : 'New'}</Text>
+          <Text style={styles.ratingText}>
+            ⭐ {item.averageRating > 0 ? item.averageRating.toFixed(1) : 'New'}
+            {item.totalReviews > 0 && (
+              <Text style={styles.reviewCountText}> ({item.totalReviews})</Text>
+            )}
+          </Text>
         </View>
       </View>
     </TouchableOpacity>

@@ -68,6 +68,9 @@ export default function AddCardScreen({ navigation }) {
             id: 'card_' + Date.now(),
             type: cardType === 'Unknown' ? 'Card' : cardType,
             last4: cardNumber.trim().slice(-4),
+            cardholderName: cardName.trim(),
+            expiry: expiry,
+            cardNumber: cardNumber.replace(/\s+/g, '') // Stripped for processing
         };
 
         navigation.navigate('OTPVerification', { newCard: cardDetails });
