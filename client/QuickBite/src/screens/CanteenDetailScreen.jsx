@@ -1,10 +1,11 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
-    View, Text, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator, ScrollView, Image, Dimensions, TextInput
+    View, Text, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator, ScrollView, Image, Dimensions, TextInput, RefreshControl
 } from 'react-native';
 import API from '../services/api';
 import { useCart } from '../context/CartContext';
 import TopNavBar from '../components/TopNavBar';
+import { getImageUrl } from '../utils/imageUtils';
 
 const ORANGE = '#FF6B35';
 const { width, height } = Dimensions.get('window');
@@ -15,7 +16,9 @@ export default function CanteenDetailScreen({ navigation, route }) {
 
     const [foodItems, setFoodItems] = useState([]);
     const [promotions, setPromotions] = useState([]);
+    const [feedbacks, setFeedbacks] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [refreshing, setRefreshing] = useState(false);
 
     const bannerRef = useRef(null);
     const [currentPromoIndex, setCurrentPromoIndex] = useState(0);
@@ -24,26 +27,56 @@ export default function CanteenDetailScreen({ navigation, route }) {
     const [category, setCategory] = useState('All');
     const [sortBy, setSortBy] = useState('none');
 
-    // Derived categories from available foods
     const categories = ['All', ...new Set(foodItems.map(f => f.category).filter(Boolean))];
 
-    useEffect(() => {
-        Promise.all([
-            API.get(`/foods?canteenId=${canteen._id}`),
-            API.get('/promotions') // We'll filter these client side
-        ])
-            .then(([foodRes, promoRes]) => {
-                setFoodItems(foodRes.data?.foodItems || []);
+    const fetchData = useCallback(async () => {
+        try {
+            const results = await Promise.allSettled([
+                API.get(`/foods?canteenId=${canteen._id}`),
+                API.get('/promotions'),
+                API.get(`/feedback/canteen/${canteen._id}`)
+            ]);
+
+            const foodRes = results[0];
+            const promoRes = results[1];
+            const feedbackRes = results[2];
+
+            const foods = foodRes.status === 'fulfilled' ? (foodRes.value.data?.foodItems || []) : [];
+            const allPromos = promoRes.status === 'fulfilled' ? (promoRes.value.data?.promotions || []) : [];
+            const reviewList = feedbackRes.status === 'fulfilled' ? (feedbackRes.value.data?.feedback || []) : [];
+
+            setFoodItems(foods);
+            setFeedbacks(reviewList);
+
+            const canteenPromos = allPromos.filter(p => String(p.canteenId?._id || p.canteenId) === String(canteen._id));
+
+            if (canteenPromos.length > 0) {
+                setPromotions(canteenPromos);
+            } else {
                 const samplePromotions = [
-                    { _id: 'canteen_promo_1', bannerImage: 'https://images.unsplash.com/photo-1554118811-1e0d58224f24?auto=format&fit=crop&w=800&q=80' },
-                    { _id: 'canteen_promo_2', bannerImage: 'https://images.unsplash.com/photo-1554118811-1e0d58224f24?auto=format&fit=crop&w=800&q=80' },
-                    { _id: 'canteen_promo_3', bannerImage: 'https://images.unsplash.com/photo-1554118811-1e0d58224f24?auto=format&fit=crop&w=800&q=80' }
+                    { _id: 'sample_c1', bannerImage: 'https://images.unsplash.com/photo-1554118811-1e0d58224f24?auto=format&fit=crop&w=800&q=80' },
+                    { _id: 'sample_c2', bannerImage: 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=800&q=80' },
+                    { _id: 'sample_c3', bannerImage: 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=800&q=80' }
                 ];
                 setPromotions(samplePromotions);
-            })
-            .catch(() => setFoodItems([]))
-            .finally(() => setLoading(false));
-    }, []);
+            }
+        } catch (e) {
+            console.error("Error fetching canteen detail data:", e);
+        } finally {
+            setLoading(false);
+            setRefreshing(false);
+        }
+    }, [canteen._id]);
+
+    useEffect(() => {
+        setLoading(true);
+        fetchData();
+    }, [fetchData]);
+
+    const onRefresh = () => {
+        setRefreshing(true);
+        fetchData();
+    };
 
     // Auto-changing banner
     useEffect(() => {
@@ -58,17 +91,17 @@ export default function CanteenDetailScreen({ navigation, route }) {
     }, [currentPromoIndex, promotions.length]);
 
     let filteredItems = foodItems.filter(item => {
-        const matchSearch = item.name.toLowerCase().includes(search.toLowerCase());
+        const matchSearch = (item.name || '').toLowerCase().includes(search.toLowerCase());
         const matchCat = category === 'All' || item.category === category;
         return matchSearch && matchCat;
     });
 
     if (sortBy === 'A-Z') {
-        filteredItems.sort((a, b) => a.name.localeCompare(b.name));
+        filteredItems.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
     } else if (sortBy === 'priceAsc') {
-        filteredItems.sort((a, b) => a.price - b.price);
+        filteredItems.sort((a, b) => (a.price || 0) - (b.price || 0));
     } else if (sortBy === 'priceDesc') {
-        filteredItems.sort((a, b) => b.price - a.price);
+        filteredItems.sort((a, b) => (b.price || 0) - (a.price || 0));
     } else if (sortBy === 'rating') {
         filteredItems.sort((a, b) => (b.averageRating || 0) - (a.averageRating || 0));
     }
@@ -76,7 +109,7 @@ export default function CanteenDetailScreen({ navigation, route }) {
     const renderPromo = ({ item }) => (
         <TouchableOpacity style={styles.promoBanner} activeOpacity={0.9}>
             {item.bannerImage
-                ? <Image source={{ uri: item.bannerImage.startsWith('http') ? item.bannerImage : `http://10.0.2.2:3000${item.bannerImage}` }} style={styles.promoBannerImg} resizeMode="cover" />
+                ? <Image source={{ uri: getImageUrl(item.bannerImage) }} style={styles.promoBannerImg} resizeMode="cover" />
                 : <View style={styles.promoBannerPlaceholder} />}
         </TouchableOpacity>
     );
@@ -85,16 +118,20 @@ export default function CanteenDetailScreen({ navigation, route }) {
         <View style={styles.container}>
             <TopNavBar navigation={navigation} search={search} setSearch={setSearch} placeholder={`🔍 Search in ${canteen.canteenName}...`} />
 
-            <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingTop: 100, paddingBottom: 20 }}>
+            <ScrollView 
+                showsVerticalScrollIndicator={false} 
+                contentContainerStyle={{ paddingTop: 100, paddingBottom: 20 }}
+                refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[ORANGE]} />}
+            >
                 {/* Hero Banner */}
                 {canteen.canteenImage
-                    ? <Image source={{ uri: canteen.canteenImage.startsWith('http') ? canteen.canteenImage : `http://10.0.2.2:3000${canteen.canteenImage}` }} style={styles.heroImg} resizeMode="cover" />
+                    ? <Image source={{ uri: getImageUrl(canteen.canteenImage) }} style={styles.heroImg} resizeMode="cover" />
                     : <View style={styles.heroPlaceholder}><Text style={{ fontSize: 60 }}>🏪</Text></View>}
 
                 {/* Info Card */}
                 <View style={styles.infoCard}>
                     <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
-                        {canteen.canteenImage && <Image source={{ uri: canteen.canteenImage.startsWith('http') ? canteen.canteenImage : `http://10.0.2.2:3000${canteen.canteenImage}` }} style={{ width: 40, height: 40, borderRadius: 20, marginRight: 10 }} />}
+                        {canteen.canteenImage && <Image source={{ uri: getImageUrl(canteen.canteenImage) }} style={{ width: 40, height: 40, borderRadius: 20, marginRight: 10 }} />}
                         <View>
                             <Text style={styles.canteenName}>{canteen.canteenName}</Text>
                             <Text style={styles.detail}>📍 {canteen.location}</Text>
@@ -102,7 +139,7 @@ export default function CanteenDetailScreen({ navigation, route }) {
                     </View>
                     <View style={styles.divider} />
                     <Text style={styles.detail}>🕐 Opening Hours: {canteen.openingTime} – {canteen.closingTime}</Text>
-                    <Text style={styles.detail}>⭐ Rating: {canteen.rating || 'New'}</Text>
+                    <Text style={styles.detail}>⭐ Rating: {feedbacks.length > 0 ? (feedbacks.reduce((a,b)=>a+b.rating,0)/feedbacks.length).toFixed(1) : 'New'}</Text>
                 </View>
 
                 {promotions.length > 0 && (
@@ -114,7 +151,7 @@ export default function CanteenDetailScreen({ navigation, route }) {
                             horizontal
                             pagingEnabled
                             showsHorizontalScrollIndicator={false}
-                            keyExtractor={i => i._id}
+                            keyExtractor={i => i._id || Math.random().toString()}
                             onMomentumScrollEnd={(e) => {
                                 const x = e.nativeEvent.contentOffset.x;
                                 setCurrentPromoIndex(Math.round(x / width));
@@ -173,24 +210,24 @@ export default function CanteenDetailScreen({ navigation, route }) {
                 </View>
 
                 <Text style={styles.sectionTitle}>🍽️ Menu Items</Text>
-                {loading ? <ActivityIndicator color={ORANGE} style={{ paddingVertical: 20 }} /> : (
+                {loading && !refreshing ? <ActivityIndicator color={ORANGE} style={{ paddingVertical: 20 }} /> : (
                     <FlatList
                         data={filteredItems}
                         scrollEnabled={false}
-                        keyExtractor={i => i._id}
+                        keyExtractor={i => i._id || i.foodItemId || Math.random().toString()}
                         numColumns={2}
-                        contentContainerStyle={{ paddingHorizontal: 10, paddingBottom: 30 }}
+                        contentContainerStyle={{ paddingHorizontal: 10, paddingBottom: 10 }}
                         renderItem={({ item }) => (
                             <TouchableOpacity
                                 style={styles.foodCard}
                                 onPress={() => navigation.navigate('FoodDetail', { item })}
                             >
                                 {item.image
-                                    ? <Image source={{ uri: item.image.startsWith('http') ? item.image : `http://10.0.2.2:3000${item.image}` }} style={styles.foodImg} resizeMode="cover" />  
+                                    ? <Image source={{ uri: getImageUrl(item.image) }} style={styles.foodImg} resizeMode="cover" />  
                                     : <View style={styles.foodImgPlaceholder}><Text style={{ fontSize: 32 }}>🍽️</Text></View>}
                                 <View style={{ padding: 8 }}>
                                     <Text style={styles.foodName} numberOfLines={1}>{item.name}</Text>
-                                    <Text style={styles.foodPrice}>LKR {item.price.toFixed(2)}</Text>
+                                    <Text style={styles.foodPrice}>LKR {item.price ? item.price.toFixed(2) : '0.00'}</Text>
                                     <TouchableOpacity style={styles.addBtn} onPress={() => addToCart(item, 1)}>
                                         <Text style={styles.addBtnText}>+ Add to Cart</Text>
                                     </TouchableOpacity>
@@ -200,6 +237,39 @@ export default function CanteenDetailScreen({ navigation, route }) {
                         ListEmptyComponent={<Text style={styles.empty}>No food items matching criteria</Text>}
                     />
                 )}
+
+                <View style={styles.reviewSection}>
+                    <View style={styles.reviewHeader}>
+                        <Text style={styles.sectionTitle}>💬 Student Reviews</Text>
+                        <TouchableOpacity 
+                            onPress={() => navigation.navigate('Feedback', { canteenId: canteen._id })}
+                            style={styles.addReviewBtn}
+                        >
+                            <Text style={styles.addReviewText}>+ Rate Canteen</Text>
+                        </TouchableOpacity>
+                    </View>
+                    
+                    {feedbacks.length === 0 ? (
+                        <Text style={styles.empty}>No reviews yet for this canteen.</Text>
+                    ) : (
+                        feedbacks.slice(0, 8).map(fb => (
+                            <View key={fb._id} style={styles.reviewCard}>
+                                <View style={styles.reviewTop}>
+                                    <Text style={styles.reviewerName}>{fb.userId?.firstName || 'Student'}</Text>
+                                    <Text style={styles.stars}>{'★'.repeat(fb.rating)}{'☆'.repeat(5-fb.rating)}</Text>
+                                </View>
+                                <Text style={styles.reviewText}>{fb.comment}</Text>
+                                {fb.complaintImage ? (
+                                    <Image 
+                                        source={{ uri: getImageUrl(fb.complaintImage) }} 
+                                        style={styles.reviewImage} 
+                                        resizeMode="cover"
+                                    />
+                                ) : null}
+                            </View>
+                        ))
+                    )}
+                </View>
             </ScrollView>
         </View>
     );
@@ -247,4 +317,15 @@ const styles = StyleSheet.create({
     addBtn: { backgroundColor: ORANGE, borderRadius: 8, paddingVertical: 8, alignItems: 'center' },
     addBtnText: { color: '#fff', fontWeight: 'bold', fontSize: 13 },
     empty: { textAlign: 'center', color: '#aaa', paddingVertical: 30, fontSize: 14 },
+
+    reviewSection: { marginTop: 20, paddingBottom: 20 },
+    reviewHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 },
+    addReviewBtn: { marginRight: 16, backgroundColor: '#FFF0E8', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 8 },
+    addReviewText: { color: ORANGE, fontWeight: 'bold', fontSize: 12 },
+    reviewCard: { backgroundColor: '#fff', marginHorizontal: 16, padding: 16, borderRadius: 12, marginBottom: 10, elevation: 2 },
+    reviewTop: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 6 },
+    reviewerName: { fontSize: 14, fontWeight: 'bold', color: '#333' },
+    stars: { color: '#FFB800', fontSize: 14 },
+    reviewText: { fontSize: 14, color: '#555', fontStyle: 'italic' },
+    reviewImage: { width: '100%', height: 180, borderRadius: 8, marginTop: 10, backgroundColor: '#eee' },
 });

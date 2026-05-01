@@ -1,4 +1,4 @@
-import Canteen from "../models/canteen.js";
+import Canteen from "../models/Canteen.js";
 import { supabase } from "../config/supabase.js";
 
 // Create a new canteen (Admin only)
@@ -9,24 +9,57 @@ export async function createCanteen(req, res) {
     }
 
     const { canteenName, location, contactDetails, ownerDetails, openingTime, closingTime } = req.body;
+
+    // Check for duplicate canteen name
+    const existingCanteen = await Canteen.findOne({ 
+      canteenName: { $regex: new RegExp(`^${canteenName}$`, 'i') } 
+    });
+    
+    if (existingCanteen) {
+      return res.status(409).json({ 
+        message: "A canteen with this name already exists. Please choose a different name." 
+      });
+    }
+
     let canteenImage = "";
     if (req.file) {
-        const fileName = `canteen_${Date.now()}`;
+      try {
+        const fileName = `canteen_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+        
         const { data, error } = await supabase.storage
-            .from('quickbite-images')
-            .upload(fileName, req.file.buffer, { contentType: req.file.mimetype });
-        if (error) throw error;
+          .from('quickbite-images')
+          .upload(fileName, req.file.buffer, { 
+            contentType: req.file.mimetype,
+            upsert: false 
+          });
+          
+        if (error) {
+          console.error('Supabase upload error:', error);
+          return res.status(500).json({ 
+            message: "Failed to upload image. Please try again or contact support.",
+            details: error.message 
+          });
+        }
+
         const { data: publicUrlData } = supabase.storage
-            .from('quickbite-images')
-            .getPublicUrl(fileName);
+          .from('quickbite-images')
+          .getPublicUrl(fileName);
+          
         canteenImage = publicUrlData.publicUrl;
+      } catch (uploadError) {
+        console.error('Image upload error:', uploadError);
+        return res.status(500).json({ 
+          message: "Image upload failed. The canteen will be created without an image.",
+          error: uploadError.message 
+        });
+      }
     }
 
     const canteen = new Canteen({
-      canteenName,
-      location,
-      contactDetails,
-      ownerDetails,
+      canteenName: canteenName.trim(),
+      location: location.trim(),
+      contactDetails: contactDetails.trim(),
+      ownerDetails: ownerDetails.trim(),
       openingTime,
       closingTime,
       canteenImage,
@@ -36,7 +69,20 @@ export async function createCanteen(req, res) {
     await canteen.save();
     res.status(201).json({ message: "Canteen created successfully", canteen });
   } catch (error) {
-    res.status(400).json({ message: error.message });
+    console.error('Canteen creation error:', error);
+    
+    if (error.name === 'ValidationError') {
+      const validationErrors = Object.values(error.errors).map(err => err.message);
+      return res.status(400).json({ 
+        message: "Validation failed", 
+        details: validationErrors 
+      });
+    }
+    
+    res.status(500).json({ 
+      message: "Failed to create canteen. Please try again later.",
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
   }
 }
 
@@ -114,25 +160,85 @@ export async function updateCanteen(req, res) {
     }
 
     const updateData = { ...req.body };
-    if (req.file) {
-        const fileName = `canteen_${req.params.id}_${Date.now()}`;
-        const { data, error } = await supabase.storage
-            .from('quickbite-images')
-            .upload(fileName, req.file.buffer, { contentType: req.file.mimetype });
-        if (error) throw error;
-        const { data: publicUrlData } = supabase.storage
-            .from('quickbite-images')
-            .getPublicUrl(fileName);
-        updateData.canteenImage = publicUrlData.publicUrl;
+    
+    // Check for duplicate canteen name (if name is being updated)
+    if (updateData.canteenName && updateData.canteenName !== canteen.canteenName) {
+      const existingCanteen = await Canteen.findOne({ 
+        canteenName: { $regex: new RegExp(`^${updateData.canteenName}$`, 'i') },
+        _id: { $ne: req.params.id } // Exclude current canteen
+      });
+      
+      if (existingCanteen) {
+        return res.status(409).json({ 
+          message: "A canteen with this name already exists. Please choose a different name." 
+        });
+      }
     }
 
-    const updated = await Canteen.findByIdAndUpdate(req.params.id, updateData, {
+    if (req.file) {
+      try {
+        const fileName = `canteen_${req.params.id}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+        
+        const { data, error } = await supabase.storage
+          .from('quickbite-images')
+          .upload(fileName, req.file.buffer, { 
+            contentType: req.file.mimetype,
+            upsert: false 
+          });
+          
+        if (error) {
+          console.error('Supabase upload error:', error);
+          return res.status(500).json({ 
+            message: "Failed to upload image. Please try again or contact support.",
+            details: error.message 
+          });
+        }
+
+        const { data: publicUrlData } = supabase.storage
+          .from('quickbite-images')
+          .getPublicUrl(fileName);
+          
+        updateData.canteenImage = publicUrlData.publicUrl;
+      } catch (uploadError) {
+        console.error('Image upload error:', uploadError);
+        return res.status(500).json({ 
+          message: "Image upload failed. The canteen will be updated without an image.",
+          error: uploadError.message 
+        });
+      }
+    }
+
+    // Trim string fields
+    const trimmedUpdateData = {};
+    Object.keys(updateData).forEach(key => {
+      if (typeof updateData[key] === 'string') {
+        trimmedUpdateData[key] = updateData[key].trim();
+      } else {
+        trimmedUpdateData[key] = updateData[key];
+      }
+    });
+
+    const updated = await Canteen.findByIdAndUpdate(req.params.id, trimmedUpdateData, {
       new: true,
       runValidators: true
     });
+    
     res.status(200).json({ message: "Canteen updated successfully", canteen: updated });
   } catch (error) {
-    res.status(400).json({ message: error.message });
+    console.error('Canteen update error:', error);
+    
+    if (error.name === 'ValidationError') {
+      const validationErrors = Object.values(error.errors).map(err => err.message);
+      return res.status(400).json({ 
+        message: "Validation failed", 
+        details: validationErrors 
+      });
+    }
+    
+    res.status(500).json({ 
+      message: "Failed to update canteen. Please try again later.",
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
   }
 }
 

@@ -5,6 +5,7 @@ import {
 } from 'react-native';
 import { launchImageLibrary } from 'react-native-image-picker';
 import API from '../../services/api';
+import { getImageUrl } from '../../utils/imageUtils';
 
 const ORANGE = '#FF6B35';
 const STATUS_COLORS = { pending: '#FF9800', confirmed: '#2196F3', preparing: '#9C27B0', ready: '#4CAF50', completed: '#607D8B', cancelled: '#F44336' };
@@ -75,6 +76,12 @@ export default function AdminOrdersScreen({ navigation }) {
                             <Text style={styles.items} numberOfLines={1}>{item.items?.map(i => `${i.name}×${i.quantity}`).join(', ')}</Text>
                             <Text style={styles.amount}>LKR {(item.finalAmount || item.totalAmount || 0).toFixed(2)}</Text>
                             {item.pickupTime ? <Text style={styles.pickup}>⏰ {item.pickupTime}</Text> : null}
+                            {item.paymentProof ? (
+                                <View style={styles.slipBox}>
+                                    <Image source={{ uri: getImageUrl(item.paymentProof) }} style={styles.slip} resizeMode="contain" />
+                                    <Text style={styles.slipLabel}>Payment Verification Slip</Text>
+                                </View>
+                            ) : null}
                             <FlatList
                                 data={STATUSES}
                                 horizontal showsHorizontalScrollIndicator={false}
@@ -119,6 +126,9 @@ const styles = StyleSheet.create({
     statusBtn: { borderWidth: 1, borderColor: '#E0E0E0', borderRadius: 12, paddingHorizontal: 10, paddingVertical: 5, marginRight: 6 },
     statusBtnText: { fontSize: 11, fontWeight: '600', color: '#555' },
     empty: { textAlign: 'center', color: '#aaa', paddingVertical: 40 },
+    slipBox: { marginTop: 10, backgroundColor: '#f9f9f9', borderRadius: 8, padding: 8, borderWidth: 1, borderColor: '#eee' },
+    slip: { width: '100%', height: 120, borderRadius: 6 },
+    slipLabel: { fontSize: 10, color: '#999', textAlign: 'center', marginTop: 4, fontWeight: 'bold' },
 });
 
 // ─── AdminFoodItemsScreen ──────────────────────────────────────────────────

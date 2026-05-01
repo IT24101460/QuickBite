@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator, Alert, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator, Alert, ScrollView, Image } from 'react-native';
 import API from '../../services/api';
+import { getImageUrl } from '../../utils/imageUtils';
 
 const ORANGE = '#FF6B35';
 const TABS = ['Pending', 'Preparing', 'Ready', 'Completed'];
@@ -34,7 +35,7 @@ export default function OwnerLiveOrdersScreen({ route, navigation }) {
     const updateStatus = async (orderId, newStatus) => {
         setUpdatingId(orderId);
         try {
-            await API.put(`/orders/${orderId}/status`, { status: newStatus });
+            await API.patch(`/orders/${orderId}/status`, { status: newStatus });
             fetchOrders();
         } catch (error) {
             Alert.alert("Update Failed", "Could not shift order tracking status.");
@@ -100,7 +101,7 @@ export default function OwnerLiveOrdersScreen({ route, navigation }) {
                     renderItem={({ item }) => (
                         <View style={styles.card}>
                             <View style={styles.cardHeader}>
-                                <Text style={styles.studentName}>{item.studentName.toUpperCase()}</Text>
+                                <Text style={styles.studentName}>{item.studentName?.toUpperCase()}</Text>
                                 <Text style={styles.timeLabel}>{new Date(item.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</Text>
                             </View>
 
@@ -118,6 +119,13 @@ export default function OwnerLiveOrdersScreen({ route, navigation }) {
                                     </View>
                                 ))}
                             </View>
+
+                            {item.paymentProof ? (
+                                <View style={styles.slipBox}>
+                                    <Image source={{ uri: getImageUrl(item.paymentProof) }} style={styles.slip} resizeMode="contain" />
+                                    <Text style={styles.slipLabel}>Payment Receipt (Student Upload)</Text>
+                                </View>
+                            ) : null}
 
                             <View style={styles.footerRow}>
                                 <View>
@@ -162,7 +170,7 @@ const styles = StyleSheet.create({
     itemList: { marginBottom: 12 },
     foodText: { fontSize: 15, color: '#444', marginBottom: 4 },
 
-    footerRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end' },
+    footerRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end', marginTop: 10 },
     paymentMetric: { fontSize: 14, fontWeight: 'bold', color: '#2ecc71' },
     pickupAlert: { fontSize: 13, color: '#e74c3c', fontWeight: 'bold', marginTop: 3 },
 
@@ -171,6 +179,10 @@ const styles = StyleSheet.create({
 
     noteBox: { backgroundColor: '#FFF9C4', padding: 10, borderRadius: 8, marginTop: 12 },
     noteText: { color: '#F57F17', fontStyle: 'italic', fontSize: 13 },
+
+    slipBox: { marginVertical: 10, backgroundColor: '#f8f9fa', borderRadius: 10, padding: 10, borderWidth: 1, borderColor: '#e0e0e0' },
+    slip: { width: '100%', height: 150, borderRadius: 8 },
+    slipLabel: { fontSize: 11, color: '#7f8c8d', textAlign: 'center', marginTop: 6, fontWeight: '600' },
 
     empty: { textAlign: 'center', color: '#888', marginTop: 40 }
 });

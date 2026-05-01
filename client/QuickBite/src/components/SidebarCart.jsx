@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Image } from 'rea
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
 import API from '../services/api';
+import { getImageUrl } from '../utils/imageUtils';
 
 const ORANGE = '#dc5a2ae7';
 
@@ -31,7 +32,7 @@ export default function SidebarCart({ navigation }) {
             <View style={styles.header}>
                 <View style={styles.userIcon}>
                     {user?.profilePic ? (
-                        <Image source={{ uri: `http://10.0.2.2:3000${user.profilePic}` }} style={styles.avatar} />
+                        <Image source={{ uri: getImageUrl(user.profilePic) }} style={styles.avatar} />
                     ) : (
                         <Text style={{ fontSize: 28 }}>👤</Text>
                     )}

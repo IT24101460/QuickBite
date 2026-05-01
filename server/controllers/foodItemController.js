@@ -1,5 +1,5 @@
 import FoodItem from "../models/foodItems.js";
-import Canteen from "../models/canteen.js";
+import Canteen from "../models/Canteen.js";
 import { supabase } from "../config/supabase.js";
 
 export async function createFoodItem(req, res) {

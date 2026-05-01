@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, Modal, TextInput, Image, ActivityIndicator, Alert, KeyboardAvoidingView, Platform } from 'react-native';
 import { launchImageLibrary } from 'react-native-image-picker';
 import API from '../../services/api';
+import { getImageUrl } from '../../utils/imageUtils';
 
 const ORANGE = '#FF6B35';
 
@@ -85,7 +86,7 @@ export default function OwnerMenuScreen({ route, navigation }) {
         setDescription(food.description || '');
         setCategory(food.category);
         setFormCanteenId(food.canteenId?._id || food.canteenId || canteenId);
-        setImagePreview(food.image ? (food.image.startsWith('http') ? food.image : `http://10.0.2.2:3000${food.image}`) : null);
+        setImagePreview(getImageUrl(food.image));
         setImageFile(null);
         setModalVisible(true);
     };
@@ -159,7 +160,7 @@ export default function OwnerMenuScreen({ route, navigation }) {
                     keyExtractor={item => item.foodItemId}
                     renderItem={({ item }) => (
                         <View style={styles.card}>
-                            <Image style={styles.cardImg} source={{ uri: item.image ? (item.image.startsWith('http') ? item.image : `http://10.0.2.2:3000${item.image}`) : 'https://via.placeholder.com/100' }} />
+                            <Image style={styles.cardImg} source={{ uri: item.image ? getImageUrl(item.image) : 'https://via.placeholder.com/100' }} />
                             <View style={styles.cardContent}>
                                 <Text style={styles.cardTitle}>{item.name}</Text>
                                 <Text style={styles.cardPrice}>Rs {item.price}</Text>
