@@ -18,8 +18,24 @@ export default function AdminCanteensScreen({ navigation }) {
     const [form, setForm] = useState({ canteenName: '', location: '', contactDetails: '', ownerDetails: '', openingTime: '', closingTime: '', createdBy: '' });
     const [image, setImage] = useState(null);
     const [saving, setSaving] = useState(false);
+    const [nameError, setNameError] = useState('');
 
-    const set = k => v => setForm(f => ({ ...f, [k]: v }));
+    const set = k => v => {
+        setForm(f => ({ ...f, [k]: v }));
+        
+        // Real-time validation for canteen name
+        if (k === 'canteenName' && v) {
+            const duplicateName = canteens.find(c => 
+                c.canteenName.toLowerCase() === v.toLowerCase() && 
+                c._id !== editing?._id
+            );
+            setNameError(duplicateName ? 'A canteen with this name already exists' : '');
+        } else if (k === 'canteenName' && !v) {
+            setNameError('Canteen name is required');
+        } else if (k === 'canteenName') {
+            setNameError('');
+        }
+    };
 
     const fetch = async () => {
         try {
@@ -38,21 +54,74 @@ export default function AdminCanteensScreen({ navigation }) {
     const openAdd = () => { setEditing(null); setForm({ canteenName: '', location: '', contactDetails: '', ownerDetails: '', openingTime: '08:00 AM', closingTime: '05:00 PM', createdBy: '' }); setImage(null); setModal(true); };
     const openEdit = (c) => { setEditing(c); setForm({ canteenName: c.canteenName, location: c.location, contactDetails: c.contactDetails, ownerDetails: c.ownerDetails, openingTime: c.openingTime, closingTime: c.closingTime, createdBy: c.createdBy }); setImage(null); setModal(true); };
 
-    const pickImg = () => launchImageLibrary({ mediaType: 'photo', quality: 0.7 }, r => { if (!r.didCancel && r.assets?.length) setImage(r.assets[0]); });
+    const pickImg = () => launchImageLibrary({ 
+        mediaType: 'photo', 
+        quality: 0.7,
+        includeBase64: false,
+        maxHeight: 1024,
+        maxWidth: 1024,
+        selectionLimit: 1
+    }, r => { 
+        if (!r.didCancel && r.assets?.length) {
+            // Check file type
+            const asset = r.assets[0];
+            const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png'];
+            if (allowedTypes.includes(asset.type)) {
+                setImage(asset);
+            } else {
+                Alert.alert('Invalid File Type', 'Please select only JPG, JPEG, or PNG images');
+            }
+        }
+    });
 
     const save = async () => {
-        if (!form.canteenName || !form.location || !form.contactDetails || !form.ownerDetails || !form.createdBy) return Alert.alert('Error', 'Fill all required fields including assigning an owner');
+        if (!form.canteenName || !form.location || !form.contactDetails || !form.ownerDetails || !form.createdBy) {
+            return Alert.alert('Error', 'Fill all required fields including assigning an owner');
+        }
+
+        // Check for duplicate name in frontend (optimistic validation)
+        const duplicateName = canteens.find(c => 
+            c.canteenName.toLowerCase() === form.canteenName.toLowerCase() && 
+            c._id !== editing?._id
+        );
+        
+        if (duplicateName) {
+            return Alert.alert('Duplicate Name', 'A canteen with this name already exists. Please choose a different name.');
+        }
+
         setSaving(true);
         try {
             const fd = new FormData();
             Object.entries(form).forEach(([k, v]) => fd.append(k, v));
             if (image) fd.append('canteenImage', { uri: image.uri, name: image.fileName || 'img.jpg', type: image.type || 'image/jpeg' });
-            if (editing) await API.put(`/canteens/${editing._id}`, fd, { headers: { 'Content-Type': 'multipart/form-data' } });
-            else await API.post('/canteens', fd, { headers: { 'Content-Type': 'multipart/form-data' } });
+            
+            let response;
+            if (editing) {
+                response = await API.put(`/canteens/${editing._id}`, fd, { headers: { 'Content-Type': 'multipart/form-data' } });
+            } else {
+                response = await API.post('/canteens', fd, { headers: { 'Content-Type': 'multipart/form-data' } });
+            }
+            
             setModal(false);
             fetch();
-        } catch (e) { Alert.alert('Error', e.response?.data?.message || 'Failed to save'); }
-        finally { setSaving(false); }
+            Alert.alert('Success', editing ? 'Canteen updated successfully!' : 'Canteen created successfully!');
+        } catch (e) {
+            console.error('Save error:', e);
+            const errorMessage = e.response?.data?.message || 'Failed to save canteen';
+            const errorDetails = e.response?.data?.details;
+            
+            if (errorDetails && Array.isArray(errorDetails)) {
+                Alert.alert('Validation Error', errorDetails.join('\n'));
+            } else if (errorMessage.includes('already exists')) {
+                Alert.alert('Duplicate Name', errorMessage);
+            } else if (errorMessage.includes('image')) {
+                Alert.alert('Image Upload Error', errorMessage);
+            } else {
+                Alert.alert('Error', errorMessage);
+            }
+        } finally { 
+            setSaving(false); 
+        }
     };
 
     const deleteCanteen = (id) => Alert.alert('Delete', 'Are you sure?', [
@@ -98,10 +167,26 @@ export default function AdminCanteensScreen({ navigation }) {
                         <Text style={styles.modalTitle}>{editing ? 'Edit Canteen' : 'Add Canteen'}</Text>
                     </View>
                     <ScrollView contentContainerStyle={styles.modalScroll}>
-                        {[['Canteen Name *', 'canteenName'], ['Location *', 'location'], ['Contact Details *', 'contactDetails'], ['Owner Details (Text) *', 'ownerDetails'], ['Opening Time', 'openingTime'], ['Closing Time', 'closingTime']].map(([label, k]) => (
+                        {[
+    ['Canteen Name *', 'canteenName'], 
+    ['Location *', 'location'], 
+    ['Contact Details *', 'contactDetails'], 
+    ['Owner Details (Text) *', 'ownerDetails'], 
+    ['Opening Time', 'openingTime'], 
+    ['Closing Time', 'closingTime']
+].map(([label, k]) => (
                             <View key={k} style={{ marginBottom: 12 }}>
                                 <Text style={styles.label}>{label}</Text>
-                                <TextInput style={styles.input} value={form[k]} onChangeText={set(k)} placeholder={label} placeholderTextColor="#aaa" />
+                                <TextInput 
+                                    style={[styles.input, nameError && k === 'canteenName' && styles.inputError]} 
+                                    value={form[k]} 
+                                    onChangeText={set(k)} 
+                                    placeholder={label} 
+                                    placeholderTextColor="#aaa" 
+                                />
+                                {nameError && k === 'canteenName' && (
+                                    <Text style={styles.errorText}>{nameError}</Text>
+                                )}
                             </View>
                         ))}
                         
@@ -121,7 +206,19 @@ export default function AdminCanteensScreen({ navigation }) {
                         </View>
                         <Text style={styles.label}>Canteen Image</Text>
                         <TouchableOpacity style={styles.imgPicker} onPress={pickImg}>
-                            {image ? <Image source={{ uri: image.uri }} style={styles.imgPreview} resizeMode="cover" /> : <Text style={styles.imgPickerText}>📷 Select Image</Text>}
+                            {image ? (
+                                <View>
+                                    <Image source={{ uri: image.uri }} style={styles.imgPreview} resizeMode="cover" />
+                                    <TouchableOpacity 
+                                        style={styles.cancelImgBtn} 
+                                        onPress={() => setImage(null)}
+                                    >
+                                        <Text style={styles.cancelImgBtnText}>✕</Text>
+                                    </TouchableOpacity>
+                                </View>
+                            ) : (
+                                <Text style={styles.imgPickerText}>📷 Select Image</Text>
+                            )}
                         </TouchableOpacity>
                         <TouchableOpacity style={[styles.saveBtn, saving && { opacity: 0.6 }]} onPress={save} disabled={saving}>
                             {saving ? <ActivityIndicator color="#fff" /> : <Text style={styles.saveBtnText}>{editing ? 'Update' : 'Create'} Canteen</Text>}
@@ -157,9 +254,13 @@ const styles = StyleSheet.create({
     modalScroll: { padding: 20 },
     label: { fontSize: 13, fontWeight: '600', color: '#555', marginBottom: 6 },
     input: { borderWidth: 1.5, borderColor: '#E8E8E8', borderRadius: 10, padding: 12, fontSize: 14, color: '#222', marginBottom: 2 },
+    inputError: { borderColor: '#FF6B35' },
+    errorText: { color: '#FF6B35', fontSize: 12, marginTop: 4 },
     imgPicker: { borderWidth: 2, borderColor: ORANGE, borderStyle: 'dashed', borderRadius: 12, height: 120, justifyContent: 'center', alignItems: 'center', marginBottom: 20, overflow: 'hidden' },
     imgPreview: { width: '100%', height: '100%' },
     imgPickerText: { color: ORANGE, fontWeight: '600', fontSize: 14 },
+    cancelImgBtn: { position: 'absolute', top: 5, right: 5, backgroundColor: 'rgba(0,0,0,0.6)', borderRadius: 12, width: 24, height: 24, justifyContent: 'center', alignItems: 'center' },
+    cancelImgBtnText: { color: '#fff', fontSize: 14, fontWeight: 'bold' },
     saveBtn: { backgroundColor: ORANGE, borderRadius: 12, paddingVertical: 14, alignItems: 'center', marginTop: 8 },
     saveBtnText: { color: '#fff', fontWeight: 'bold', fontSize: 15 },
     ownersList: { marginBottom: 20, gap: 8 },

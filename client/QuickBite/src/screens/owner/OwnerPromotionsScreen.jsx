@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, Modal, TextInput, Image, ActivityIndicator, Alert, ScrollView, Switch, KeyboardAvoidingView, Platform } from 'react-native';
 import { launchImageLibrary } from 'react-native-image-picker';
 import API from '../../services/api';
+import { getImageUrl } from '../../utils/imageUtils';
 
 const ORANGE = '#FF6B35';
 
@@ -134,7 +135,7 @@ export default function OwnerPromotionsScreen({ route, navigation }) {
 
     const toggleStatus = async (id) => {
         try {
-            await API.put(`/promotions/${id}/toggle`);
+            await API.patch(`/promotions/${id}/toggle`);
             fetchData();
         } catch (e) { Alert.alert("Error", "Could not toggle the promotion status"); }
     }
@@ -155,7 +156,7 @@ export default function OwnerPromotionsScreen({ route, navigation }) {
         <View style={styles.container}>
             <View style={styles.header}>
                 <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}><Text style={styles.backArrow}>←</Text></TouchableOpacity>
-                <Text style={styles.title}>Promotions HQ</Text>
+                <Text style={styles.title}>QuickBite Promotions</Text>
             </View>
 
             <View style={styles.actionRow}>
@@ -172,7 +173,7 @@ export default function OwnerPromotionsScreen({ route, navigation }) {
                     keyExtractor={item => item._id}
                     renderItem={({ item }) => (
                         <View style={[styles.card, !item.isActive && { opacity: 0.6 }]}>
-                            {item.bannerImage ? <Image source={{ uri: item.bannerImage.startsWith('http') ? item.bannerImage : `http://10.0.2.2:3000${item.bannerImage}` }} style={styles.cardImage} /> : null}
+                            {item.bannerImage ? <Image source={{ uri: getImageUrl(item.bannerImage) }} style={styles.cardImage} /> : null}
                             <View style={styles.cardContent}>
                                 <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
                                     <Text style={styles.cardTitle}>{item.title}</Text>

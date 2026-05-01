@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, StyleSheet, TouchableOpacity, ScrollView, Alert, ActivityIndicator, Image } from 'react-native';
 import { launchImageLibrary } from 'react-native-image-picker';
 import API from '../../services/api';
+import { getImageUrl } from '../../utils/imageUtils';
 
 const ORANGE = '#FF6B35';
 
@@ -43,7 +44,7 @@ export default function OwnerSettingsScreen({ route, navigation }) {
                 setClosing(data.closingTime);
                 setBankLabel(data.bankDetails || '');
                 if (data.canteenImage) {
-                    setCanteenImage(data.canteenImage.startsWith('http') ? data.canteenImage : `http://10.0.2.2:3000${data.canteenImage}`);
+                    setCanteenImage(getImageUrl(data.canteenImage));
                 }
             }
         } catch (error) {

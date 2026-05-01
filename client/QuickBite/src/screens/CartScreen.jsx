@@ -6,6 +6,7 @@ import {
 import { useCart } from '../context/CartContext';
 import API from '../services/api';
 import TopNavBar from '../components/TopNavBar';
+import { getImageUrl } from '../utils/imageUtils';
 
 const ORANGE = '#FF6B35';
 
@@ -42,7 +43,7 @@ export default function CartScreen({ navigation }) {
         <View style={styles.cartItemWrapper}>
             <View style={styles.cartItem}>
                 {item.image
-                    ? <Image source={{ uri: `http://10.0.2.2:3000${item.image}` }} style={styles.itemImg} resizeMode="cover" />
+                    ? <Image source={{ uri: getImageUrl(item.image) }} style={styles.itemImg} resizeMode="cover" />
                     : <View style={styles.itemImgPlaceholder}><Text style={{ fontSize: 28 }}>🍽️</Text></View>}
                 <View style={styles.itemInfo}>
                     <Text style={styles.itemName} numberOfLines={2}>{item.name}</Text>

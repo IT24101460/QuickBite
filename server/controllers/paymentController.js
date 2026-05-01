@@ -4,6 +4,7 @@ import UserPaymentOption from "../models/userPaymentOption.js";
 import { v4 as uuidv4 } from "uuid";
 import { recordPaymentOptionUsage } from "./userPaymentController.js";
 import stripe from "../config/stripe.js";
+import { supabase } from "../config/supabase.js";
 
 // Create payment for an order
 export async function createPayment(req, res) {
@@ -34,7 +35,18 @@ export async function createPayment(req, res) {
             return res.status(400).json({ message: "Payment already exists for this order" });
         }
 
-        const paymentProof = req.file ? `/uploads/${req.file.filename}` : "";
+        let paymentProof = "";
+        if (req.file) {
+            const fileName = `payment_${orderId}_${Date.now()}`;
+            const { data, error } = await supabase.storage
+                .from('quickbite-images')
+                .upload(fileName, req.file.buffer, { contentType: req.file.mimetype });
+            if (error) throw error;
+            const { data: publicUrlData } = supabase.storage
+                .from('quickbite-images')
+                .getPublicUrl(fileName);
+            paymentProof = publicUrlData.publicUrl;
+        }
 
         // If paymentOptionId is provided, validate it belongs to the user
         let selectedPaymentMethod = paymentMethod || "cash";
