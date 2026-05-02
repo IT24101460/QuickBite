@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator, Alert, ScrollView, Image } from 'react-native';
 import API from '../../services/api';
 import { getImageUrl } from '../../utils/imageUtils';
 
 const ORANGE = '#FF6B35';
-const TABS = ['Pending', 'Preparing', 'Ready', 'Completed'];
+const TABS = ['Pending', 'Confirmed', 'Preparing', 'Ready', 'Completed'];
 
 export default function OwnerLiveOrdersScreen({ route, navigation }) {
     const passedCanteenId = route.params?.canteenId;
@@ -13,14 +13,7 @@ export default function OwnerLiveOrdersScreen({ route, navigation }) {
     const [activeTab, setActiveTab] = useState('Pending');
     const [updatingId, setUpdatingId] = useState(null);
 
-    useEffect(() => {
-        fetchOrders();
-        // Simple polling for a real-world feel
-        const interval = setInterval(() => { fetchOrders() }, 15000);
-        return () => clearInterval(interval);
-    }, []);
-
-    const fetchOrders = async () => {
+    const fetchOrders = useCallback(async () => {
         try {
             const url = passedCanteenId ? `/orders?canteenId=${passedCanteenId}` : '/orders';
             const res = await API.get(url);
@@ -30,7 +23,14 @@ export default function OwnerLiveOrdersScreen({ route, navigation }) {
         } finally {
             setLoading(false);
         }
-    };
+    }, [passedCanteenId]);
+
+    useEffect(() => {
+        fetchOrders();
+        // Simple polling for a real-world feel
+        const interval = setInterval(() => { fetchOrders() }, 15000);
+        return () => clearInterval(interval);
+    }, [fetchOrders]);
 
     const updateStatus = async (orderId, newStatus) => {
         setUpdatingId(orderId);
@@ -45,10 +45,10 @@ export default function OwnerLiveOrdersScreen({ route, navigation }) {
     };
 
     const StatusButton = ({ order }) => {
-        if (order.status === 'pending') {
+        if (order.status === 'pending' || order.status === 'confirmed') {
             return (
                 <TouchableOpacity style={[styles.actionBtn, { backgroundColor: '#3498db' }]} onPress={() => updateStatus(order._id, 'preparing')}>
-                    <Text style={styles.actionText}>Accept & Prepare</Text>
+                    <Text style={styles.actionText}>{order.status === 'pending' ? 'Accept & Prepare' : 'Start Preparing'}</Text>
                 </TouchableOpacity>
             );
         }
@@ -102,7 +102,10 @@ export default function OwnerLiveOrdersScreen({ route, navigation }) {
                         <View style={styles.card}>
                             <View style={styles.cardHeader}>
                                 <Text style={styles.studentName}>{item.studentName?.toUpperCase()}</Text>
-                                <Text style={styles.timeLabel}>{new Date(item.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</Text>
+                                <View style={{ alignItems: 'flex-end' }}>
+                                    <Text style={styles.statusPill}>{item.status?.toUpperCase()}</Text>
+                                    <Text style={styles.timeLabel}>{new Date(item.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</Text>
+                                </View>
                             </View>
 
                             <View style={styles.itemList}>
@@ -165,6 +168,7 @@ const styles = StyleSheet.create({
     card: { backgroundColor: '#fff', borderRadius: 12, padding: 16, marginBottom: 15, elevation: 2, borderLeftWidth: 4, borderColor: ORANGE },
     cardHeader: { flexDirection: 'row', justifyContent: 'space-between', borderBottomWidth: 1, borderBottomColor: '#eee', paddingBottom: 8, marginBottom: 10 },
     studentName: { fontSize: 16, fontWeight: 'bold', color: '#222' },
+    statusPill: { backgroundColor: '#FFF0E8', color: ORANGE, fontSize: 10, lineHeight: 13, fontWeight: 'bold', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 9, marginBottom: 4, overflow: 'hidden' },
     timeLabel: { fontSize: 13, color: '#888' },
 
     itemList: { marginBottom: 12 },
