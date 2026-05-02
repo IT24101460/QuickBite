@@ -42,20 +42,23 @@ export default function AdminOrdersScreen({ navigation }) {
             </View>
 
             {/* Status Filter */}
-            <FlatList
-                data={['', ...STATUSES]}
-                horizontal showsHorizontalScrollIndicator={false}
-                keyExtractor={i => i}
-                contentContainerStyle={{ padding: 10 }}
-                renderItem={({ item }) => (
+            <View style={styles.filterBar}>
+                <ScrollView
+                    horizontal
+                    showsHorizontalScrollIndicator={false}
+                    contentContainerStyle={styles.filterContent}
+                >
+                    {['', ...STATUSES].map(item => (
                     <TouchableOpacity
+                        key={item || 'all'}
                         style={[styles.chip, filterStatus === item && styles.chipActive]}
                         onPress={() => setFilterStatus(item)}
                     >
                         <Text style={[styles.chipText, filterStatus === item && styles.chipTextActive]}>{item || 'All'}</Text>
                     </TouchableOpacity>
-                )}
-            />
+                    ))}
+                </ScrollView>
+            </View>
 
             {loading ? <ActivityIndicator size="large" color={COLORS.primary} style={{ marginTop: 20 }} /> : (
                 <FlatList
@@ -71,7 +74,20 @@ export default function AdminOrdersScreen({ navigation }) {
                                     <Text style={styles.badgeText}>{item.status.toUpperCase()}</Text>
                                 </View>
                             </View>
-                            <Text style={styles.items} numberOfLines={1}>{item.items?.map(i => `${i.name}×${i.quantity}`).join(', ')}</Text>
+                            <View style={styles.itemList}>
+                                {item.items?.map((orderItem, idx) => (
+                                    <View key={`${orderItem.foodItemId || orderItem.name}-${idx}`} style={styles.itemRow}>
+                                        <Text style={styles.itemName} numberOfLines={1}>
+                                            {orderItem.name} ×{orderItem.quantity}
+                                        </Text>
+                                        <View style={styles.categoryBadge}>
+                                            <Text style={styles.categoryBadgeText} numberOfLines={1}>
+                                                {orderItem.category || 'General'}
+                                            </Text>
+                                        </View>
+                                    </View>
+                                ))}
+                            </View>
                             <Text style={styles.amount}>LKR {(item.finalAmount || item.totalAmount || 0).toFixed(2)}</Text>
                             {item.pickupTime ? <Text style={styles.pickup}>⏰ {item.pickupTime}</Text> : null}
                             {item.paymentProof ? (
@@ -239,6 +255,44 @@ const styles = StyleSheet.create({
         marginTop: SPACING.xs, 
         fontWeight: 'bold' 
     },
+    container: { flex: 1, backgroundColor: '#F8F9FA' },
+    header: { backgroundColor: ORANGE, paddingTop: 52, paddingBottom: 16, paddingHorizontal: 16, flexDirection: 'row', alignItems: 'center' },
+    backBtn: { marginRight: 10, padding: 4 },
+    back: { color: '#fff', fontSize: 22, fontWeight: 'bold' },
+    headerTitle: { color: '#fff', fontSize: 18, fontWeight: 'bold' },
+    filterBar: { height: 52, backgroundColor: '#F8F9FA', justifyContent: 'center' },
+    filterContent: { paddingHorizontal: 10, alignItems: 'center' },
+    chip: { minHeight: 34, borderWidth: 1.5, borderColor: '#E8E8E8', borderRadius: 17, paddingHorizontal: 14, marginRight: 8, backgroundColor: '#fff', justifyContent: 'center', alignItems: 'center' },
+    chipActive: { backgroundColor: ORANGE, borderColor: ORANGE },
+    chipText: { fontSize: 13, lineHeight: 16, color: '#666', fontWeight: '600', includeFontPadding: false, textAlignVertical: 'center' },
+    chipTextActive: { color: '#fff' },
+    card: { backgroundColor: '#fff', borderRadius: 14, padding: 14, marginBottom: 10, elevation: 2 },
+    cardTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 },
+    qNum: { fontSize: 14, fontWeight: 'bold', color: '#222' },
+    badge: { borderRadius: 10, paddingHorizontal: 8, paddingVertical: 4 },
+    badgeText: { color: '#fff', fontSize: 10, fontWeight: 'bold' },
+    itemList: { marginBottom: 6 },
+    itemRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 6 },
+    itemName: { flex: 1, minWidth: 0, fontSize: 12, color: '#666', marginRight: 10 },
+    categoryBadge: {
+        maxWidth: 120,
+        height: 24,
+        backgroundColor: '#FFF0E8',
+        borderRadius: 12,
+        paddingHorizontal: 9,
+        justifyContent: 'center',
+        alignItems: 'center',
+        flexShrink: 0,
+    },
+    categoryBadgeText: { color: ORANGE, fontSize: 10, lineHeight: 14, fontWeight: '700', includeFontPadding: false, textAlignVertical: 'center' },
+    amount: { fontSize: 14, fontWeight: 'bold', color: ORANGE },
+    pickup: { fontSize: 12, color: '#888', marginTop: 2 },
+    statusBtn: { borderWidth: 1, borderColor: '#E0E0E0', borderRadius: 12, paddingHorizontal: 10, paddingVertical: 5, marginRight: 6 },
+    statusBtnText: { fontSize: 11, fontWeight: '600', color: '#555' },
+    empty: { textAlign: 'center', color: '#aaa', paddingVertical: 40 },
+    slipBox: { marginTop: 10, backgroundColor: '#f9f9f9', borderRadius: 8, padding: 8, borderWidth: 1, borderColor: '#eee' },
+    slip: { width: '100%', height: 120, borderRadius: 6 },
+    slipLabel: { fontSize: 10, color: '#999', textAlign: 'center', marginTop: 4, fontWeight: 'bold' },
 });
 
 // ─── AdminFoodItemsScreen ──────────────────────────────────────────────────
