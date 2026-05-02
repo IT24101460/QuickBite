@@ -136,6 +136,7 @@ export default function CheckoutScreen({ route, navigation }) {
                 items: cartItems.map(i => ({
                     foodItemId: i.foodItemId || i._id,
                     name: i.name,
+                    category: i.category || 'General',
                     price: i.price,
                     quantity: i.quantity,
                     note: i.note || "",

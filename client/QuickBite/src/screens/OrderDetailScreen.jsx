@@ -60,6 +60,7 @@ export default function OrderDetailScreen({ navigation, route }) {
                 {/* Info */}
                 <View style={styles.card}>
                     <Text style={styles.cardTitle}>ℹ️ Details</Text>
+                    {order.lastStatusMessage ? <Text style={styles.statusMessage}>{order.lastStatusMessage}</Text> : null}
                     {order.pickupTime ? <Text style={styles.detailRow}>⏰ Pickup: {order.pickupTime}</Text> : null}
                     {order.note ? <Text style={styles.detailRow}>📝 Note: {order.note}</Text> : null}
                     <Text style={styles.detailRow}>📅 {new Date(order.createdAt).toLocaleString()}</Text>
@@ -107,6 +108,7 @@ const styles = StyleSheet.create({
     divider: { height: 1, backgroundColor: '#F0F0F0', marginVertical: 8 },
     totalLabel: { fontSize: 16, fontWeight: 'bold', color: '#222' },
     totalValue: { fontSize: 16, fontWeight: 'bold', color: ORANGE },
+    statusMessage: { fontSize: 13, color: '#444', backgroundColor: '#FFF7F2', borderRadius: 10, padding: 10, marginBottom: 10 },
     detailRow: { fontSize: 14, color: '#555', marginBottom: 6 },
     feedbackBtn: {
         backgroundColor: '#FFF3EE', borderWidth: 2, borderColor: ORANGE,
