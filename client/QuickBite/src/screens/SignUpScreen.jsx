@@ -5,6 +5,8 @@ import {
 } from 'react-native';
 import API from '../services/api';
 import { useAuth } from '../context/AuthContext';
+import { useBranding } from '../context/BrandingContext';
+import { getImageUrl } from '../utils/imageUtils';
 
 const ORANGE = '#FF6B35';
 const { width } = Dimensions.get('window');
@@ -20,6 +22,8 @@ export default function SignUpScreen({ navigation }) {
   const [form, setForm] = useState({ firstName: '', lastName: '', email: '', uniId: '', phoneNumber: '', password: '', confirmPassword: '' });
   const [loading, setLoading] = useState(false);
   const { login } = useAuth();
+  const { branding } = useBranding();
+  const logoSource = branding?.logoUrl ? { uri: getImageUrl(branding.logoUrl) } : require('../assets/my-logo.png');
 
   const set = (key) => (val) => setForm(f => ({ ...f, [key]: val }));
 
@@ -64,10 +68,10 @@ export default function SignUpScreen({ navigation }) {
         <View style={styles.hero}>
 
           <Image
-            source={require('../assets/my-logo.png')}
+            source={logoSource}
             style={{ width: 100, height: 100, resizeMode: 'contain' }} />
 
-          <Text style={styles.appName}>QuickBite</Text>
+          <Text style={styles.appName}>{branding?.appName || 'QuickBite'}</Text>
         </View>
         <View style={styles.card}>
           <Text style={styles.cardTitle}>Create Account</Text>

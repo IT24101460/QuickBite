@@ -27,6 +27,7 @@ import CanteenDetailScreen from '../screens/CanteenDetailScreen';
 import AddCardScreen from '../screens/AddCardScreen';
 import OTPScreen from '../screens/OTPScreen';
 import PaymentOptionsScreen from '../screens/PaymentOptionsScreen';
+import { BrandingProvider } from '../context/BrandingContext';
 
 // Admin screens
 import AdminDashboardScreen from '../screens/admin/AdminDashboardScreen';
@@ -36,6 +37,7 @@ import AdminOrdersScreen from '../screens/admin/AdminOrdersScreen';
 import AdminPromotionsScreen from '../screens/admin/AdminPromotionsScreen';
 import AdminOwnersScreen from '../screens/admin/AdminOwnersScreen';
 import AdminFeedbackScreen from '../screens/admin/AdminFeedbackScreen';
+import AdminBrandingScreen from '../screens/admin/AdminBrandingScreen';
 
 // Owner screens
 import OwnerDashboardScreen from '../screens/owner/OwnerDashboardScreen';
@@ -101,6 +103,7 @@ function AdminFlow() {
       <Stack.Screen name="AdminPromotions" component={AdminPromotionsScreen} />
       <Stack.Screen name="AdminOwners" component={AdminOwnersScreen} />
       <Stack.Screen name="AdminFeedback" component={AdminFeedbackScreen} />
+      <Stack.Screen name="AdminBranding" component={AdminBrandingScreen} />
     </Stack.Navigator>
   );
 }
@@ -132,22 +135,24 @@ export default function AppNavigator() {
   }
 
   return (
-    <NavigationContainer>
-      <OrderStatusNotifier />
-      <GlobalStack.Navigator screenOptions={{ headerShown: false }}>
-        {user?.role === 'admin' ? (
-            <GlobalStack.Screen name="Admin" component={AdminFlow} />
-        ) : user?.role === 'owner' ? (
-            <GlobalStack.Screen name="Owner" component={OwnerFlow} />
-        ) : user ? (
-            <GlobalStack.Screen name="User" component={UserDrawerFlow} />
-        ) : (
-            <>
-              <GlobalStack.Screen name="Login" component={LoginScreen} />
-              <GlobalStack.Screen name="SignUp" component={SignUpScreen} />
-            </>
-        )}
-      </GlobalStack.Navigator>
-    </NavigationContainer>
+    <BrandingProvider>
+      <NavigationContainer>
+        <OrderStatusNotifier />
+        <GlobalStack.Navigator screenOptions={{ headerShown: false }}>
+          {user?.role === 'admin' ? (
+              <GlobalStack.Screen name="Admin" component={AdminFlow} />
+          ) : user?.role === 'owner' ? (
+              <GlobalStack.Screen name="Owner" component={OwnerFlow} />
+          ) : user ? (
+              <GlobalStack.Screen name="User" component={UserDrawerFlow} />
+          ) : (
+              <>
+                <GlobalStack.Screen name="Login" component={LoginScreen} />
+                <GlobalStack.Screen name="SignUp" component={SignUpScreen} />
+              </>
+          )}
+        </GlobalStack.Navigator>
+      </NavigationContainer>
+    </BrandingProvider>
   );
 }
