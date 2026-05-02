@@ -2,12 +2,15 @@ import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image, TextInput } from 'react-native';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
+import { useBranding } from '../context/BrandingContext';
+import { getImageUrl } from '../utils/imageUtils';
 
 const ORANGE = '#e35f2fd2';
 
 export default function TopNavBar({ navigation, search, setSearch, placeholder = "🔍 Search amazing food...", hideBottomRow = false, isHome = false }) {
     const { user } = useAuth();
     const { itemCount, finalTotal } = useCart();
+    const { branding } = useBranding();
 
     const canGoBack = !isHome && navigation.canGoBack ? navigation.canGoBack() : false;
 
@@ -25,7 +28,11 @@ export default function TopNavBar({ navigation, search, setSearch, placeholder =
                         <TouchableOpacity style={styles.hamburgerBtn} onPress={() => navigation.toggleDrawer?.()}>
                             <Text style={styles.hamburgerIcon}>≡</Text>
                         </TouchableOpacity>
-                        <Text style={styles.logoText}>Q<Text style={styles.logoBold}>B</Text></Text>
+                        {branding?.logoUrl ? (
+                            <Image source={{ uri: getImageUrl(branding.logoUrl) }} style={styles.brandLogo} resizeMode="contain" />
+                        ) : (
+                            <Text style={styles.logoText}>Q<Text style={styles.logoBold}>B</Text></Text>
+                        )}
                     </View>
                 </View>
 
@@ -121,6 +128,7 @@ const styles = StyleSheet.create({
     hamburgerIcon: { fontSize: 32, color: '#000', lineHeight: 36, fontWeight: '400' },
     logoText: { fontSize: 20, color: '#000', letterSpacing: -0.5 },
     logoBold: { fontWeight: 'bold', color: ORANGE },
+    brandLogo: { width: 34, height: 34 },
 
     centerSearchWrapper: {
         flex: 1,

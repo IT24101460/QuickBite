@@ -8,8 +8,8 @@ import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
 import TopNavBar from '../components/TopNavBar';
 import { getImageUrl } from '../utils/imageUtils';
+import { COLORS, SPACING, TYPOGRAPHY, BORDER_RADIUS, SHADOWS, SIZES } from '../styles/adminTheme';
 
-const ORANGE = '#FF6B35';
 const { width, height } = Dimensions.get('window');
 
 export default function HomeScreen({ navigation }) {
@@ -133,19 +133,18 @@ export default function HomeScreen({ navigation }) {
   if (loading) {
     return (
       <View style={styles.center}>
-        <ActivityIndicator size="large" color={ORANGE} />
-        <Text style={styles.loadingText}>Loading QuickBite...</Text>
+        {loading ? <ActivityIndicator size="large" color={COLORS.primary} /> : <Text style={styles.loadingText}>Loading QuickBite...</Text>}
       </View>
     );
   }
 
   return (
     <View style={styles.container}>
-      <TopNavBar navigation={navigation} search={search} setSearch={setSearch} hideBottomRow={true} isHome={true} />
+        <TopNavBar navigation={navigation} search={search} setSearch={setSearch} hideBottomRow={true} isHome={true} />
 
       <ScrollView
         showsVerticalScrollIndicator={false}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[ORANGE]} />}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[COLORS.primary]} />}
         contentContainerStyle={{ paddingTop: 85, paddingBottom: 20 }}
       >
 
@@ -282,67 +281,204 @@ export default function HomeScreen({ navigation }) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#FFF7F3' },
-  center: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#fff' },
-  loadingText: { marginTop: 12, color: '#888', fontSize: 14 },
+  container: { flex: 1, backgroundColor: COLORS.background },
+  center: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'transparent' },
+  loadingText: { 
+    marginTop: SPACING.md, 
+    color: COLORS.textSecondary, 
+    fontSize: TYPOGRAPHY.body2.fontSize 
+  },
   promoContainer: { width: '100%', alignItems: 'center' },
   promoBanner: {
     width: width - 32,
     height: height * 0.25,
-    backgroundColor: '#FFE0D6',
-    marginHorizontal: 16,
-    marginTop: 10,
-    borderRadius: 10,
-    overflow: 'hidden'
+    backgroundColor: COLORS.primaryUltraLight,
+    marginHorizontal: SPACING.md,
+    marginTop: SPACING.sm,
+    borderRadius: BORDER_RADIUS.lg,
+    overflow: 'hidden',
+    ...SHADOWS.sm,
   },
   promoBannerImg: { width: '100%', height: '100%' },
-  promoBannerPlaceholder: { width: '100%', height: '100%', backgroundColor: '#FFD4C2' },
+  promoBannerPlaceholder: { 
+    width: '100%', 
+    height: '100%', 
+    backgroundColor: COLORS.primaryLight 
+  },
   promoOverlay: {
     position: 'absolute', bottom: 0, left: 0, right: 0,
-    backgroundColor: 'rgba(0,0,0,0.5)', padding: 12, paddingTop: 20
+    backgroundColor: 'rgba(0,0,0,0.6)', 
+    padding: SPACING.md, 
+    paddingTop: SPACING.lg
   },
-  promoTitle: { color: '#fff', fontWeight: 'bold', fontSize: 15 },
-  promoDiscount: { color: '#FFD700', fontWeight: 'bold', fontSize: 13, marginTop: 2 },
-  dotsRow: { flexDirection: 'row', position: 'absolute', bottom: 10, width: '100%', justifyContent: 'center' },
-  dot: { width: 6, height: 6, borderRadius: 3, backgroundColor: 'rgba(255,255,255,0.4)', marginLeft: 6 },
-  dotActive: { backgroundColor: '#fff', width: 14 },
-  section: { marginTop: 15 },
-  sectionBot: { marginTop: 5, paddingBottom: 30 },
-  sectionRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 16, marginBottom: 10 },
-  sectionTitle: { fontSize: 16, fontWeight: 'bold', color: '#222', paddingHorizontal: 16, marginBottom: 10 },
-  seeAll: { fontSize: 13, color: ORANGE, fontWeight: '600' },
+  promoTitle: { 
+    color: COLORS.textWhite, 
+    fontWeight: 'bold', 
+    fontSize: TYPOGRAPHY.body1.fontSize 
+  },
+  promoDiscount: { 
+    color: '#FFD700', 
+    fontWeight: 'bold', 
+    fontSize: TYPOGRAPHY.caption.fontSize, 
+    marginTop: SPACING.xs 
+  },
+  dotsRow: { 
+    flexDirection: 'row', 
+    position: 'absolute', 
+    bottom: SPACING.sm, 
+    width: '100%', 
+    justifyContent: 'center' 
+  },
+  dot: { 
+    width: 6, 
+    height: 6, 
+    borderRadius: BORDER_RADIUS.round, 
+    backgroundColor: 'rgba(255,255,255,0.4)', 
+    marginLeft: SPACING.xs 
+  },
+  dotActive: { 
+    backgroundColor: COLORS.textWhite, 
+    width: 14 
+  },
+  section: { marginTop: SPACING.md },
+  sectionBot: { marginTop: SPACING.xs, paddingBottom: SPACING.xxxl },
+  sectionRow: { 
+    flexDirection: 'row', 
+    justifyContent: 'space-between', 
+    alignItems: 'center', 
+    paddingHorizontal: SPACING.md, 
+    marginBottom: SPACING.sm 
+  },
+  sectionTitle: { 
+    fontSize: TYPOGRAPHY.h4.fontSize, 
+    fontWeight: TYPOGRAPHY.h4.fontWeight, 
+    color: COLORS.textPrimary, 
+    paddingHorizontal: SPACING.md, 
+    marginBottom: SPACING.sm 
+  },
+  seeAll: { 
+    fontSize: TYPOGRAPHY.caption.fontSize, 
+    color: COLORS.primary, 
+    fontWeight: '600' 
+  },
   canteenChip: {
-    backgroundColor: '#fff', borderRadius: 20, paddingHorizontal: 12, paddingVertical: 8,
-    marginRight: 10, borderWidth: 1.5, borderColor: '#F0F0F0', flexDirection: 'row', alignItems: 'center',
-    shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 2, elevation: 2,
+    backgroundColor: COLORS.surface, 
+    borderRadius: BORDER_RADIUS.round, 
+    paddingHorizontal: SPACING.md, 
+    paddingVertical: SPACING.sm,
+    marginRight: SPACING.sm, 
+    borderWidth: 1.5, 
+    borderColor: COLORS.borderLight, 
+    flexDirection: 'row', 
+    alignItems: 'center',
+    ...SHADOWS.sm,
   },
-  canteenSmallLogo: { width: 20, height: 20, borderRadius: 10, marginRight: 6 },
-  canteenChipText: { fontSize: 13, color: '#444', fontWeight: '600', marginLeft: 4 },
+  canteenSmallLogo: { 
+    width: 20, 
+    height: 20, 
+    borderRadius: BORDER_RADIUS.sm, 
+    marginRight: SPACING.xs 
+  },
+  canteenChipText: { 
+    fontSize: TYPOGRAPHY.caption.fontSize, 
+    color: COLORS.textPrimary, 
+    fontWeight: '600', 
+    marginLeft: SPACING.xs 
+  },
   catChip: {
-    backgroundColor: '#fff', borderRadius: 20, paddingHorizontal: 14, paddingVertical: 7,
-    marginRight: 8, borderWidth: 1.5, borderColor: '#E8E8E8',
+    backgroundColor: COLORS.surface, 
+    borderRadius: BORDER_RADIUS.round, 
+    paddingHorizontal: SPACING.sm, 
+    paddingVertical: SPACING.xs,
+    marginRight: SPACING.sm, 
+    borderWidth: 1.5, 
+    borderColor: COLORS.border,
   },
-  catChipActive: { backgroundColor: ORANGE, borderColor: ORANGE },
-  catChipText: { fontSize: 13, color: '#666', fontWeight: '600' },
-  catChipTextActive: { color: '#fff' },
-  sortRow: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, marginVertical: 12 },
-  sortLabel: { fontSize: 13, fontWeight: 'bold', color: '#555', marginRight: 10 },
-  sortBtn: { paddingHorizontal: 10, paddingVertical: 5, borderRadius: 8, backgroundColor: '#eee', marginRight: 6 },
-  sortBtnActive: { backgroundColor: '#ffe5db' },
-  sortBtnText: { fontSize: 12, color: '#666', fontWeight: '600' },
-  sortBtnTextActive: { color: ORANGE, fontWeight: 'bold' },
-  foodGrid: { paddingHorizontal: 10 },
+  catChipActive: { 
+    backgroundColor: COLORS.primary, 
+    borderColor: COLORS.primary 
+  },
+  catChipText: { 
+    fontSize: TYPOGRAPHY.caption.fontSize, 
+    color: COLORS.textSecondary, 
+    fontWeight: '600' 
+  },
+  catChipTextActive: { color: COLORS.textWhite },
+  sortRow: { 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    paddingHorizontal: SPACING.md, 
+    marginVertical: SPACING.md 
+  },
+  sortLabel: { 
+    fontSize: TYPOGRAPHY.caption.fontSize, 
+    fontWeight: 'bold', 
+    color: COLORS.textSecondary, 
+    marginRight: SPACING.sm 
+  },
+  sortBtn: { 
+    paddingHorizontal: SPACING.sm, 
+    paddingVertical: SPACING.xs, 
+    borderRadius: BORDER_RADIUS.sm, 
+    backgroundColor: COLORS.background, 
+    marginRight: SPACING.xs 
+  },
+  sortBtnActive: { backgroundColor: COLORS.primaryUltraLight },
+  sortBtnText: { 
+    fontSize: TYPOGRAPHY.caption.fontSize, 
+    color: COLORS.textSecondary, 
+    fontWeight: '600' 
+  },
+  sortBtnTextActive: { 
+    color: COLORS.primary, 
+    fontWeight: 'bold' 
+  },
+  foodGrid: { paddingHorizontal: SPACING.sm },
   foodCard: {
-    flex: 1, margin: 6, backgroundColor: '#fff', borderRadius: 16, overflow: 'hidden',
-    shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.08, shadowRadius: 6, elevation: 3,
+    flex: 1, 
+    margin: SPACING.sm, 
+    backgroundColor: COLORS.surface, 
+    borderRadius: BORDER_RADIUS.xl, 
+    overflow: 'hidden',
+    ...SHADOWS.md,
+    borderWidth: 1,
+    borderColor: COLORS.borderLight,
   },
-  foodImg: { width: '100%', height: 110 },
-  foodImgPlaceholder: { width: '100%', height: 110, backgroundColor: '#FFF5F0', justifyContent: 'center', alignItems: 'center' },
-  foodInfo: { padding: 10 },
-  foodName: { fontSize: 14, fontWeight: 'bold', color: '#222' },
-  foodCat: { fontSize: 11, color: '#999', marginTop: 2 },
-  foodPrice: { fontSize: 14, fontWeight: 'bold', color: ORANGE, marginTop: 4 },
-  ratingRow: { marginTop: 5 },
-  ratingText: { fontSize: 11, fontWeight: 'bold', color: '#666' },
-  emptyText: { textAlign: 'center', color: '#aaa', paddingVertical: 40, fontSize: 14 },
+  foodImg: { width: '100%', height: 120 },
+  foodImgPlaceholder: { 
+    width: '100%', 
+    height: 120, 
+    backgroundColor: COLORS.primaryUltraLight, 
+    justifyContent: 'center', 
+    alignItems: 'center' 
+  },
+  foodInfo: { padding: SPACING.sm },
+  foodName: { 
+    fontSize: TYPOGRAPHY.body2.fontSize, 
+    fontWeight: '600', 
+    color: COLORS.textPrimary 
+  },
+  foodCat: { 
+    fontSize: TYPOGRAPHY.caption.fontSize, 
+    color: COLORS.textSecondary, 
+    marginTop: SPACING.xs 
+  },
+  foodPrice: { 
+    fontSize: TYPOGRAPHY.body2.fontSize, 
+    fontWeight: 'bold', 
+    color: COLORS.primary, 
+    marginTop: SPACING.xs 
+  },
+  ratingRow: { marginTop: SPACING.xs },
+  ratingText: { 
+    fontSize: TYPOGRAPHY.caption.fontSize, 
+    fontWeight: 'bold', 
+    color: COLORS.textSecondary 
+  },
+  emptyText: { 
+    textAlign: 'center', 
+    color: COLORS.textTertiary, 
+    paddingVertical: SPACING.xxxl, 
+    fontSize: TYPOGRAPHY.body2.fontSize 
+  },
 });

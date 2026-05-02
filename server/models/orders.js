@@ -3,11 +3,22 @@ import mongoose from "mongoose";
 const orderItemSchema = new mongoose.Schema({
     foodItemId: { type: String, required: true },
     name: { type: String, required: true },
+    category: { type: String, default: "General" },
     price: { type: Number, required: true },
     quantity: { type: Number, required: true },
     image: { type: String, default: "" },
     note: { type: String, default: "" },
 });
+
+const statusHistorySchema = new mongoose.Schema(
+    {
+        status: { type: String, required: true },
+        message: { type: String, default: "" },
+        updatedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User", default: null },
+        updatedByRole: { type: String, default: "" },
+    },
+    { timestamps: true }
+);
 
 const orderSchema = new mongoose.Schema(
     {
@@ -28,6 +39,9 @@ const orderSchema = new mongoose.Schema(
             enum: ["pending", "confirmed", "preparing", "ready", "completed", "cancelled"],
             default: "pending"
         },
+        statusHistory: { type: [statusHistorySchema], default: [] },
+        lastStatusMessage: { type: String, default: "" },
+        statusUpdatedAt: { type: Date, default: null },
         note: { type: String, default: "" }
     },
     { timestamps: true }
