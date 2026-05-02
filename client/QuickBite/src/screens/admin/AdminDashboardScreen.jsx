@@ -20,15 +20,17 @@ export default function AdminDashboardScreen({ navigation }) {
 
     return (
         <View style={styles.container}>
-            <View style={styles.header}>
-                <View>
-                    <Text style={styles.headerTitle}>⚙️ Admin Dashboard</Text>
-                    <Text style={styles.headerSub}>QuickBite Management</Text>
+            <ImageBackground source={require('../../assets/SLIIT KANDY UNI.jpg')} style={styles.headerBg}>
+                <View style={styles.header}>
+                    <View>
+                        <Text style={styles.headerTitle}>⚙️ Admin Dashboard</Text>
+                        <Text style={styles.headerSub}>QuickBite Management</Text>
+                    </View>
+                    <TouchableOpacity onPress={logout} style={styles.logoutBtn}>
+                        <Text style={styles.logoutText}>Logout</Text>
+                    </TouchableOpacity>
                 </View>
-                <TouchableOpacity onPress={logout} style={styles.logoutBtn}>
-                    <Text style={styles.logoutText}>Logout</Text>
-                </TouchableOpacity>
-            </View>
+            </ImageBackground>
 
             <ScrollView contentContainerStyle={styles.scroll}>
                 <Text style={styles.welcome}>Welcome, Admin 👋</Text>
@@ -63,15 +65,18 @@ export default function AdminDashboardScreen({ navigation }) {
 
 const styles = StyleSheet.create({
     container: { flex: 1, backgroundColor: COLORS.background },
+    headerBg: {
+        width: '100%',
+        ...SHADOWS.lg,
+    },
     header: {
-        backgroundColor: COLORS.primary,
+        backgroundColor: 'rgba(0,0,0,0.65)',
         paddingTop: 52,
         paddingBottom: SPACING.xl,
         paddingHorizontal: SPACING.lg,
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
-        ...SHADOWS.lg,
     },
     logoutBtn: {
         backgroundColor: 'rgba(255,255,255,0.2)',
