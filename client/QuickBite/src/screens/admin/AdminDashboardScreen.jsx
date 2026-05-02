@@ -3,16 +3,15 @@ import {
     View, Text, StyleSheet, TouchableOpacity, ScrollView,
 } from 'react-native';
 import { useAuth } from '../../context/AuthContext';
-
-const ORANGE = '#FF6B35';
+import { COLORS, SPACING, TYPOGRAPHY, BORDER_RADIUS, SHADOWS, SIZES } from '../../styles/adminTheme';
 
 const CARDS = [
-    { emoji: '🏪', title: 'Canteens', desc: 'Add, edit, delete canteens', screen: 'AdminCanteens', color: '#E3F2FD' },
-    { emoji: '🍽️', title: 'Food Items', desc: 'Manage menu items & images', screen: 'AdminFoodItems', color: '#F3E5F5' },
-    { emoji: '📦', title: 'Orders', desc: 'Update order status', screen: 'AdminOrders', color: '#E8F5E9' },
-    { emoji: '🎁', title: 'Promotions', desc: 'Create & manage promotions', screen: 'AdminPromotions', color: '#FFF8E1' },
-    { emoji: '👥', title: 'Owners', desc: 'Create and manage owner accounts', screen: 'AdminOwners', color: '#E0F7FA' },
-    { emoji: '🌟', title: 'Feedback', desc: 'Monitor reviews and images', screen: 'AdminFeedback', color: '#FFF3E0' },
+    { emoji: '🏪', title: 'Canteens', desc: 'Add, edit, delete canteens', screen: 'AdminCanteens', color: COLORS.primaryUltraLight, iconColor: COLORS.primary },
+    { emoji: '🍽️', title: 'Food Items', desc: 'Manage menu items & images', screen: 'AdminFoodItems', color: '#F3E5F5', iconColor: '#9B59B6' },
+    { emoji: '📦', title: 'Orders', desc: 'Update order status', screen: 'AdminOrders', color: '#E8F5E9', iconColor: '#27AE60' },
+    { emoji: '🎁', title: 'Promotions', desc: 'Create & manage promotions', screen: 'AdminPromotions', color: '#FFF8E1', iconColor: '#F39C12' },
+    { emoji: '👥', title: 'Owners', desc: 'Create and manage owner accounts', screen: 'AdminOwners', color: '#E0F7FA', iconColor: '#3498DB' },
+    { emoji: '🌟', title: 'Feedback', desc: 'Monitor reviews and images', screen: 'AdminFeedback', color: '#FFF3E0', iconColor: '#E67E22' },
 ];
 
 export default function AdminDashboardScreen({ navigation }) {
@@ -55,25 +54,86 @@ export default function AdminDashboardScreen({ navigation }) {
 }
 
 const styles = StyleSheet.create({
-    container: { flex: 1, backgroundColor: '#F8F9FA' },
+    container: { flex: 1, backgroundColor: COLORS.background },
     header: {
-        backgroundColor: ORANGE, paddingTop: 52, paddingBottom: 18,
-        paddingHorizontal: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between'
+        backgroundColor: COLORS.primary,
+        paddingTop: 52,
+        paddingBottom: SPACING.xl,
+        paddingHorizontal: SPACING.lg,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        ...SHADOWS.lg,
     },
-    logoutBtn: { backgroundColor: 'rgba(255,255,255,0.2)', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 8 },
-    logoutText: { color: '#fff', fontWeight: 'bold', fontSize: 12 },
-    headerTitle: { color: '#fff', fontSize: 20, fontWeight: 'bold' },
-    headerSub: { color: 'rgba(255,255,255,0.8)', fontSize: 13 },
-    scroll: { padding: 16 },
-    welcome: { fontSize: 22, fontWeight: 'bold', color: '#222', marginBottom: 4 },
-    wSub: { fontSize: 14, color: '#888', marginBottom: 20 },
-    grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
+    logoutBtn: { 
+        backgroundColor: 'rgba(255,255,255,0.2)', 
+        paddingHorizontal: SPACING.md, 
+        paddingVertical: SPACING.sm, 
+        borderRadius: BORDER_RADIUS.md 
+    },
+    logoutText: { 
+        color: COLORS.textWhite, 
+        fontWeight: TYPOGRAPHY.button.fontWeight, 
+        fontSize: TYPOGRAPHY.caption.fontSize 
+    },
+    headerTitle: { 
+        color: COLORS.textWhite, 
+        fontSize: TYPOGRAPHY.h2.fontSize, 
+        fontWeight: TYPOGRAPHY.h2.fontWeight 
+    },
+    headerSub: { 
+        color: 'rgba(255,255,255,0.9)', 
+        fontSize: TYPOGRAPHY.body2.fontSize,
+        marginTop: 2
+    },
+    scroll: { padding: SPACING.lg },
+    welcome: { 
+        fontSize: TYPOGRAPHY.h1.fontSize, 
+        fontWeight: TYPOGRAPHY.h1.fontWeight, 
+        color: COLORS.textPrimary, 
+        marginBottom: SPACING.xs 
+    },
+    wSub: { 
+        fontSize: TYPOGRAPHY.body2.fontSize, 
+        color: COLORS.textSecondary, 
+        marginBottom: SPACING.xl 
+    },
+    grid: { flexDirection: 'row', flexWrap: 'wrap', gap: SPACING.md },
     card: {
-        width: '47%', borderRadius: 18, padding: 18, minHeight: 130,
-        shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.08, shadowRadius: 6, elevation: 3,
+        width: '47%', 
+        borderRadius: BORDER_RADIUS.xl, 
+        padding: SPACING.lg, 
+        minHeight: 140,
+        ...SHADOWS.md,
+        borderWidth: 1,
+        borderColor: COLORS.borderLight,
+        position: 'relative',
+        overflow: 'hidden',
     },
-    cardEmoji: { fontSize: 32, marginBottom: 8 },
-    cardTitle: { fontSize: 16, fontWeight: 'bold', color: '#222', marginBottom: 4 },
-    cardDesc: { fontSize: 12, color: '#666', flex: 1 },
-    cardArrow: { fontSize: 18, color: '#aaa', marginTop: 8, alignSelf: 'flex-end' },
+    cardEmoji: { 
+        fontSize: 36, 
+        marginBottom: SPACING.sm,
+        alignSelf: 'center',
+    },
+    cardTitle: { 
+        fontSize: TYPOGRAPHY.body1.fontSize, 
+        fontWeight: '600', 
+        color: COLORS.textPrimary, 
+        marginBottom: SPACING.xs,
+        textAlign: 'center'
+    },
+    cardDesc: { 
+        fontSize: TYPOGRAPHY.caption.fontSize, 
+        color: COLORS.textSecondary, 
+        flex: 1,
+        textAlign: 'center',
+        lineHeight: 16
+    },
+    cardArrow: { 
+        fontSize: 20, 
+        color: COLORS.textTertiary, 
+        marginTop: SPACING.sm, 
+        alignSelf: 'center',
+        fontWeight: 'bold'
+    },
 });
