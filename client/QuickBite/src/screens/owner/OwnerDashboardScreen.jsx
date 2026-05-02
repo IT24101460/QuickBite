@@ -101,15 +101,17 @@ export default function OwnerDashboardScreen({ navigation }) {
     return (
         <View style={styles.container}>
             {/* Header */}
-            <View style={styles.header}>
-                <View>
-                    <Text style={styles.headerTitle}>Owner Dashboard</Text>
-                    <Text style={styles.headerSub}>Welcome back, {user?.firstName}!</Text>
+            <ImageBackground source={require('../../assets/SLIIT KANDY UNI.jpg')} style={styles.headerBg}>
+                <View style={styles.header}>
+                    <View>
+                        <Text style={styles.headerTitle}>Owner Dashboard</Text>
+                        <Text style={styles.headerSub}>Welcome back, {user?.firstName}!</Text>
+                    </View>
+                    <TouchableOpacity onPress={logout} style={styles.logoutBtn}>
+                        <Text style={styles.logoutText}>Logout</Text>
+                    </TouchableOpacity>
                 </View>
-                <TouchableOpacity onPress={logout} style={styles.logoutBtn}>
-                    <Text style={styles.logoutText}>Logout</Text>
-                </TouchableOpacity>
-            </View>
+            </ImageBackground>
 
             <ScrollView
                 showsVerticalScrollIndicator={false}
@@ -232,15 +234,18 @@ export default function OwnerDashboardScreen({ navigation }) {
 
 const styles = StyleSheet.create({
     container: { flex: 1, backgroundColor: COLORS.background },
+    headerBg: {
+        width: '100%',
+        ...SHADOWS.lg,
+    },
     header: {
-        backgroundColor: COLORS.primary,
+        backgroundColor: 'rgba(0,0,0,0.65)',
         paddingTop: 52,
         paddingBottom: SPACING.lg,
         paddingHorizontal: SPACING.lg,
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        ...SHADOWS.lg,
     },
     headerTitle: {
         color: COLORS.textWhite,
