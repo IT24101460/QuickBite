@@ -13,6 +13,7 @@ const CARDS = [
     { emoji: '🎁', title: 'Promotions', desc: 'Create & manage promotions', screen: 'AdminPromotions', color: '#FFF8E1' },
     { emoji: '👥', title: 'Owners', desc: 'Create and manage owner accounts', screen: 'AdminOwners', color: '#E0F7FA' },
     { emoji: '🌟', title: 'Feedback', desc: 'Monitor reviews and images', screen: 'AdminFeedback', color: '#FFF3E0' },
+    { emoji: '🖼️', title: 'Branding', desc: 'Upload app logo', screen: 'AdminBranding', color: '#F1F8E9' },
 ];
 
 export default function AdminDashboardScreen({ navigation }) {

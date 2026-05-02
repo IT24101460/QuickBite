@@ -5,6 +5,8 @@ import {
 } from 'react-native';
 import API from '../services/api';
 import { useAuth } from '../context/AuthContext';
+import { useBranding } from '../context/BrandingContext';
+import { getImageUrl } from '../utils/imageUtils';
 
 const ORANGE = '#FF6B35';
 const { width } = Dimensions.get('window');
@@ -16,6 +18,8 @@ export default function LoginScreen({ navigation }) {
   const [showPw, setShowPw] = useState(false);
   const [loginMode, setLoginMode] = useState('user'); // 'user', 'owner', 'admin'
   const { login } = useAuth();
+  const { branding } = useBranding();
+  const logoSource = branding?.logoUrl ? { uri: getImageUrl(branding.logoUrl) } : require('../assets/my-logo.png');
 
   const handleLogin = async () => {
     if (!email.trim()) return Alert.alert('Error', 'Please enter your email');
@@ -64,8 +68,8 @@ export default function LoginScreen({ navigation }) {
             <Text style={styles.backButtonText}>←</Text>
           </TouchableOpacity>
         <View style={styles.hero}>
-          <Image source={require('../assets/my-logo.png')} style={{ width: 100, height: 100, resizeMode: 'contain' }} />
-          <Text style={styles.appName}>QuickBite</Text>
+          <Image source={logoSource} style={{ width: 100, height: 100, resizeMode: 'contain' }} />
+          <Text style={styles.appName}>{branding?.appName || 'QuickBite'}</Text>
           <Text style={styles.tagline}>SLIIT Canteen Pre-Order System</Text>
         </View>
 
