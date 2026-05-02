@@ -49,7 +49,14 @@ export default function AdminBrandingScreen({ navigation }) {
             setImage(null);
             Alert.alert('Saved', 'App logo updated successfully.');
         } catch (error) {
-            Alert.alert('Error', error.response?.data?.message || 'Could not update app logo.');
+            const status = error.response?.status;
+            const backendMessage = error.response?.data?.message || error.response?.data;
+            Alert.alert(
+                'Error',
+                status
+                    ? `Could not update app logo.\nStatus: ${status}\n${backendMessage || ''}`
+                    : 'Could not update app logo. Please check your network connection.'
+            );
         } finally {
             setSaving(false);
         }
