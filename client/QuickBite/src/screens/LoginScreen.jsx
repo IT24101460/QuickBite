@@ -16,7 +16,8 @@ export default function LoginScreen({ navigation }) {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [showPw, setShowPw] = useState(false);
-  const [loginMode, setLoginMode] = useState('user'); // 'user', 'owner', 'admin'
+  const [loginMode, setLoginMode] = useState('user');
+  const [showSellerPanel, setShowSellerPanel] = useState(false);
   const { login } = useAuth();
   const { branding } = useBranding();
   const logoSource = branding?.logoUrl ? { uri: getImageUrl(branding.logoUrl) } : require('../assets/my-logo.png');
@@ -30,17 +31,18 @@ export default function LoginScreen({ navigation }) {
       if (res.data.token) {
 
         const dbUser = res.data.user || res.data;
-        const actualRole = dbUser.role || (dbUser.isAdmin ? 'admin' : 'student'); // Evaluate true rank
+        const actualRole = dbUser.role || (dbUser.isAdmin ? 'admin' : 'user');
 
-        // Compare against active tab requested
         if (loginMode === 'owner' && actualRole !== 'owner') {
-          return Alert.alert('Access Denied', 'This account is not registered as a Canteen Owner. Please use the Student login tab!');
+          return Alert.alert('Access Denied', 'This account is not registered as a seller account.');
         }
         if (loginMode === 'admin' && actualRole !== 'admin' && !dbUser.isAdmin) {
           return Alert.alert('Access Denied', 'This account does not have Admin privileges.');
         }
         if (loginMode === 'user' && (actualRole === 'owner' || actualRole === 'admin')) {
-          return Alert.alert('Switch Portals', `Our records indicate you are a(n) ${actualRole}. Please use the correct login tab below.`);
+          return Alert.alert('Use the right entrance', actualRole === 'owner'
+            ? 'Seller accounts sign in from Start selling with us.'
+            : 'Admin accounts sign in from Admin access.');
         }
 
         await login(res.data.token, dbUser);
@@ -70,20 +72,25 @@ export default function LoginScreen({ navigation }) {
         <View style={styles.hero}>
           <Image source={logoSource} style={{ width: 100, height: 100, resizeMode: 'contain' }} />
           <Text style={styles.appName}>{branding?.appName || 'QuickBite'}</Text>
-          <Text style={styles.tagline}>SLIIT Canteen Pre-Order System</Text>
+          <Text style={styles.tagline}>Order ahead from your favourite cafes</Text>
         </View>
 
         <View style={styles.card}>
           <Text style={styles.cardTitle}>
-            {loginMode === 'admin' ? 'Admin Portal' :
-              loginMode === 'owner' ? 'Canteen Owner Login' :
-                'Welcome Back'}
+            {loginMode === 'admin' ? 'Admin Access' : loginMode === 'owner' ? 'Seller Sign In' : 'Welcome Back'}
+          </Text>
+          <Text style={styles.cardSub}>
+            {loginMode === 'owner'
+              ? 'Use the seller account provided by the platform admin.'
+              : loginMode === 'admin'
+                ? 'Restricted access for platform administrators.'
+                : 'Sign in to browse menus, place orders, and track pickups.'}
           </Text>
 
           <Text style={styles.label}>Email</Text>
           <TextInput
             style={styles.input}
-            placeholder="student@sliit.lk"
+            placeholder={loginMode === 'owner' ? 'owner@cafe.com' : loginMode === 'admin' ? 'admin@email.com' : 'you@email.com'}
             placeholderTextColor="#aaa"
             value={email}
             onChangeText={setEmail}
@@ -113,25 +120,51 @@ export default function LoginScreen({ navigation }) {
             onPress={handleLogin}
             disabled={loading}
           >
-            {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.btnText}>Login</Text>}
+            {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.btnText}>{loginMode === 'owner' ? 'Seller Login' : loginMode === 'admin' ? 'Admin Login' : 'Login'}</Text>}
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.link} onPress={() => navigation.navigate('SignUp')}>
-            <Text style={styles.linkText}>Don't have an account? <Text style={{ color: ORANGE, fontWeight: 'bold' }}>Sign Up</Text></Text>
-          </TouchableOpacity>
+          {loginMode === 'user' ? (
+            <TouchableOpacity style={styles.link} onPress={() => navigation.navigate('SignUp')}>
+              <Text style={styles.linkText}>Don't have an account? <Text style={{ color: ORANGE, fontWeight: 'bold' }}>Sign Up</Text></Text>
+            </TouchableOpacity>
+          ) : (
+            <TouchableOpacity style={styles.link} onPress={() => { setLoginMode('user'); setShowSellerPanel(false); }}>
+              <Text style={styles.linkText}>Back to user login</Text>
+            </TouchableOpacity>
+          )}
 
-          <View style={styles.modeSwitcherRow}>
-            <TouchableOpacity onPress={() => setLoginMode('user')} style={[styles.modeBtn, loginMode === 'user' && styles.modeBtnActive]}>
-              <Text style={[styles.modeBtnText, loginMode === 'user' && styles.modeBtnTextActive]}>Student</Text>
-            </TouchableOpacity>
-            <TouchableOpacity onPress={() => setLoginMode('owner')} style={[styles.modeBtn, loginMode === 'owner' && styles.modeBtnActive]}>
-              <Text style={[styles.modeBtnText, loginMode === 'owner' && styles.modeBtnTextActive]}>Owner</Text>
-            </TouchableOpacity>
-            <TouchableOpacity onPress={() => setLoginMode('admin')} style={[styles.modeBtn, loginMode === 'admin' && styles.modeBtnActive]}>
-              <Text style={[styles.modeBtnText, loginMode === 'admin' && styles.modeBtnTextActive]}>Admin</Text>
-            </TouchableOpacity>
-          </View>
+          {loginMode === 'user' && (
+            <View style={styles.sellerBox}>
+              <TouchableOpacity
+                style={styles.sellerHeader}
+                onPress={() => setShowSellerPanel(prev => !prev)}
+                activeOpacity={0.85}
+              >
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.sellerTitle}>Start selling with us</Text>
+                  <Text style={styles.sellerText}>Manage your cafe menu, live orders, and promotions.</Text>
+                </View>
+                <Text style={styles.sellerArrow}>{showSellerPanel ? '−' : '+'}</Text>
+              </TouchableOpacity>
 
+              {showSellerPanel && (
+                <View style={styles.sellerPanel}>
+                  <Text style={styles.sellerPanelText}>
+                    Seller accounts are created by the platform admin after approval. If you already have an approved seller account, sign in here.
+                  </Text>
+                  <TouchableOpacity style={styles.sellerLoginBtn} onPress={() => setLoginMode('owner')}>
+                    <Text style={styles.sellerLoginText}>Seller sign in</Text>
+                  </TouchableOpacity>
+                </View>
+              )}
+            </View>
+          )}
+
+          {loginMode === 'user' && (
+            <TouchableOpacity style={styles.adminLink} onPress={() => setLoginMode('admin')}>
+              <Text style={styles.adminLinkText}>Admin access</Text>
+            </TouchableOpacity>
+          )}
 
         </View>
         </ScrollView>
@@ -177,7 +210,8 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff', borderTopLeftRadius: 32, borderTopRightRadius: 32,
     padding: 28, flex: 1, minHeight: 420,
   },
-  cardTitle: { fontSize: 26, fontWeight: 'bold', color: '#222', marginBottom: 24 },
+  cardTitle: { fontSize: 26, fontWeight: 'bold', color: '#222', marginBottom: 6 },
+  cardSub: { fontSize: 13, color: '#777', lineHeight: 18, marginBottom: 22 },
   label: { fontSize: 13, fontWeight: '600', color: '#555', marginBottom: 6 },
   input: {
     borderWidth: 1.5, borderColor: '#e8e8e8', borderRadius: 12, padding: 13,
@@ -195,10 +229,16 @@ const styles = StyleSheet.create({
   btnText: { color: '#fff', fontSize: 16, fontWeight: 'bold', letterSpacing: 0.5 },
   link: { alignItems: 'center', marginTop: 4, marginBottom: 25 },
   linkText: { color: '#888', fontSize: 14 },
-  modeSwitcherRow: { flexDirection: 'row', justifyContent: 'center', marginTop: 'auto', borderTopWidth: 1, borderTopColor: '#f0f0f0', paddingTop: 15, paddingBottom: 15 },
-  modeBtn: { paddingHorizontal: 12, paddingVertical: 6, borderRadius: 12, marginHorizontal: 4 },
-  modeBtnActive: { backgroundColor: '#FF6B3522' },
-  modeBtnText: { color: '#888', fontSize: 12, fontWeight: '600' },
-  modeBtnTextActive: { color: ORANGE, fontWeight: 'bold' },
+  sellerBox: { borderTopWidth: 1, borderTopColor: '#F0F0F0', paddingTop: 16, marginTop: 4 },
+  sellerHeader: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#FFF7F2', borderRadius: 14, padding: 14, borderWidth: 1, borderColor: '#FFE0D2' },
+  sellerTitle: { fontSize: 15, fontWeight: 'bold', color: '#222', marginBottom: 4 },
+  sellerText: { fontSize: 12, color: '#777', lineHeight: 16 },
+  sellerArrow: { fontSize: 24, color: ORANGE, fontWeight: 'bold', marginLeft: 12 },
+  sellerPanel: { padding: 14 },
+  sellerPanelText: { fontSize: 12, color: '#666', lineHeight: 18, marginBottom: 12 },
+  sellerLoginBtn: { alignSelf: 'flex-start', backgroundColor: ORANGE, borderRadius: 10, paddingHorizontal: 14, paddingVertical: 9 },
+  sellerLoginText: { color: '#fff', fontSize: 12, fontWeight: 'bold' },
+  adminLink: { alignItems: 'center', marginTop: 16 },
+  adminLinkText: { fontSize: 12, color: '#999', fontWeight: '600' },
   footerText: { textAlign: 'center', fontSize: 12, color: '#aaa', marginTop: 10 },
 });
