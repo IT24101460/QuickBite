@@ -34,7 +34,7 @@ export default function SidebarCart({ navigation }) {
                     {user?.profilePic ? (
                         <Image source={{ uri: getImageUrl(user.profilePic) }} style={styles.avatar} />
                     ) : (
-                        <Text style={{ fontSize: 28 }}>👤</Text>
+                        <Text style={styles.avatarPlaceholder}>👤</Text>
                     )}
                 </View>
                 <Text style={styles.userName}>{user?.firstName || 'User'} {user?.lastName}</Text>
@@ -126,6 +126,7 @@ const styles = StyleSheet.create({
     header: { backgroundColor: '#F8F9FA', paddingTop: 50, paddingBottom: 20, alignItems: 'center', borderBottomWidth: 1, borderBottomColor: '#eee' },
     userIcon: { width: 60, height: 60, borderRadius: 30, backgroundColor: '#FFE5DB', justifyContent: 'center', alignItems: 'center', marginBottom: 10 },
     avatar: { width: 60, height: 60, borderRadius: 30 },
+    avatarPlaceholder: { fontSize: 28 },
     userName: { fontSize: 16, fontWeight: 'bold', color: '#222' },
     scroll: { padding: 16, paddingBottom: 40 },
     sectionTitle: { fontSize: 16, fontWeight: 'bold', color: ORANGE, marginBottom: 12 },

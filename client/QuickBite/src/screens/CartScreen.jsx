@@ -44,7 +44,7 @@ export default function CartScreen({ navigation }) {
             <View style={styles.cartItem}>
                 {item.image
                     ? <Image source={{ uri: getImageUrl(item.image) }} style={styles.itemImg} resizeMode="cover" />
-                    : <View style={styles.itemImgPlaceholder}><Text style={{ fontSize: 28 }}>🍽️</Text></View>}
+                    : <View style={styles.itemImgPlaceholder}><Text style={styles.placeholderIcon}>🍽️</Text></View>}
                 <View style={styles.itemInfo}>
                     <Text style={styles.itemName} numberOfLines={2}>{item.name}</Text>
                     <Text style={styles.itemPrice}>LKR {item.price.toFixed(2)} each</Text>
@@ -80,7 +80,7 @@ export default function CartScreen({ navigation }) {
     if (cartItems.length === 0) {
         return (
             <View style={styles.empty}>
-                <Text style={{ fontSize: 64 }}>🛒</Text>
+                <Text style={styles.emptyIcon}>🛒</Text>
                 <Text style={styles.emptyTitle}>Your cart is empty</Text>
                 <Text style={styles.emptySub}>Add some delicious food!</Text>
                 <TouchableOpacity style={styles.browseBtn} onPress={() => navigation.navigate('Home')}>
@@ -199,6 +199,7 @@ const styles = StyleSheet.create({
     },
     itemImg: { width: 64, height: 64, borderRadius: 10 },
     itemImgPlaceholder: { width: 64, height: 64, borderRadius: 10, backgroundColor: '#FFF0E8', justifyContent: 'center', alignItems: 'center' },
+    placeholderIcon: { fontSize: 28 },
     itemInfo: { flex: 1, marginHorizontal: 10 },
     itemName: { fontSize: 14, fontWeight: '600', color: '#222' },
     itemPrice: { fontSize: 12, color: '#888', marginTop: 4 },
@@ -241,6 +242,7 @@ const styles = StyleSheet.create({
     },
     checkoutBtnText: { color: '#fff', fontSize: 16, fontWeight: 'bold' },
     empty: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#fff', padding: 40 },
+    emptyIcon: { fontSize: 64 },
     emptyTitle: { fontSize: 22, fontWeight: 'bold', color: '#333', marginTop: 16 },
     emptySub: { fontSize: 14, color: '#999', marginTop: 8, marginBottom: 28 },
     browseBtn: { backgroundColor: ORANGE, borderRadius: 12, paddingVertical: 13, paddingHorizontal: 30 },

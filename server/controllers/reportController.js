@@ -8,10 +8,16 @@ export async function getOwnerStats(req, res) {
             return res.status(403).json({ message: "Owners only" });
         }
 
-        const myCanteen = await Canteen.findOne({ createdBy: req.user._id || req.user.id });
-        if (!myCanteen) return res.status(404).json({ message: "No canteen found" });
-
-        const canteenId = myCanteen._id;
+        let canteenId;
+        if (req.query.canteenId) {
+            canteenId = req.query.canteenId;
+            const myCanteen = await Canteen.findOne({ _id: canteenId, createdBy: req.user._id || req.user.id });
+            if (!myCanteen) return res.status(403).json({ message: "Unauthorized or Canteen not found" });
+        } else {
+            const myCanteen = await Canteen.findOne({ createdBy: req.user._id || req.user.id });
+            if (!myCanteen) return res.status(404).json({ message: "No canteen found" });
+            canteenId = myCanteen._id;
+        }
 
         const startOfDay = new Date();
         startOfDay.setHours(0, 0, 0, 0);

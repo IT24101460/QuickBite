@@ -118,7 +118,7 @@ export default function HomeScreen({ navigation }) {
     >
       {item.image
         ? <Image source={{ uri: getImageUrl(item.image) }} style={styles.foodImg} resizeMode="cover" />
-        : <View style={styles.foodImgPlaceholder}><Text style={{ fontSize: 40 }}>🍽️</Text></View>}
+        : <View style={styles.foodImgPlaceholder}><Text style={styles.placeholderIcon}>🍽️</Text></View>}
       <View style={styles.foodInfo}>
         <Text style={styles.foodName} numberOfLines={1}>{item.name}</Text>
         <Text style={styles.foodCat}>{item.category || 'General'}</Text>
@@ -182,7 +182,7 @@ export default function HomeScreen({ navigation }) {
           <View style={styles.promoContainer}>
             <TouchableOpacity style={styles.promoBanner} activeOpacity={1}>
               <View style={[styles.promoBannerPlaceholder, { backgroundColor: '#FF8A65', justifyContent: 'center', alignItems: 'center' }]}>
-                <Text style={{ fontSize: 50 }}>🎉</Text>
+                <Text style={styles.promoEmoji}>🎉</Text>
               </View>
               <View style={styles.promoOverlay}>
                 <Text style={styles.promoTitle}>Welcome to QuickBite!</Text>
@@ -481,4 +481,6 @@ const styles = StyleSheet.create({
     paddingVertical: SPACING.xxxl, 
     fontSize: TYPOGRAPHY.body2.fontSize 
   },
+  placeholderIcon: { fontSize: 40 },
+  promoEmoji: { fontSize: 50 },
 });

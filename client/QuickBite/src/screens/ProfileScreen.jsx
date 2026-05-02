@@ -255,14 +255,14 @@ export default function ProfileScreen({ navigation }) {
                             })}
                             {paymentOptions.length > 3 && (
                                 <TouchableOpacity onPress={() => navigation.navigate('PaymentOptions')}>
-                                    <Text style={{color: ORANGE, fontSize: 12, fontWeight: '600', marginTop: 8}}>
+                                    <Text style={styles.viewMoreText}>
                                         +{paymentOptions.length - 3} more • View All →
                                     </Text>
                                 </TouchableOpacity>
                             )}
                         </>
                     ) : (
-                        <Text style={{color: '#888', fontSize: 13, fontStyle: 'italic', marginTop: 5, marginBottom: 5}}>No payment options saved yet.</Text>
+                        <Text style={styles.noPaymentText}>No payment options saved yet.</Text>
                     )}
                 </View>
 
@@ -415,5 +415,7 @@ const styles = StyleSheet.create({
     modalBtn: { paddingHorizontal: 16, paddingVertical: 10, borderRadius: 8 },
     cancelBtn: { backgroundColor: '#e0e0e0' },
     saveBtn: { backgroundColor: ORANGE },
-    modalBtnText: { fontSize: 14, fontWeight: '600', color: '#333' }
+    modalBtnText: { fontSize: 14, fontWeight: '600', color: '#333' },
+    viewMoreText: { color: ORANGE, fontSize: 12, fontWeight: '600', marginTop: 8 },
+    noPaymentText: { color: '#888', fontSize: 13, fontStyle: 'italic', marginTop: 5, marginBottom: 5 }
 });

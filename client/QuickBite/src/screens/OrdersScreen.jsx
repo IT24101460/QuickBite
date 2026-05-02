@@ -71,7 +71,7 @@ export default function OrdersScreen({ navigation }) {
             <TopNavBar navigation={navigation} placeholder="📦 My Orders" />
             {orders.length === 0 ? (
                 <View style={styles.empty}>
-                    <Text style={{ fontSize: 56 }}>📦</Text>
+                    <Text style={styles.emptyIcon}>📦</Text>
                     <Text style={styles.emptyTitle}>No orders yet</Text>
                     <Text style={styles.emptySub}>Your orders will appear here</Text>
                     <TouchableOpacity style={styles.browseBtn} onPress={() => navigation.navigate('Home')}>
@@ -110,6 +110,7 @@ const styles = StyleSheet.create({
     amount: { fontSize: 15, fontWeight: 'bold', color: ORANGE },
     date: { fontSize: 12, color: '#aaa' },
     empty: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 40 },
+    emptyIcon: { fontSize: 56 },
     emptyTitle: { fontSize: 20, fontWeight: 'bold', color: '#333', marginTop: 16 },
     emptySub: { fontSize: 14, color: '#aaa', marginTop: 6, marginBottom: 24 },
     browseBtn: { backgroundColor: ORANGE, borderRadius: 12, paddingVertical: 12, paddingHorizontal: 28 },

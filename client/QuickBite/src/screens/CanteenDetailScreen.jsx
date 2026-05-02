@@ -126,7 +126,7 @@ export default function CanteenDetailScreen({ navigation, route }) {
                 {/* Hero Banner */}
                 {canteen.canteenImage
                     ? <Image source={{ uri: getImageUrl(canteen.canteenImage) }} style={styles.heroImg} resizeMode="cover" />
-                    : <View style={styles.heroPlaceholder}><Text style={{ fontSize: 60 }}>🏪</Text></View>}
+                    : <View style={styles.heroPlaceholder}><Text style={styles.heroPlaceholderIcon}>🏪</Text></View>}
 
                 {/* Info Card */}
                 <View style={styles.infoCard}>
@@ -224,7 +224,7 @@ export default function CanteenDetailScreen({ navigation, route }) {
                             >
                                 {item.image
                                     ? <Image source={{ uri: getImageUrl(item.image) }} style={styles.foodImg} resizeMode="cover" />  
-                                    : <View style={styles.foodImgPlaceholder}><Text style={{ fontSize: 32 }}>🍽️</Text></View>}
+                                    : <View style={styles.foodImgPlaceholder}><Text style={styles.placeholderIcon}>🍽️</Text></View>}
                                 <View style={{ padding: 8 }}>
                                     <Text style={styles.foodName} numberOfLines={1}>{item.name}</Text>
                                     <Text style={styles.foodPrice}>LKR {item.price ? item.price.toFixed(2) : '0.00'}</Text>
@@ -279,6 +279,7 @@ const styles = StyleSheet.create({
     container: { flex: 1, backgroundColor: '#F8F9FA' },
     heroImg: { width: '100%', height: 180 },
     heroPlaceholder: { width: '100%', height: 180, backgroundColor: '#FFF0E8', justifyContent: 'center', alignItems: 'center' },
+    heroPlaceholderIcon: { fontSize: 60 },
     infoCard: { backgroundColor: '#fff', marginHorizontal: 16, marginTop: -50, borderRadius: 16, padding: 15, elevation: 6, shadowColor: '#000', shadowOpacity: 0.1, shadowRadius: 10 },
     canteenName: { fontSize: 22, fontWeight: 'bold', color: '#222' },
     detail: { fontSize: 13, color: '#666', marginBottom: 4 },
@@ -312,6 +313,7 @@ const styles = StyleSheet.create({
     foodCard: { flex: 1, margin: 6, backgroundColor: '#fff', borderRadius: 14, overflow: 'hidden', elevation: 3, shadowColor: '#000', shadowOpacity: 0.1, shadowRadius: 5 },
     foodImg: { width: '100%', height: 110 },
     foodImgPlaceholder: { width: '100%', height: 110, backgroundColor: '#FFF0E8', justifyContent: 'center', alignItems: 'center' },
+    placeholderIcon: { fontSize: 32 },
     foodName: { fontSize: 14, fontWeight: 'bold', color: '#222', marginBottom: 2 },
     foodPrice: { fontSize: 13, fontWeight: 'bold', color: ORANGE, marginBottom: 8 },
     addBtn: { backgroundColor: ORANGE, borderRadius: 8, paddingVertical: 8, alignItems: 'center' },
