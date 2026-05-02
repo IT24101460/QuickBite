@@ -323,7 +323,7 @@ export default function CheckoutScreen({ route, navigation }) {
                             >
                                 <Text style={styles.savedCardIcon}>➕</Text>
                                 <Text style={styles.savedCardText}>Add a New Card</Text>
-                                <Text style={{ fontSize: 16, color: '#aaa' }}>→</Text>
+                                <Text style={styles.arrowIcon}>→</Text>
                             </TouchableOpacity>
                         </View>
                     )}
@@ -429,6 +429,7 @@ const styles = StyleSheet.create({
     savedCardIcon: { fontSize: 16, marginRight: 10 },
     savedCardText: { flex: 1, fontSize: 14, fontWeight: '500', color: '#333' },
     checkIcon: { fontSize: 14 },
+    arrowIcon: { fontSize: 16, color: '#aaa' },
     guestNotice: { backgroundColor: '#FFF3E0', marginTop: 10, padding: 16, borderRadius: 10, borderWidth: 1, borderColor: '#FFB74D', alignItems: 'center' },
     guestNoticeText: { fontSize: 14, color: '#E65100', fontWeight: '600', marginBottom: 12, textAlign: 'center' },
     guestLoginBtn: { backgroundColor: ORANGE, borderRadius: 8, paddingHorizontal: 16, paddingVertical: 10 },

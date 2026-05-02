@@ -12,13 +12,7 @@ const CARDS = [
     { emoji: '🎁', title: 'Promotions', desc: 'Create & manage promotions', screen: 'AdminPromotions', color: '#FFF8E1', iconColor: '#F39C12' },
     { emoji: '👥', title: 'Owners', desc: 'Create and manage owner accounts', screen: 'AdminOwners', color: '#E0F7FA', iconColor: '#3498DB' },
     { emoji: '🌟', title: 'Feedback', desc: 'Monitor reviews and images', screen: 'AdminFeedback', color: '#FFF3E0', iconColor: '#E67E22' },
-    { emoji: '🏪', title: 'Canteens', desc: 'Add, edit, delete canteens', screen: 'AdminCanteens', color: '#E3F2FD' },
-    { emoji: '🍽️', title: 'Food Items', desc: 'Manage menu items & images', screen: 'AdminFoodItems', color: '#F3E5F5' },
-    { emoji: '📦', title: 'Orders', desc: 'Update order status', screen: 'AdminOrders', color: '#E8F5E9' },
-    { emoji: '🎁', title: 'Promotions', desc: 'Create & manage promotions', screen: 'AdminPromotions', color: '#FFF8E1' },
-    { emoji: '👥', title: 'Owners', desc: 'Create and manage owner accounts', screen: 'AdminOwners', color: '#E0F7FA' },
-    { emoji: '🌟', title: 'Feedback', desc: 'Monitor reviews and images', screen: 'AdminFeedback', color: '#FFF3E0' },
-    { emoji: '🖼️', title: 'Branding', desc: 'Upload app logo', screen: 'AdminBranding', color: '#F1F8E9' },
+    { emoji: '🖼️', title: 'Branding', desc: 'Upload app logo', screen: 'AdminBranding', color: '#F1F8E9', iconColor: '#27AE60' },
 ];
 
 export default function AdminDashboardScreen({ navigation }) {

@@ -46,7 +46,7 @@ export default function SidebarMenu({ navigation }) {
                     {(user?.image || user?.profilePic) ? (
                         <Image source={{ uri: getImageUrl(user?.image || user?.profilePic) }} style={styles.avatar} />
                     ) : (
-                        <Text style={{ fontSize: 32 }}>👤</Text>
+                        <Text style={styles.avatarPlaceholder}>👤</Text>
                     )}
                 </View>
                 <Text style={styles.userName}>{user?.firstName || 'User'} {user?.lastName}</Text>
@@ -135,6 +135,7 @@ const styles = StyleSheet.create({
         shadowRadius: 4,
     },
     avatar: { width: 70, height: 70, borderRadius: 35 },
+    avatarPlaceholder: { fontSize: 32 },
     userName: { fontSize: 22, fontWeight: 'bold', color: '#fff', marginBottom: 4 },
     userEmail: { fontSize: 14, color: '#FFE0D6' },
     
