@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity, Image, TextInput } from 'reac
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
 
-const ORANGE = '#FF6B35';
+const ORANGE = '#e35f2fd2';
 
 export default function TopNavBar({ navigation, search, setSearch, placeholder = "🔍 Search amazing food...", hideBottomRow = false, isHome = false }) {
     const { user } = useAuth();
