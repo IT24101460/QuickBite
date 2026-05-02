@@ -30,7 +30,7 @@ export default function OrdersScreen({ navigation }) {
         }
     }, []);
 
-    useEffect(() => { fetchOrders(); }, []);
+    useEffect(() => { fetchOrders(); }, [fetchOrders]);
 
     const onRefresh = () => { setRefreshing(true); fetchOrders(); };
 
@@ -49,6 +49,7 @@ export default function OrdersScreen({ navigation }) {
             <Text style={styles.itemsText} numberOfLines={1}>
                 {item.items?.map(i => `${i.name} ×${i.quantity}`).join(', ')}
             </Text>
+            {item.lastStatusMessage ? <Text style={styles.statusMessage}>{item.lastStatusMessage}</Text> : null}
             {item.pickupTime ? <Text style={styles.pickupTime}>⏰ Pickup: {item.pickupTime}</Text> : null}
             <View style={styles.orderBottom}>
                 <Text style={styles.amount}>LKR {(item.finalAmount || item.totalAmount || 0).toFixed(2)}</Text>
@@ -103,6 +104,7 @@ const styles = StyleSheet.create({
     statusBadge: { borderRadius: 12, paddingHorizontal: 10, paddingVertical: 4 },
     statusText: { color: '#fff', fontSize: 11, fontWeight: 'bold' },
     itemsText: { fontSize: 13, color: '#555', marginBottom: 6 },
+    statusMessage: { fontSize: 12, color: '#444', backgroundColor: '#FFF7F2', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 7, marginBottom: 6 },
     pickupTime: { fontSize: 12, color: ORANGE, fontWeight: '600', marginBottom: 6 },
     orderBottom: { flexDirection: 'row', justifyContent: 'space-between' },
     amount: { fontSize: 15, fontWeight: 'bold', color: ORANGE },
