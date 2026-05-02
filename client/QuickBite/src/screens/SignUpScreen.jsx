@@ -5,6 +5,8 @@ import {
 } from 'react-native';
 import API from '../services/api';
 import { useAuth } from '../context/AuthContext';
+import { useBranding } from '../context/BrandingContext';
+import { getImageUrl } from '../utils/imageUtils';
 
 const ORANGE = '#FF6B35';
 const { width } = Dimensions.get('window');
@@ -20,12 +22,14 @@ export default function SignUpScreen({ navigation }) {
   const [form, setForm] = useState({ firstName: '', lastName: '', email: '', uniId: '', phoneNumber: '', password: '', confirmPassword: '' });
   const [loading, setLoading] = useState(false);
   const { login } = useAuth();
+  const { branding } = useBranding();
+  const logoSource = branding?.logoUrl ? { uri: getImageUrl(branding.logoUrl) } : require('../assets/my-logo.png');
 
   const set = (key) => (val) => setForm(f => ({ ...f, [key]: val }));
 
   const handleRegister = async () => {
     const { firstName, lastName, email, uniId, phoneNumber, password, confirmPassword } = form;
-    if (!firstName || !lastName || !email || !uniId || !phoneNumber || !password) {
+    if (!firstName || !lastName || !email || !phoneNumber || !password) {
       return Alert.alert('Error', 'Please fill in all fields');
     }
     if (password !== confirmPassword) return Alert.alert('Error', 'Passwords do not match');
@@ -33,7 +37,8 @@ export default function SignUpScreen({ navigation }) {
 
     setLoading(true);
     try {
-      const res = await API.post('/users', { firstName, lastName, email, uniId, phoneNumber: Number(phoneNumber), password });
+      const generatedUserId = uniId?.trim() || `USER${Date.now()}`;
+      const res = await API.post('/users', { firstName, lastName, email, uniId: generatedUserId, phoneNumber: Number(phoneNumber), password });
       if (res.data.token) {
         await login(res.data.token, res.data.user || res.data);
       } else {
@@ -64,10 +69,10 @@ export default function SignUpScreen({ navigation }) {
         <View style={styles.hero}>
 
           <Image
-            source={require('../assets/my-logo.png')}
+            source={logoSource}
             style={{ width: 100, height: 100, resizeMode: 'contain' }} />
 
-          <Text style={styles.appName}>QuickBite</Text>
+          <Text style={styles.appName}>{branding?.appName || 'QuickBite'}</Text>
         </View>
         <View style={styles.card}>
           <Text style={styles.cardTitle}>Create Account</Text>
@@ -79,8 +84,8 @@ export default function SignUpScreen({ navigation }) {
               <FormField label="Last Name" k="lastName" form={form} set={set} loading={loading} placeholder="Doe" />
             </View>
           </View>
-          <FormField label="Email" k="email" form={form} set={set} loading={loading} placeholder="student@sliit.lk" keyboardType="email-address" autoCapitalize="none" />
-          <FormField label="Student ID" k="uniId" form={form} set={set} loading={loading} placeholder="IT/IT/2024/001" />
+          <FormField label="Email" k="email" form={form} set={set} loading={loading} placeholder="you@email.com" keyboardType="email-address" autoCapitalize="none" />
+          <FormField label="User ID (optional)" k="uniId" form={form} set={set} loading={loading} placeholder="Leave blank to generate one" />
           <FormField label="Phone Number" k="phoneNumber" form={form} set={set} loading={loading} placeholder="0712345678" keyboardType="phone-pad" />
           <FormField label="Password" k="password" form={form} set={set} loading={loading} placeholder="••••••••" secureTextEntry />
           <FormField label="Confirm Password" k="confirmPassword" form={form} set={set} loading={loading} placeholder="••••••••" secureTextEntry />
@@ -92,6 +97,11 @@ export default function SignUpScreen({ navigation }) {
           <TouchableOpacity style={styles.link} onPress={() => navigation.navigate('Login')}>
             <Text style={styles.linkText}>Already have an account? <Text style={{ color: ORANGE, fontWeight: 'bold' }}>Login</Text></Text>
           </TouchableOpacity>
+
+          <View style={styles.sellerNote}>
+            <Text style={styles.sellerNoteTitle}>Want to sell food?</Text>
+            <Text style={styles.sellerNoteText}>Seller accounts are approved and created by the platform admin. Use Start selling with us from the login screen after approval.</Text>
+          </View>
 
           <Text style={styles.footerText}>© {new Date().getFullYear()} QuickBite. All rights reserved.</Text>
         </View>
@@ -149,5 +159,8 @@ const styles = StyleSheet.create({
   btnText: { color: '#fff', fontSize: 16, fontWeight: 'bold' },
   link: { alignItems: 'center', marginBottom: 15 },
   linkText: { color: '#888', fontSize: 14 },
+  sellerNote: { backgroundColor: '#FFF7F2', borderRadius: 14, padding: 14, borderWidth: 1, borderColor: '#FFE0D2', marginBottom: 14 },
+  sellerNoteTitle: { fontSize: 14, fontWeight: 'bold', color: '#222', marginBottom: 4 },
+  sellerNoteText: { fontSize: 12, color: '#666', lineHeight: 17 },
   footerText: { textAlign: 'center', fontSize: 12, color: '#aaa', marginTop: 10 },
 });

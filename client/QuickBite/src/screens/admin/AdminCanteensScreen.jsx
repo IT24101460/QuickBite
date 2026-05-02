@@ -5,8 +5,7 @@ import {
 } from 'react-native';
 import { launchImageLibrary } from 'react-native-image-picker';
 import API from '../../services/api';
-
-const ORANGE = '#FF6B35';
+import { COLORS, SPACING, TYPOGRAPHY, BORDER_RADIUS, SHADOWS, SIZES } from '../../styles/adminTheme';
 
 export default function AdminCanteensScreen({ navigation }) {
     const [canteens, setCanteens] = useState([]);
@@ -137,14 +136,23 @@ export default function AdminCanteensScreen({ navigation }) {
                 <TouchableOpacity style={styles.addBtn} onPress={openAdd}><Text style={styles.addBtnText}>+ Add</Text></TouchableOpacity>
             </View>
 
-            {loading ? <ActivityIndicator size="large" color={ORANGE} style={{ marginTop: 40 }} /> : (
+            {loading ? <ActivityIndicator size="large" color={COLORS.primary} style={{ marginTop: 40 }} /> : (
                 <FlatList
                     data={canteens}
                     keyExtractor={i => i._id}
                     contentContainerStyle={{ padding: 12 }}
-                    refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); fetch(); }} colors={[ORANGE]} />}
+                    refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); fetch(); }} colors={[COLORS.primary]} />}
                     renderItem={({ item }) => (
                         <View style={styles.card}>
+                            <View style={styles.cardImageContainer}>
+                                {item.canteenImage ? (
+                                    <Image source={{ uri: item.canteenImage }} style={styles.cardImage} resizeMode="cover" />
+                                ) : (
+                                    <View style={styles.cardImagePlaceholder}>
+                                        <Text style={styles.cardImagePlaceholderText}>🏪</Text>
+                                    </View>
+                                )}
+                            </View>
                             <View style={styles.cardInfo}>
                                 <Text style={styles.cardName}>{item.canteenName}</Text>
                                 <Text style={styles.cardSub}>📍 {item.location}</Text>
@@ -231,41 +239,223 @@ export default function AdminCanteensScreen({ navigation }) {
 }
 
 const styles = StyleSheet.create({
-    container: { flex: 1, backgroundColor: '#F8F9FA' },
-    header: { backgroundColor: ORANGE, paddingTop: 52, paddingBottom: 16, paddingHorizontal: 16, flexDirection: 'row', alignItems: 'center' },
-    backBtn: { marginRight: 10, padding: 4 },
-    back: { color: '#fff', fontSize: 22, fontWeight: 'bold' },
-    headerTitle: { flex: 1, color: '#fff', fontSize: 18, fontWeight: 'bold' },
-    addBtn: { backgroundColor: 'rgba(255,255,255,0.25)', borderRadius: 8, paddingHorizontal: 12, paddingVertical: 6 },
-    addBtnText: { color: '#fff', fontWeight: 'bold', fontSize: 14 },
-    card: { flexDirection: 'row', backgroundColor: '#fff', borderRadius: 14, padding: 14, marginBottom: 10, elevation: 2 },
+    container: { flex: 1, backgroundColor: COLORS.background },
+    header: {
+        backgroundColor: COLORS.primary,
+        paddingTop: 52,
+        paddingBottom: 20,
+        paddingHorizontal: SPACING.lg,
+        flexDirection: 'row',
+        alignItems: 'center',
+        ...SHADOWS.md,
+    },
+    backBtn: { 
+        marginRight: SPACING.sm,
+        padding: SPACING.xs,
+        borderRadius: BORDER_RADIUS.round,
+        backgroundColor: 'rgba(255,255,255,0.1)'
+    },
+    back: { color: COLORS.textWhite, fontSize: 22, fontWeight: '700' },
+    headerTitle: { 
+        flex: 1, 
+        color: COLORS.textWhite, 
+        fontSize: TYPOGRAPHY.h3.fontSize, 
+        fontWeight: TYPOGRAPHY.h3.fontWeight 
+    },
+    addBtn: { 
+        backgroundColor: 'rgba(255,255,255,0.2)', 
+        borderRadius: BORDER_RADIUS.md, 
+        paddingHorizontal: SPACING.md, 
+        paddingVertical: SPACING.sm 
+    },
+    addBtnText: { 
+        color: COLORS.textWhite, 
+        fontWeight: TYPOGRAPHY.button.fontWeight, 
+        fontSize: TYPOGRAPHY.button.fontSize 
+    },
+    card: { 
+        flexDirection: 'row', 
+        backgroundColor: COLORS.surface, 
+        borderRadius: BORDER_RADIUS.lg, 
+        padding: SPACING.lg, 
+        marginBottom: SPACING.md, 
+        ...SHADOWS.md,
+        alignItems: 'center',
+        borderWidth: 1,
+        borderColor: COLORS.borderLight,
+    },
+    cardImageContainer: { marginRight: SPACING.md },
+    cardImage: { 
+        width: 70, 
+        height: 70, 
+        borderRadius: BORDER_RADIUS.md, 
+        backgroundColor: COLORS.surfaceVariant,
+        borderWidth: 1,
+        borderColor: COLORS.borderLight,
+    },
+    cardImagePlaceholder: { 
+        width: 70, 
+        height: 70, 
+        borderRadius: BORDER_RADIUS.md, 
+        backgroundColor: COLORS.primaryUltraLight,
+        justifyContent: 'center', 
+        alignItems: 'center',
+        borderWidth: 1,
+        borderColor: COLORS.primaryLight,
+    },
+    cardImagePlaceholderText: { fontSize: 28, color: COLORS.primary },
     cardInfo: { flex: 1 },
-    cardName: { fontSize: 15, fontWeight: 'bold', color: '#222', marginBottom: 4 },
-    cardSub: { fontSize: 12, color: '#888', marginBottom: 2 },
-    cardActions: { justifyContent: 'center', gap: 6 },
-    editBtn: { backgroundColor: '#E3F2FD', borderRadius: 8, paddingHorizontal: 12, paddingVertical: 6 },
-    editBtnText: { color: '#1565C0', fontWeight: '600', fontSize: 12 },
-    delBtn: { backgroundColor: '#FFEBEE', borderRadius: 8, paddingHorizontal: 12, paddingVertical: 6 },
-    delBtnText: { color: '#C62828', fontWeight: '600', fontSize: 12 },
-    empty: { textAlign: 'center', color: '#aaa', paddingVertical: 40 },
-    modalContainer: { flex: 1, backgroundColor: '#fff' },
-    modalHeader: { backgroundColor: ORANGE, paddingTop: 52, paddingBottom: 16, paddingHorizontal: 16, flexDirection: 'row', alignItems: 'center', gap: 12 },
-    modalTitle: { color: '#fff', fontSize: 18, fontWeight: 'bold' },
-    modalScroll: { padding: 20 },
-    label: { fontSize: 13, fontWeight: '600', color: '#555', marginBottom: 6 },
-    input: { borderWidth: 1.5, borderColor: '#E8E8E8', borderRadius: 10, padding: 12, fontSize: 14, color: '#222', marginBottom: 2 },
-    inputError: { borderColor: '#FF6B35' },
-    errorText: { color: '#FF6B35', fontSize: 12, marginTop: 4 },
-    imgPicker: { borderWidth: 2, borderColor: ORANGE, borderStyle: 'dashed', borderRadius: 12, height: 120, justifyContent: 'center', alignItems: 'center', marginBottom: 20, overflow: 'hidden' },
+    cardName: { 
+        fontSize: TYPOGRAPHY.body1.fontSize,
+        fontWeight: '600', 
+        color: COLORS.textPrimary, 
+        marginBottom: SPACING.xs 
+    },
+    cardSub: { 
+        fontSize: TYPOGRAPHY.caption.fontSize, 
+        color: COLORS.textSecondary, 
+        marginBottom: 2 
+    },
+    cardActions: { justifyContent: 'center', gap: SPACING.sm },
+    editBtn: { 
+        backgroundColor: COLORS.info, 
+        borderRadius: BORDER_RADIUS.md, 
+        paddingHorizontal: SPACING.md, 
+        paddingVertical: SPACING.sm 
+    },
+    editBtnText: { 
+        color: COLORS.textWhite, 
+        fontWeight: '600', 
+        fontSize: TYPOGRAPHY.caption.fontSize 
+    },
+    delBtn: { 
+        backgroundColor: COLORS.danger, 
+        borderRadius: BORDER_RADIUS.md, 
+        paddingHorizontal: SPACING.md, 
+        paddingVertical: SPACING.sm 
+    },
+    delBtnText: { 
+        color: COLORS.textWhite, 
+        fontWeight: '600', 
+        fontSize: TYPOGRAPHY.caption.fontSize 
+    },
+    empty: { 
+        textAlign: 'center', 
+        color: COLORS.textTertiary, 
+        paddingVertical: SPACING.xxxl,
+        fontSize: TYPOGRAPHY.body2.fontSize 
+    },
+    modalContainer: { flex: 1, backgroundColor: COLORS.surface },
+    modalHeader: { 
+        backgroundColor: COLORS.primary,
+        paddingTop: 52,
+        paddingBottom: SPACING.lg,
+        paddingHorizontal: SPACING.lg,
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: SPACING.md,
+        ...SHADOWS.md,
+    },
+    modalTitle: { 
+        color: COLORS.textWhite, 
+        fontSize: TYPOGRAPHY.h3.fontSize, 
+        fontWeight: TYPOGRAPHY.h3.fontWeight 
+    },
+    modalScroll: { padding: SPACING.lg },
+    label: { 
+        fontSize: TYPOGRAPHY.label.fontSize, 
+        fontWeight: TYPOGRAPHY.label.fontWeight, 
+        color: COLORS.textSecondary, 
+        marginBottom: SPACING.sm 
+    },
+    input: { 
+        borderWidth: 1.5, 
+        borderColor: COLORS.border, 
+        borderRadius: BORDER_RADIUS.md, 
+        padding: SPACING.md, 
+        fontSize: TYPOGRAPHY.body2.fontSize, 
+        color: COLORS.textPrimary, 
+        marginBottom: SPACING.xs,
+        backgroundColor: COLORS.surface,
+        height: SIZES.inputHeight,
+    },
+    inputError: { 
+        borderColor: COLORS.danger,
+        borderWidth: 2,
+    },
+    errorText: { 
+        color: COLORS.danger, 
+        fontSize: TYPOGRAPHY.caption.fontSize, 
+        marginTop: SPACING.xs 
+    },
+    imgPicker: { 
+        borderWidth: 2, 
+        borderColor: COLORS.primary, 
+        borderStyle: 'dashed', 
+        borderRadius: BORDER_RADIUS.lg, 
+        height: 120, 
+        justifyContent: 'center', 
+        alignItems: 'center', 
+        marginBottom: SPACING.lg, 
+        overflow: 'hidden',
+        backgroundColor: COLORS.primaryUltraLight,
+    },
     imgPreview: { width: '100%', height: '100%' },
-    imgPickerText: { color: ORANGE, fontWeight: '600', fontSize: 14 },
-    cancelImgBtn: { position: 'absolute', top: 5, right: 5, backgroundColor: 'rgba(0,0,0,0.6)', borderRadius: 12, width: 24, height: 24, justifyContent: 'center', alignItems: 'center' },
-    cancelImgBtnText: { color: '#fff', fontSize: 14, fontWeight: 'bold' },
-    saveBtn: { backgroundColor: ORANGE, borderRadius: 12, paddingVertical: 14, alignItems: 'center', marginTop: 8 },
-    saveBtnText: { color: '#fff', fontWeight: 'bold', fontSize: 15 },
-    ownersList: { marginBottom: 20, gap: 8 },
-    ownerItem: { padding: 12, borderRadius: 10, borderWidth: 1, borderColor: '#E8E8E8', backgroundColor: '#F8F9FA' },
-    ownerItemSelected: { borderColor: ORANGE, backgroundColor: '#FFF3E0' },
-    ownerItemText: { fontSize: 14, color: '#444' },
-    ownerItemTextSelected: { color: ORANGE, fontWeight: 'bold' },
+    imgPickerText: { 
+        color: COLORS.primary, 
+        fontWeight: '600', 
+        fontSize: TYPOGRAPHY.body2.fontSize 
+    },
+    cancelImgBtn: { 
+        position: 'absolute', 
+        top: SPACING.xs, 
+        right: SPACING.xs, 
+        backgroundColor: 'rgba(0,0,0,0.7)', 
+        borderRadius: BORDER_RADIUS.round, 
+        width: 28, 
+        height: 28, 
+        justifyContent: 'center', 
+        alignItems: 'center' 
+    },
+    cancelImgBtnText: { 
+        color: COLORS.textWhite, 
+        fontSize: 14, 
+        fontWeight: 'bold' 
+    },
+    saveBtn: { 
+        backgroundColor: COLORS.primary,
+        borderRadius: BORDER_RADIUS.lg, 
+        paddingVertical: SPACING.md, 
+        alignItems: 'center', 
+        marginTop: SPACING.md,
+        height: SIZES.buttonHeight,
+        justifyContent: 'center',
+        ...SHADOWS.sm,
+    },
+    saveBtnText: { 
+        color: COLORS.textWhite, 
+        fontWeight: 'bold', 
+        fontSize: TYPOGRAPHY.button.fontSize 
+    },
+    ownersList: { marginBottom: SPACING.lg, gap: SPACING.sm },
+    ownerItem: { 
+        padding: SPACING.md, 
+        borderRadius: BORDER_RADIUS.md, 
+        borderWidth: 1, 
+        borderColor: COLORS.border, 
+        backgroundColor: COLORS.surfaceVariant 
+    },
+    ownerItemSelected: { 
+        borderColor: COLORS.primary, 
+        backgroundColor: COLORS.primaryUltraLight,
+        borderWidth: 2,
+    },
+    ownerItemText: { 
+        fontSize: TYPOGRAPHY.body2.fontSize, 
+        color: COLORS.textPrimary 
+    },
+    ownerItemTextSelected: { 
+        color: COLORS.primary, 
+        fontWeight: 'bold' 
+    },
 });
