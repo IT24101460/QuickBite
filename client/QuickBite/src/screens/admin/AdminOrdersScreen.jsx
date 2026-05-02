@@ -6,9 +6,7 @@ import {
 import { launchImageLibrary } from 'react-native-image-picker';
 import API from '../../services/api';
 import { getImageUrl } from '../../utils/imageUtils';
-
-const ORANGE = '#FF6B35';
-const STATUS_COLORS = { pending: '#FF9800', confirmed: '#2196F3', preparing: '#9C27B0', ready: '#4CAF50', completed: '#607D8B', cancelled: '#F44336' };
+import { COLORS, SPACING, TYPOGRAPHY, BORDER_RADIUS, SHADOWS, SIZES } from '../../styles/adminTheme';
 const STATUSES = ['pending', 'confirmed', 'preparing', 'ready', 'completed', 'cancelled'];
 
 export default function AdminOrdersScreen({ navigation }) {
@@ -62,17 +60,17 @@ export default function AdminOrdersScreen({ navigation }) {
                 </ScrollView>
             </View>
 
-            {loading ? <ActivityIndicator size="large" color={ORANGE} style={{ marginTop: 20 }} /> : (
+            {loading ? <ActivityIndicator size="large" color={COLORS.primary} style={{ marginTop: 20 }} /> : (
                 <FlatList
                     data={orders}
                     keyExtractor={i => i._id}
                     contentContainerStyle={{ paddingHorizontal: 12, paddingBottom: 20 }}
-                    refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); fetch(); }} colors={[ORANGE]} />}
+                    refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); fetch(); }} colors={[COLORS.primary]} />}
                     renderItem={({ item }) => (
                         <View style={styles.card}>
                             <View style={styles.cardTop}>
                                 <Text style={styles.qNum}>#{item.queueNumber || '—'} · {item.studentName}</Text>
-                                <View style={[styles.badge, { backgroundColor: STATUS_COLORS[item.status] || '#999' }]}>
+                                <View style={[styles.badge, { backgroundColor: COLORS.status[item.status] || '#999' }]}>
                                     <Text style={styles.badgeText}>{item.status.toUpperCase()}</Text>
                                 </View>
                             </View>
@@ -105,7 +103,7 @@ export default function AdminOrdersScreen({ navigation }) {
                                 style={{ marginTop: 8 }}
                                 renderItem={({ item: s }) => (
                                     <TouchableOpacity
-                                        style={[styles.statusBtn, item.status === s && { backgroundColor: STATUS_COLORS[s] }]}
+                                        style={[styles.statusBtn, item.status === s && { backgroundColor: COLORS.status[s] }]}
                                         onPress={() => item.status !== s && updateStatus(item._id, s)}
                                     >
                                         <Text style={[styles.statusBtnText, item.status === s && { color: '#fff' }]}>{s}</Text>
@@ -122,6 +120,141 @@ export default function AdminOrdersScreen({ navigation }) {
 }
 
 const styles = StyleSheet.create({
+    container: { flex: 1, backgroundColor: COLORS.background },
+    header: { 
+        backgroundColor: COLORS.primary,
+        paddingTop: 52,
+        paddingBottom: SPACING.lg,
+        paddingHorizontal: SPACING.lg,
+        flexDirection: 'row',
+        alignItems: 'center',
+        ...SHADOWS.md,
+    },
+    backBtn: { 
+        marginRight: SPACING.sm,
+        padding: SPACING.xs,
+        borderRadius: BORDER_RADIUS.round,
+        backgroundColor: 'rgba(255,255,255,0.1)'
+    },
+    back: { 
+        color: COLORS.textWhite, 
+        fontSize: 22, 
+        fontWeight: '700' 
+    },
+    headerTitle: { 
+        flex: 1, 
+        color: COLORS.textWhite, 
+        fontSize: TYPOGRAPHY.h3.fontSize, 
+        fontWeight: TYPOGRAPHY.h3.fontWeight 
+    },
+    chip: { 
+        borderWidth: 1.5, 
+        borderColor: COLORS.border, 
+        borderRadius: BORDER_RADIUS.round, 
+        paddingHorizontal: SPACING.md, 
+        paddingVertical: SPACING.sm, 
+        marginRight: SPACING.sm, 
+        backgroundColor: COLORS.surface,
+        ...SHADOWS.sm,
+    },
+    chipActive: { 
+        backgroundColor: COLORS.primary, 
+        borderColor: COLORS.primary 
+    },
+    chipText: { 
+        fontSize: TYPOGRAPHY.caption.fontSize, 
+        color: COLORS.textSecondary, 
+        fontWeight: '600' 
+    },
+    chipTextActive: { 
+        color: COLORS.textWhite 
+    },
+    card: { 
+        backgroundColor: COLORS.surface, 
+        borderRadius: BORDER_RADIUS.lg, 
+        padding: SPACING.lg, 
+        marginBottom: SPACING.md, 
+        ...SHADOWS.md,
+        borderWidth: 1,
+        borderColor: COLORS.borderLight,
+    },
+    cardTop: { 
+        flexDirection: 'row', 
+        justifyContent: 'space-between', 
+        alignItems: 'center', 
+        marginBottom: SPACING.sm 
+    },
+    qNum: { 
+        fontSize: TYPOGRAPHY.body2.fontSize, 
+        fontWeight: '600', 
+        color: COLORS.textPrimary 
+    },
+    badge: { 
+        borderRadius: BORDER_RADIUS.md, 
+        paddingHorizontal: SPACING.sm, 
+        paddingVertical: SPACING.xs 
+    },
+    badgeText: { 
+        color: COLORS.textWhite, 
+        fontSize: TYPOGRAPHY.caption.fontSize, 
+        fontWeight: 'bold' 
+    },
+    items: { 
+        fontSize: TYPOGRAPHY.caption.fontSize, 
+        color: COLORS.textSecondary, 
+        marginBottom: SPACING.xs 
+    },
+    amount: { 
+        fontSize: TYPOGRAPHY.body2.fontSize, 
+        fontWeight: 'bold', 
+        color: COLORS.primary 
+    },
+    pickup: { 
+        fontSize: TYPOGRAPHY.caption.fontSize, 
+        color: COLORS.textTertiary, 
+        marginTop: SPACING.xs 
+    },
+    statusBtn: { 
+        borderWidth: 1, 
+        borderColor: COLORS.border, 
+        borderRadius: BORDER_RADIUS.md, 
+        paddingHorizontal: SPACING.sm, 
+        paddingVertical: SPACING.xs, 
+        marginRight: SPACING.xs,
+        backgroundColor: COLORS.surface,
+        ...SHADOWS.sm,
+    },
+    statusBtnText: { 
+        fontSize: TYPOGRAPHY.caption.fontSize, 
+        fontWeight: '600', 
+        color: COLORS.textSecondary 
+    },
+    empty: { 
+        textAlign: 'center', 
+        color: COLORS.textTertiary, 
+        paddingVertical: SPACING.xxxl,
+        fontSize: TYPOGRAPHY.body2.fontSize 
+    },
+    slipBox: { 
+        marginTop: SPACING.md, 
+        backgroundColor: COLORS.surfaceVariant, 
+        borderRadius: BORDER_RADIUS.md, 
+        padding: SPACING.sm, 
+        borderWidth: 1, 
+        borderColor: COLORS.borderLight 
+    },
+    slip: { 
+        width: '100%', 
+        height: 120, 
+        borderRadius: BORDER_RADIUS.sm 
+    },
+    slipLabel: { 
+        fontSize: TYPOGRAPHY.caption.fontSize, 
+        color: COLORS.textTertiary, 
+        textAlign: 'center', 
+        marginTop: SPACING.xs, 
+        fontWeight: 'bold' 
+    },
     container: { flex: 1, backgroundColor: '#F8F9FA' },
     header: { backgroundColor: ORANGE, paddingTop: 52, paddingBottom: 16, paddingHorizontal: 16, flexDirection: 'row', alignItems: 'center' },
     backBtn: { marginRight: 10, padding: 4 },
