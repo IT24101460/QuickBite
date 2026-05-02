@@ -47,6 +47,7 @@ import OwnerFeedbacksScreen from '../screens/owner/OwnerFeedbacksScreen';
 import OwnerSupportScreen from '../screens/owner/OwnerSupportScreen';
 
 import SidebarMenu from '../components/SidebarMenu';
+import OrderStatusNotifier from '../components/OrderStatusNotifier';
 
 const Stack = createNativeStackNavigator();
 const Drawer = createDrawerNavigator();
@@ -132,6 +133,7 @@ export default function AppNavigator() {
 
   return (
     <NavigationContainer>
+      <OrderStatusNotifier />
       <GlobalStack.Navigator screenOptions={{ headerShown: false }}>
         {user?.role === 'admin' ? (
             <GlobalStack.Screen name="Admin" component={AdminFlow} />
