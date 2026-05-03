@@ -9,7 +9,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getImageUrl } from '../utils/imageUtils';
 
-const ORANGE = '#FF6B35';
+const ORANGE = '#FF6B35'; // primary brand color
 
 export default function ProfileScreen({ navigation }) {
     const { user, login: updateUserContext, logout, isAdmin, role, token } = useAuth();
@@ -167,12 +167,20 @@ export default function ProfileScreen({ navigation }) {
     return (
         <View style={styles.container}>
             <View style={styles.header}>
+                <View style={styles.headerTopRow}>
                 <TouchableOpacity 
-                    style={styles.backButton}
+                    style={styles.menuButton}
                     onPress={() => navigation.openDrawer()}
                 >
-                    <Text style={styles.backButtonText}>← Back</Text>
+                    <Text style={styles.menuButtonText}>☰ Menu</Text>
                 </TouchableOpacity>
+                <TouchableOpacity 
+                    style={styles.homeButton}
+                    onPress={() => navigation.navigate('Home')}
+                >
+                    <Text style={styles.homeButtonText}>🏠 Home</Text>
+                </TouchableOpacity>
+            </View>
                 <Text style={styles.headerTitle}>👤 My Profile</Text>
             </View>
 
@@ -345,10 +353,13 @@ export default function ProfileScreen({ navigation }) {
 }
 
 const styles = StyleSheet.create({
-    container: { flex: 1, backgroundColor: '#F8F9FA' },
+    container: { flex: 1, backgroundColor: '#FFF7F2' },
     header: { backgroundColor: ORANGE, paddingTop: 52, paddingBottom: 25, paddingHorizontal: 20 },
-    backButton: { marginBottom: 12, padding: 8 },
-    backButtonText: { color: '#fff', fontSize: 16, fontWeight: '600' },
+    headerTopRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
+    homeButton: { padding: 8, marginRight: -8, backgroundColor: 'rgba(255,255,255,0.2)', borderRadius: 12 },
+    homeButtonText: { color: '#fff', fontSize: 14, fontWeight: 'bold' },
+    menuButton: { padding: 8, marginLeft: -8 },
+    menuButtonText: { color: '#fff', fontSize: 16, fontWeight: '600' },
     headerTitle: { color: '#fff', fontSize: 24, fontWeight: 'bold' },
     avatarSection: { alignItems: 'center', paddingVertical: 25, marginTop: -20, backgroundColor: '#fff', borderBottomLeftRadius: 30, borderBottomRightRadius: 30, elevation: 3, marginBottom: 15 },
     avatarContainer: { position: 'relative', marginBottom: 12 },

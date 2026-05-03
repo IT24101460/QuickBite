@@ -38,6 +38,7 @@ export default function OTPScreen({ route, navigation }) {
         // Check for duplicate card before saving
         const checkAndSaveCard = async () => {
             try {
+                const { fromCheckout } = route.params || {};
                 const existingCards = await AsyncStorage.getItem('@saved_cards');
                 let cards = existingCards ? JSON.parse(existingCards) : [];
                 
@@ -46,21 +47,33 @@ export default function OTPScreen({ route, navigation }) {
                     card.last4 === newCard.last4 && card.type === newCard.type
                 );
                 
+
+                
                 if (isDuplicate) {
+                    const buttons = [
+                        {
+                            text: 'Go Back',
+                            onPress: () => navigation.goBack(),
+                            style: 'cancel'
+                        }
+                    ];
+
+                    if (fromCheckout) {
+                        buttons.push({
+                            text: 'Back to Checkout',
+                            onPress: () => navigation.navigate('Checkout', { newlyAddedCard: cards.find(c => c.last4 === newCard.last4) })
+                        });
+                    } else {
+                        buttons.push({
+                            text: 'View Profile',
+                            onPress: () => navigation.navigate('Profile')
+                        });
+                    }
+
                     return Alert.alert(
                         'Card Already Saved',
                         `A ${newCard.type} card ending in ${newCard.last4} is already saved in your payment options.`,
-                        [
-                            {
-                                text: 'Go Back',
-                                onPress: () => navigation.goBack(),
-                                style: 'cancel'
-                            },
-                            {
-                                text: 'View Profile',
-                                onPress: () => navigation.navigate('Profile')
-                            }
-                        ]
+                        buttons
                     );
                 }
                 
@@ -68,9 +81,24 @@ export default function OTPScreen({ route, navigation }) {
                 cards.push(newCard);
                 await AsyncStorage.setItem('@saved_cards', JSON.stringify(cards));
                 
+
+                
+                if (fromCheckout) {
+                    return Alert.alert('Verified!', 'Your card has been verified and saved. Redirecting to checkout...', [
+                        {
+                            text: 'Finish Order',
+                            onPress: () => navigation.navigate('Checkout', { newlyAddedCard: newCard })
+                        }
+                    ]);
+                }
+
                 Alert.alert('Verified!', 'Your card has been verified and saved successfully.', [
                     {
-                        text: 'OK',
+                        text: 'Go Home',
+                        onPress: () => navigation.navigate('Home')
+                    },
+                    {
+                        text: 'View Profile',
                         onPress: () => navigation.navigate('Profile')
                     }
                 ]);

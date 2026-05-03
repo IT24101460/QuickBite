@@ -85,7 +85,7 @@ export default function OrderDetailScreen({ navigation, route }) {
 }
 
 const styles = StyleSheet.create({
-    container: { flex: 1, backgroundColor: '#F8F9FA' },
+    container: { flex: 1, backgroundColor: '#FFF7F2' },
     header: {
         backgroundColor: ORANGE, paddingTop: 52, paddingBottom: 16,
         paddingHorizontal: 16, flexDirection: 'row', alignItems: 'center',
