@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
-    View, Text, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator, ScrollView, Image, Dimensions, TextInput, RefreshControl
+    View, Text, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator, ScrollView, Image, Dimensions, RefreshControl, Alert
 } from 'react-native';
 import API from '../services/api';
 import { useCart } from '../context/CartContext';
@@ -12,7 +12,7 @@ const { width, height } = Dimensions.get('window');
 
 export default function CanteenDetailScreen({ navigation, route }) {
     const { canteen } = route.params;
-    const { addToCart } = useCart();
+    const { addToCart, cartItems, cartTotal, applyPromotion } = useCart();
 
     const [foodItems, setFoodItems] = useState([]);
     const [promotions, setPromotions] = useState([]);
@@ -106,8 +106,51 @@ export default function CanteenDetailScreen({ navigation, route }) {
         filteredItems.sort((a, b) => (b.averageRating || 0) - (a.averageRating || 0));
     }
 
+    const handlePromotionPress = async (promotion) => {
+        if (!promotion?._id || promotion._id.startsWith('sample_')) {
+            return Alert.alert('Promotion unavailable', 'This banner is a preview promotion and cannot be applied.');
+        }
+
+        const promotionItems = promotion.foodItems || [];
+        const appliesToSpecificItems = promotion.applicableTo === 'specific' && promotionItems.length > 0;
+        let nextCartItems = cartItems;
+        let nextCartTotal = cartTotal;
+
+        if (appliesToSpecificItems) {
+            const applicableIds = promotionItems.map(item => String(item._id || item.foodItemId));
+            const cartHasApplicableItem = cartItems.some(item => applicableIds.includes(String(item.foodItemId || item._id)));
+
+            if (!cartHasApplicableItem) {
+                const promoItem = promotionItems[0];
+                const itemToAdd = {
+                    ...promoItem,
+                    canteenId: promotion.canteenId?._id || promotion.canteenId || canteen._id,
+                };
+
+                addToCart(itemToAdd, 1);
+                nextCartItems = [...cartItems, { ...itemToAdd, quantity: 1 }];
+                nextCartTotal = nextCartItems.reduce((sum, item) => sum + (item.price || 0) * item.quantity, 0);
+            }
+        } else if (cartItems.length === 0) {
+            return Alert.alert('Cart is empty', 'Add food items to your cart before applying this promotion.');
+        }
+
+        try {
+            const res = await API.post('/promotions/apply', {
+                promotionId: promotion._id,
+                cartTotal: nextCartTotal,
+                cartItems: nextCartItems.map(i => ({ foodItemId: i.foodItemId || i._id })),
+            });
+
+            applyPromotion({ ...promotion, ...res.data.promotion, _id: promotion._id }, res.data.discountAmount);
+            navigation.navigate('Cart', { appliedPromotionId: promotion._id });
+        } catch (err) {
+            Alert.alert('Promotion not applied', err.response?.data?.message || 'This promotion cannot be applied to your cart.');
+        }
+    };
+
     const renderPromo = ({ item }) => (
-        <TouchableOpacity style={styles.promoBanner} activeOpacity={0.9}>
+        <TouchableOpacity style={styles.promoBanner} activeOpacity={0.9} onPress={() => handlePromotionPress(item)}>
             {item.bannerImage
                 ? <Image source={{ uri: getImageUrl(item.bannerImage) }} style={styles.promoBannerImg} resizeMode="cover" />
                 : <View style={styles.promoBannerPlaceholder} />}
@@ -276,7 +319,7 @@ export default function CanteenDetailScreen({ navigation, route }) {
 }
 
 const styles = StyleSheet.create({
-    container: { flex: 1, backgroundColor: '#F8F9FA' },
+    container: { flex: 1, backgroundColor: '#FFF7F2' },
     heroImg: { width: '100%', height: 180 },
     heroPlaceholder: { width: '100%', height: 180, backgroundColor: '#FFF0E8', justifyContent: 'center', alignItems: 'center' },
     heroPlaceholderIcon: { fontSize: 60 },

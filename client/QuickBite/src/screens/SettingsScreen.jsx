@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TextInput, TouchableOpacity, Alert, SafeAreaView, ScrollView, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, TextInput, TouchableOpacity, Alert, ScrollView, ActivityIndicator } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../context/AuthContext';
 import API from '../services/api';
 
@@ -7,11 +8,11 @@ const ORANGE = '#FF6B35';
 
 export default function SettingsScreen({ navigation }) {
     const { user, token, login: updateUserContext } = useAuth();
-    
-    const [role, setRole] = useState(user?.role || 'student');
+
+    const accountRole = user?.role || 'student';
+    const registrationNumber = user?.uniId || '';
     const [firstName, setFirstName] = useState(user?.firstName || '');
     const [lastName, setLastName] = useState(user?.lastName || '');
-    const [uniId, setUniId] = useState(user?.uniId || '');
     const [phoneNumber, setPhoneNumber] = useState(user?.phoneNumber?.toString() || '');
     const [email, setEmail] = useState(user?.email || '');
     const [currentPassword, setCurrentPassword] = useState('');
@@ -19,7 +20,7 @@ export default function SettingsScreen({ navigation }) {
     const [loading, setLoading] = useState(false);
 
     const handleSave = async () => {
-        if (!firstName || !lastName || !phoneNumber || !email || (role === 'student' && !uniId)) {
+        if (!firstName || !lastName || !phoneNumber || !email || (accountRole === 'student' && !registrationNumber)) {
             return Alert.alert('Validation Error', 'Please fill in all required fields.');
         }
 
@@ -32,10 +33,9 @@ export default function SettingsScreen({ navigation }) {
             const updates = {
                 firstName,
                 lastName,
-                uniId: role === 'student' ? uniId : '', 
+                uniId: accountRole === 'student' ? registrationNumber : user?.uniId || '',
                 phoneNumber,
-                email,
-                role
+                email
             };
             
             if (newPassword.trim().length > 0) {
@@ -82,27 +82,15 @@ export default function SettingsScreen({ navigation }) {
                     <TextInput style={styles.input} value={lastName} onChangeText={setLastName} placeholder="e.g. Doe" />
                 </View>
 
-                <View style={styles.inputGroup}>
-                    <Text style={styles.label}>Account Role</Text>
-                    <View style={styles.roleContainer}>
-                        {['student', 'lecturer', 'staff'].map((r) => (
-                            <TouchableOpacity 
-                                key={r} 
-                                style={[styles.roleBtn, role === r && styles.roleBtnActive]}
-                                onPress={() => setRole(r)}
-                            >
-                                <Text style={[styles.roleTxt, role === r && styles.roleTxtActive]}>
-                                    {r.charAt(0).toUpperCase() + r.slice(1)}
-                                </Text>
-                            </TouchableOpacity>
-                        ))}
-                    </View>
-                </View>
-
-                {role === 'student' && (
+                {accountRole === 'student' && (
                     <View style={styles.inputGroup}>
                         <Text style={styles.label}>Registration Number</Text>
-                        <TextInput style={styles.input} value={uniId} onChangeText={setUniId} placeholder="e.g. IT12345678" autoCapitalize="characters" />
+                        <TextInput
+                            style={[styles.input, styles.disabledInput]}
+                            value={registrationNumber}
+                            editable={false}
+                            placeholder="e.g. IT12345678"
+                        />
                     </View>
                 )}
 
@@ -154,7 +142,7 @@ export default function SettingsScreen({ navigation }) {
 }
 
 const styles = StyleSheet.create({
-    safeArea: { flex: 1, backgroundColor: '#F8F9FA' },
+    safeArea: { flex: 1, backgroundColor: '#FFF7F2' },
     header: { backgroundColor: ORANGE, flexDirection: 'row', alignItems: 'center', padding: 16, paddingTop: 50 },
     backBtn: { width: 40, height: 40, justifyContent: 'center' },
     backTxt: { color: '#fff', fontSize: 24, fontWeight: 'bold' },
@@ -164,12 +152,8 @@ const styles = StyleSheet.create({
     inputGroup: { marginBottom: 16 },
     label: { fontSize: 13, fontWeight: '600', color: '#555', marginBottom: 6 },
     input: { backgroundColor: '#fff', borderWidth: 1, borderColor: '#ddd', borderRadius: 10, padding: 12, fontSize: 15, color: '#333' },
+    disabledInput: { backgroundColor: '#F1F3F5', color: '#777' },
     hint: { fontSize: 12, color: '#888', marginTop: 4 },
     saveBtn: { backgroundColor: ORANGE, padding: 16, borderRadius: 12, alignItems: 'center', marginTop: 30 },
-    saveBtnText: { color: '#fff', fontSize: 16, fontWeight: 'bold' },
-    roleContainer: { flexDirection: 'row', justifyContent: 'space-between', gap: 10 },
-    roleBtn: { flex: 1, paddingVertical: 10, borderWidth: 1, borderColor: '#ddd', borderRadius: 8, alignItems: 'center', backgroundColor: '#fff' },
-    roleBtnActive: { borderColor: ORANGE, backgroundColor: '#FFF0E5' },
-    roleTxt: { fontSize: 14, color: '#666', fontWeight: '500' },
-    roleTxtActive: { color: ORANGE, fontWeight: 'bold' }
+    saveBtnText: { color: '#fff', fontSize: 16, fontWeight: 'bold' }
 });

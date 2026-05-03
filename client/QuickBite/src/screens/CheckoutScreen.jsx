@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {
     View, Text, StyleSheet, TouchableOpacity, ScrollView,
-    ActivityIndicator, Alert, TextInput, Modal, FlatList
+    ActivityIndicator, Alert
 } from 'react-native';
 import { launchImageLibrary } from 'react-native-image-picker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -21,12 +21,7 @@ export default function CheckoutScreen({ route, navigation }) {
     const { cartItems, finalTotal, discountAmount, appliedPromotion, clearCart } = useCart();
     const { user } = useAuth();
     const [method, setMethod] = useState('cash');
-
-    // Time Picker States
-    const [selHour, setSelHour] = useState('10');
-    const [selMin, setSelMin] = useState('00');
-    const [selPeriod, setSelPeriod] = useState('AM');
-    const [showTimeModal, setShowTimeModal] = useState(false);
+    const pickupTime = route.params?.pickupTime || '';
 
     // Card Payment States
     const [savedCards, setSavedCards] = useState([]);
@@ -67,8 +62,8 @@ export default function CheckoutScreen({ route, navigation }) {
         if (!timeStr) return 0;
         const match = timeStr.match(/(\d+):(\d+)\s*(AM|PM)/i);
         if (!match) return 0;
-        let h = parseInt(match[1]);
-        let m = parseInt(match[2]);
+        let h = parseInt(match[1], 10);
+        let m = parseInt(match[2], 10);
         let mode = match[3].toUpperCase();
         if (h === 12 && mode === 'AM') h = 0;
         if (h < 12 && mode === 'PM') h += 12;
@@ -82,14 +77,13 @@ export default function CheckoutScreen({ route, navigation }) {
             setSelectedCard(newCard.id);
             navigation.setParams({ newlyAddedCard: null });
         }
-    }, [route.params?.newlyAddedCard]);
+    }, [navigation, route.params?.newlyAddedCard]);
 
     useEffect(() => {
         // Fetch the bank details for the canteen related to the first item
         if (cartItems.length > 0) {
             // Assuming we check the details of foods to find their canteen, 
             // but for safety let's find the first item's food detail or fetch it.
-            const foodId = cartItems[0].foodItemId || cartItems[0]._id;
             // The item object might contain canteen context populated in fetching.
             // If the user's requested bank details is directly at /canteens/foodId,
             // we will just pull canteens globally and match if possible, or gracefully mock if backend isn't ready.
@@ -113,11 +107,13 @@ export default function CheckoutScreen({ route, navigation }) {
     };
 
     const handleConfirm = async () => {
-        const selectedFormattedTime = `${selHour}:${selMin} ${selPeriod}`;
+        if (!pickupTime) {
+            return Alert.alert('Pickup Time Required', 'Please go back to your cart and choose a pickup time.');
+        }
 
         // Validate pickup time against canteen open/close hours
         if (canteen) {
-            const chosenMin = timeToMinutes(selectedFormattedTime);
+            const chosenMin = timeToMinutes(pickupTime);
             const openMin = timeToMinutes(canteen.openingTime || '08:00 AM');
             const closeMin = timeToMinutes(canteen.closingTime || '05:00 PM');
 
@@ -141,7 +137,7 @@ export default function CheckoutScreen({ route, navigation }) {
                     quantity: i.quantity,
                     note: i.note || "",
                 })),
-                pickupTime: selectedFormattedTime,
+                pickupTime,
                 discountAmount: discountAmount || 0,
                 promotionId: appliedPromotion ? appliedPromotion._id : null,
                 canteenId: cartItems[0].canteenId || null
@@ -180,7 +176,7 @@ export default function CheckoutScreen({ route, navigation }) {
             clearCart();
             Alert.alert(
                 '🎉 Order Confirmed!',
-                `Queue #${order.queueNumber}\nPickup: ${selectedFormattedTime}\nTotal: LKR ${finalTotal.toFixed(2)}`,
+                `Queue #${order.queueNumber}\nPickup: ${pickupTime}\nTotal: LKR ${finalTotal.toFixed(2)}`,
                 [{
                     text: 'View Orders', onPress: () => {
                         navigation.goBack(); // Back to drawer home
@@ -203,63 +199,16 @@ export default function CheckoutScreen({ route, navigation }) {
 
             <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ padding: 16, paddingTop: 85 }}>
 
-                {/* Pickup Time Option */}
+                {/* Pickup Time */}
                 <View style={styles.card}>
-                    <Text style={styles.cardTitle}>⏰ Preferred Pickup Time</Text>
+                    <Text style={styles.cardTitle}>⏰ Pickup Time</Text>
                     <Text style={styles.descText}>
                         Canteen Hours: {canteen?.openingTime || '08:00 AM'} - {canteen?.closingTime || '05:00 PM'}
                     </Text>
-
-                    <TouchableOpacity
-                        style={styles.timeSelectBtn}
-                        onPress={() => setShowTimeModal(true)}
-                    >
-                        <Text style={styles.timeSelectText}>{selHour}:{selMin} {selPeriod}</Text>
-                        <Text style={styles.timeSelectIcon}>▼</Text>
-                    </TouchableOpacity>
+                    <View style={styles.timeDisplay}>
+                        <Text style={styles.timeDisplayText}>{pickupTime || 'Not selected'}</Text>
+                    </View>
                 </View>
-
-                {/* Time Picker Modal */}
-                <Modal visible={showTimeModal} transparent animationType="slide">
-                    <TouchableOpacity style={styles.modalBg} activeOpacity={1} onPress={() => setShowTimeModal(false)}>
-                        <View style={styles.modalContent} onStartShouldSetResponder={() => true}>
-                            <Text style={styles.modalTitle}>Select Pickup Time</Text>
-
-                            <View style={styles.pickerCols}>
-                                {/* Hours */}
-                                <ScrollView style={styles.pickerList} nestedScrollEnabled showsVerticalScrollIndicator={false}>
-                                    {['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12'].map(h => (
-                                        <TouchableOpacity key={h} onPress={() => setSelHour(h)} style={[styles.timeItem, selHour === h && styles.timeItemActive]}>
-                                            <Text style={[styles.timeItemText, selHour === h && styles.timeItemTextActive]}>{h}</Text>
-                                        </TouchableOpacity>
-                                    ))}
-                                </ScrollView>
-
-                                {/* Minutes */}
-                                <ScrollView style={styles.pickerList} nestedScrollEnabled showsVerticalScrollIndicator={false}>
-                                    {['00', '05', '10', '15', '20', '25', '30', '35', '40', '45', '50', '55'].map(m => (
-                                        <TouchableOpacity key={m} onPress={() => setSelMin(m)} style={[styles.timeItem, selMin === m && styles.timeItemActive]}>
-                                            <Text style={[styles.timeItemText, selMin === m && styles.timeItemTextActive]}>{m}</Text>
-                                        </TouchableOpacity>
-                                    ))}
-                                </ScrollView>
-
-                                {/* Period */}
-                                <View style={styles.periodCol}>
-                                    {['AM', 'PM'].map(p => (
-                                        <TouchableOpacity key={p} onPress={() => setSelPeriod(p)} style={[styles.periodItem, selPeriod === p && styles.timeItemActive]}>
-                                            <Text style={[styles.timeItemText, selPeriod === p && styles.timeItemTextActive]}>{p}</Text>
-                                        </TouchableOpacity>
-                                    ))}
-                                </View>
-                            </View>
-
-                            <TouchableOpacity style={styles.modalDone} onPress={() => setShowTimeModal(false)}>
-                                <Text style={styles.modalDoneText}>Confirm Time</Text>
-                            </TouchableOpacity>
-                        </View>
-                    </TouchableOpacity>
-                </Modal>
 
                 {/* Order Summary */}
                 <View style={styles.card}>
@@ -273,7 +222,9 @@ export default function CheckoutScreen({ route, navigation }) {
                     <View style={styles.divider} />
                     {discountAmount > 0 && (
                         <View style={styles.summaryItem}>
-                            <Text style={{ color: '#4CAF50', fontWeight: '600' }}>Discount</Text>
+                            <Text style={{ color: '#4CAF50', fontWeight: '600' }}>
+                                {appliedPromotion?.title ? `${appliedPromotion.title} Discount` : 'Discount'}
+                            </Text>
                             <Text style={{ color: '#4CAF50', fontWeight: '600' }}>− LKR {discountAmount.toFixed(2)}</Text>
                         </View>
                     )}
@@ -319,7 +270,7 @@ export default function CheckoutScreen({ route, navigation }) {
                             ))}
                             <TouchableOpacity
                                 style={styles.savedCardRow}
-                                onPress={() => navigation.navigate('AddCard')}
+                                onPress={() => navigation.navigate('AddCard', { fromCheckout: true })}
                             >
                                 <Text style={styles.savedCardIcon}>➕</Text>
                                 <Text style={styles.savedCardText}>Add a New Card</Text>
@@ -377,29 +328,12 @@ export default function CheckoutScreen({ route, navigation }) {
 }
 
 const styles = StyleSheet.create({
-    container: { flex: 1, backgroundColor: '#F8F9FA' },
+    container: { flex: 1, backgroundColor: '#FFF7F2' },
     card: { backgroundColor: '#fff', borderRadius: 16, padding: 16, marginBottom: 14, elevation: 2 },
     cardTitle: { fontSize: 15, fontWeight: 'bold', color: '#222', marginBottom: 8 },
     descText: { fontSize: 13, color: '#888', marginBottom: 10 },
-    timeSelectBtn: {
-        flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
-        borderWidth: 1.5, borderColor: '#eee', borderRadius: 10, padding: 14, backgroundColor: '#FAFAFA'
-    },
-    timeSelectText: { fontSize: 16, fontWeight: '600', color: '#333' },
-    timeSelectIcon: { fontSize: 14, color: '#888' },
-    modalBg: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' },
-    modalContent: { backgroundColor: '#fff', borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: 20, height: 350 },
-    modalTitle: { fontSize: 18, fontWeight: 'bold', marginBottom: 15, textAlign: 'center', color: '#222' },
-    pickerCols: { flexDirection: 'row', justifyContent: 'space-between', height: 200, marginBottom: 15 },
-    pickerList: { flex: 1, borderWidth: 1, borderColor: '#eee', borderRadius: 10, marginRight: 10 },
-    periodCol: { flex: 0.8, justifyContent: 'center' },
-    timeItem: { paddingVertical: 12, alignItems: 'center' },
-    timeItemActive: { backgroundColor: '#FFF0E8' },
-    periodItem: { paddingVertical: 20, alignItems: 'center', borderWidth: 1, borderColor: '#eee', borderRadius: 10, marginBottom: 10 },
-    timeItemText: { fontSize: 16, color: '#555', fontWeight: '500' },
-    timeItemTextActive: { color: ORANGE, fontWeight: 'bold', fontSize: 18 },
-    modalDone: { backgroundColor: ORANGE, padding: 14, borderRadius: 12, alignItems: 'center' },
-    modalDoneText: { color: '#fff', fontWeight: 'bold', fontSize: 16 },
+    timeDisplay: { borderWidth: 1.5, borderColor: '#eee', borderRadius: 10, padding: 14, backgroundColor: '#FAFAFA' },
+    timeDisplayText: { fontSize: 16, fontWeight: '600', color: '#333' },
     summaryItem: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 },
     summaryItemName: { flex: 1, fontSize: 14, color: '#444', marginRight: 8 },
     summaryItemPrice: { fontSize: 14, fontWeight: '600', color: '#333' },
@@ -416,7 +350,7 @@ const styles = StyleSheet.create({
     radioDot: { width: 10, height: 10, borderRadius: 5, backgroundColor: ORANGE },
     methodLabel: { fontSize: 15, fontWeight: '600', color: '#222' },
     methodDesc: { fontSize: 12, color: '#888', marginTop: 2 },
-    bankContainer: { backgroundColor: '#F8F9FA', marginTop: 10, padding: 12, borderRadius: 8, borderWidth: 1, borderColor: '#eee' },
+    bankContainer: { backgroundColor: '#FFF3EC', marginTop: 10, padding: 12, borderRadius: 8, borderWidth: 1, borderColor: '#F7D8CB' },
     bankTitle: { fontSize: 13, fontWeight: 'bold', color: '#444', marginBottom: 6 },
     bankText: { fontSize: 14, color: '#222', fontWeight: '500', marginBottom: 15 },
     uploadBtn: {

@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, TextInput, TouchableOpacity, Alert, SafeAreaVie
 
 const ORANGE = '#FF6B35';
 
-export default function AddCardScreen({ navigation }) {
+export default function AddCardScreen({ navigation, route }) {
     const [cardName, setCardName] = useState('');
     const [cardNumber, setCardNumber] = useState('');
     const [expiry, setExpiry] = useState('');
@@ -70,11 +70,14 @@ export default function AddCardScreen({ navigation }) {
             last4: cardNumber.trim().slice(-4),
         };
 
-        navigation.navigate('OTPVerification', { newCard: cardDetails });
+        navigation.navigate('OTPVerification', { 
+            newCard: cardDetails,
+            fromCheckout: route.params?.fromCheckout 
+        });
     };
 
     return (
-        <SafeAreaView style={{ flex: 1, backgroundColor: '#F8F9FA' }}>
+        <SafeAreaView style={{ flex: 1, backgroundColor: '#FFF7F2' }}>
             <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
                 <View style={styles.header}>
                     <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
