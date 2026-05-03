@@ -243,7 +243,12 @@ export async function applyPromotion(req, res) {
             originalTotal: cartTotal,
             discountAmount: parseFloat(discountAmount.toFixed(2)),
             finalTotal,
-            promotion: { title: promotion.title, discountType: promotion.discountType, discountValue: promotion.discountValue }
+            promotion: {
+                _id: promotion._id,
+                title: promotion.title,
+                discountType: promotion.discountType,
+                discountValue: promotion.discountValue
+            }
         });
     } catch (error) {
         res.status(500).json({ message: "Error applying promotion", error: error.message });

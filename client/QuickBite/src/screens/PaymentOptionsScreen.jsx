@@ -17,14 +17,7 @@ export default function PaymentOptionsScreen({ navigation }) {
     const [editingOption, setEditingOption] = useState(null);
     const [cardholderName, setCardholderName] = useState('');
 
-    // Load payment options on screen focus
-    useFocusEffect(
-        useCallback(() => {
-            loadPaymentOptions();
-        }, [])
-    );
-
-    const loadPaymentOptions = async () => {
+    const loadPaymentOptions = useCallback(async (showErrorAlert = false) => {
         try {
             setLoading(true);
             const response = await API.get('/user-payments', {
@@ -34,16 +27,23 @@ export default function PaymentOptionsScreen({ navigation }) {
         } catch (error) {
             console.error('Error loading payment options:', error);
             const message = error.response?.data?.message || 'Failed to load payment options';
-            if (!loading) Alert.alert('Error', message);
+            if (showErrorAlert) Alert.alert('Error', message);
         } finally {
             setLoading(false);
             setRefreshing(false);
         }
-    };
+    }, [token]);
+
+    // Load payment options on screen focus
+    useFocusEffect(
+        useCallback(() => {
+            loadPaymentOptions();
+        }, [loadPaymentOptions])
+    );
 
     const handleRefresh = () => {
         setRefreshing(true);
-        loadPaymentOptions();
+        loadPaymentOptions(true);
     };
 
     const handleSetDefault = (optionId) => {
@@ -286,7 +286,7 @@ export default function PaymentOptionsScreen({ navigation }) {
 }
 
 const styles = StyleSheet.create({
-    container: { flex: 1, backgroundColor: '#F8F9FA' },
+    container: { flex: 1, backgroundColor: '#FFF7F2' },
     header: { backgroundColor: ORANGE, paddingTop: 50, paddingBottom: 20, paddingHorizontal: 20 },
     backButton: { marginBottom: 12, padding: 8 },
     backButtonText: { color: '#fff', fontSize: 16, fontWeight: '600' },

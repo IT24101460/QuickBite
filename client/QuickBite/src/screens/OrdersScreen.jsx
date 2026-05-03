@@ -93,7 +93,7 @@ export default function OrdersScreen({ navigation }) {
 }
 
 const styles = StyleSheet.create({
-    container: { flex: 1, backgroundColor: '#F8F9FA' },
+    container: { flex: 1, backgroundColor: '#FFF7F2' },
     center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
     list: { padding: 16, paddingTop: 125 },
     orderCard: {

@@ -146,7 +146,7 @@ export default function FoodDetailScreen({ navigation, route }) {
 }
 
 const styles = StyleSheet.create({
-    container: { flex: 1, backgroundColor: '#F8F9FA' },
+    container: { flex: 1, backgroundColor: '#FFF7F2' },
     heroImg: { width: '100%', height: 240 },
     heroPlaceholder: { width: '100%', height: 240, backgroundColor: '#FFF0E8', justifyContent: 'center', alignItems: 'center' },
     heroPlaceholderIcon: { fontSize: 80 },

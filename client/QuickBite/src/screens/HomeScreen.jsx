@@ -1,20 +1,18 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
   View, Text, StyleSheet, FlatList, TouchableOpacity,
-  ActivityIndicator, TextInput, Image, RefreshControl, ScrollView, Dimensions
+  ActivityIndicator, Image, RefreshControl, ScrollView, Dimensions, Alert
 } from 'react-native';
 import API from '../services/api';
-import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
 import TopNavBar from '../components/TopNavBar';
 import { getImageUrl } from '../utils/imageUtils';
-import { COLORS, SPACING, TYPOGRAPHY, BORDER_RADIUS, SHADOWS, SIZES } from '../styles/adminTheme';
+import { COLORS, SPACING, TYPOGRAPHY, BORDER_RADIUS, SHADOWS } from '../styles/adminTheme';
 
 const { width, height } = Dimensions.get('window');
 
 export default function HomeScreen({ navigation }) {
-  const { user } = useAuth();
-  const { itemCount } = useCart();
+  const { cartItems, addToCart, cartTotal, applyPromotion } = useCart();
   const [foodItems, setFoodItems] = useState([]);
   const [promotions, setPromotions] = useState([]);
   const [canteens, setCanteens] = useState([]);
@@ -102,8 +100,51 @@ export default function HomeScreen({ navigation }) {
     filteredItems.sort((a, b) => (b.averageRating || 0) - (a.averageRating || 0));
   }
 
+  const handlePromotionPress = async (promotion) => {
+    if (!promotion?._id || promotion._id.startsWith('sample_')) {
+      return Alert.alert('Promotion unavailable', 'This banner is a preview promotion and cannot be applied.');
+    }
+
+    const promotionItems = promotion.foodItems || [];
+    const appliesToSpecificItems = promotion.applicableTo === 'specific' && promotionItems.length > 0;
+    let nextCartItems = cartItems;
+    let nextCartTotal = cartTotal;
+
+    if (appliesToSpecificItems) {
+      const applicableIds = promotionItems.map(item => String(item._id || item.foodItemId));
+      const cartHasApplicableItem = cartItems.some(item => applicableIds.includes(String(item.foodItemId || item._id)));
+
+      if (!cartHasApplicableItem) {
+        const promoItem = promotionItems[0];
+        const itemToAdd = {
+          ...promoItem,
+          canteenId: promotion.canteenId?._id || promotion.canteenId || promoItem.canteenId,
+        };
+
+        addToCart(itemToAdd, 1);
+        nextCartItems = [...cartItems, { ...itemToAdd, quantity: 1 }];
+        nextCartTotal = nextCartItems.reduce((sum, item) => sum + (item.price || 0) * item.quantity, 0);
+      }
+    } else if (cartItems.length === 0) {
+      return Alert.alert('Cart is empty', 'Add food items to your cart before applying this promotion.');
+    }
+
+    try {
+      const res = await API.post('/promotions/apply', {
+        promotionId: promotion._id,
+        cartTotal: nextCartTotal,
+        cartItems: nextCartItems.map(i => ({ foodItemId: i.foodItemId || i._id })),
+      });
+
+      applyPromotion({ ...promotion, ...res.data.promotion, _id: promotion._id }, res.data.discountAmount);
+      navigation.navigate('Cart', { appliedPromotionId: promotion._id });
+    } catch (err) {
+      Alert.alert('Promotion not applied', err.response?.data?.message || 'This promotion cannot be applied to your cart.');
+    }
+  };
+
   const renderPromo = ({ item }) => (
-    <TouchableOpacity style={styles.promoBanner} activeOpacity={0.85}>
+    <TouchableOpacity style={styles.promoBanner} activeOpacity={0.85} onPress={() => handlePromotionPress(item)}>
       {item.bannerImage
         ? <Image source={{ uri: getImageUrl(item.bannerImage) }} style={styles.promoBannerImg} resizeMode="cover" />
         : <View style={styles.promoBannerPlaceholder} />}
@@ -281,7 +322,7 @@ export default function HomeScreen({ navigation }) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: COLORS.background },
+  container: { flex: 1, backgroundColor: '#FFF7F2' },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'transparent' },
   loadingText: { 
     marginTop: SPACING.md, 
@@ -420,7 +461,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: SPACING.sm, 
     paddingVertical: SPACING.xs, 
     borderRadius: BORDER_RADIUS.sm, 
-    backgroundColor: COLORS.background, 
+    backgroundColor: '#FFF7F2',
     marginRight: SPACING.xs 
   },
   sortBtnActive: { backgroundColor: COLORS.primaryUltraLight },
