@@ -6,12 +6,14 @@ import {
 import API from '../services/api';
 import { useCart } from '../context/CartContext';
 import TopNavBar from '../components/TopNavBar';
+import { useBranding } from '../context/BrandingContext';
 import { getImageUrl } from '../utils/imageUtils';
 import { COLORS, SPACING, TYPOGRAPHY, BORDER_RADIUS, SHADOWS } from '../styles/adminTheme';
 
 const { width, height } = Dimensions.get('window');
 
 export default function HomeScreen({ navigation }) {
+  const { branding } = useBranding();
   const { cartItems, addToCart, cartTotal, applyPromotion } = useCart();
   const [foodItems, setFoodItems] = useState([]);
   const [promotions, setPromotions] = useState([]);
@@ -174,14 +176,15 @@ export default function HomeScreen({ navigation }) {
   if (loading) {
     return (
       <View style={styles.center}>
-        {loading ? <ActivityIndicator size="large" color={COLORS.primary} /> : <Text style={styles.loadingText}>Loading QuickBite...</Text>}
+        <ActivityIndicator size="large" color={COLORS.primary} />
+        <Text style={styles.loadingText}>Loading {branding?.appName || 'QuickBite'}...</Text>
       </View>
     );
   }
 
   return (
     <View style={styles.container}>
-        <TopNavBar navigation={navigation} search={search} setSearch={setSearch} hideBottomRow={true} isHome={true} />
+      <TopNavBar navigation={navigation} search={search} setSearch={setSearch} hideBottomRow={true} isHome={true} />
 
       <ScrollView
         showsVerticalScrollIndicator={false}
@@ -226,7 +229,7 @@ export default function HomeScreen({ navigation }) {
                 <Text style={styles.promoEmoji}>🎉</Text>
               </View>
               <View style={styles.promoOverlay}>
-                <Text style={styles.promoTitle}>Welcome to QuickBite!</Text>
+                <Text style={styles.promoTitle}>Welcome to {branding?.appName || 'QuickBite'}!</Text>
                 <Text style={styles.promoDiscount}>Enjoy 10% OFF on your first purchase today</Text>
               </View>
             </TouchableOpacity>
@@ -303,19 +306,20 @@ export default function HomeScreen({ navigation }) {
         {/* Food Grid */}
         <View style={styles.sectionBot}>
           <Text style={styles.sectionTitle}>🔥 Popular Food Items</Text>
-          {filteredItems.length === 0
-            ? <Text style={styles.emptyText}>No items found</Text>
-            : (
-              <FlatList
-                data={filteredItems}
-                renderItem={renderFood}
-                keyExtractor={i => i._id || i.foodItemId || Math.random().toString()}
-                numColumns={2}
-                scrollEnabled={false}
-                contentContainerStyle={styles.foodGrid}
-              />
-            )}
+          {filteredItems.length === 0 ? (
+            <Text style={styles.emptyText}>No food items found matching your criteria.</Text>
+          ) : (
+            <FlatList
+              data={filteredItems}
+              renderItem={renderFood}
+              keyExtractor={item => item._id}
+              numColumns={2}
+              scrollEnabled={false}
+              contentContainerStyle={styles.foodGrid}
+            />
+          )}
         </View>
+
       </ScrollView>
     </View>
   );
