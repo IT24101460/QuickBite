@@ -26,7 +26,7 @@ export default function AdminDashboardScreen({ navigation }) {
                 <View style={styles.header}>
                     <View>
                         <Text style={styles.headerTitle}>⚙️ Admin Dashboard</Text>
-                        <Text style={styles.headerSub}>{(branding?.appName || 'QuickBite')} Management</Text>
+                        <Text style={styles.headerSub}>{(branding?.appName || 'UniEats')} Management</Text>
                     </View>
                     <TouchableOpacity onPress={logout} style={styles.logoutBtn}>
                         <Text style={styles.logoutText}>Logout</Text>
