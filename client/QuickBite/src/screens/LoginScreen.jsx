@@ -110,6 +110,8 @@ export default function LoginScreen({ navigation }) {
   const [showPw, setShowPw] = useState(false);
   const [loginMode, setLoginMode] = useState('user');
   const [showSellerPanel, setShowSellerPanel] = useState(false);
+  const [errors, setErrors] = useState({});
+  const [touched, setTouched] = useState({});
   const { login } = useAuth();
   const { branding } = useBranding();
   const logoSource = branding?.logoUrl ? { uri: getImageUrl(branding.logoUrl) } : null;
@@ -119,9 +121,38 @@ export default function LoginScreen({ navigation }) {
     grid.filter(t => t.row === i)
   );
 
+  const validate = (field, value) => {
+    const errs = { ...errors };
+    if (field === 'email') {
+      if (!value.trim()) errs.email = 'Email is required.';
+      else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim())) errs.email = 'Enter a valid email address.';
+      else delete errs.email;
+    }
+    if (field === 'password') {
+      if (!value.trim()) errs.password = 'Password is required.';
+      else if (value.length < 6) errs.password = 'Password must be at least 6 characters.';
+      else delete errs.password;
+    }
+    setErrors(errs);
+    return errs;
+  };
+
+  const handleBlur = (field, value) => {
+    setTouched(t => ({ ...t, [field]: true }));
+    validate(field, value);
+  };
+
+  const handleChange = (field, value, setter) => {
+    setter(value);
+    if (touched[field]) validate(field, value);
+  };
+
   const handleLogin = async () => {
-    if (!email.trim()) return Alert.alert('Error', 'Please enter your email');
-    if (!password.trim()) return Alert.alert('Error', 'Please enter your password');
+    // Mark all fields touched and run full validation
+    setTouched({ email: true, password: true });
+    const emailErrs = validate('email', email);
+    const pwErrs = validate('password', password);
+    if (emailErrs.email || pwErrs.password) return;
     setLoading(true);
     try {
       const res = await API.post('/users/login', { email: email.trim(), password: password.trim() });
@@ -190,24 +221,29 @@ export default function LoginScreen({ navigation }) {
 
             <Text style={styles.label}>Email</Text>
             <TextInput
-              style={styles.input}
+              style={[styles.input, touched.email && errors.email && styles.inputError]}
               placeholder={loginMode === 'owner' ? 'owner@cafe.com' : loginMode === 'admin' ? 'admin@email.com' : 'you@email.com'}
               placeholderTextColor="#aaa"
               value={email}
-              onChangeText={setEmail}
+              onChangeText={v => handleChange('email', v, setEmail)}
+              onBlur={() => handleBlur('email', email)}
               keyboardType="email-address"
               autoCapitalize="none"
               editable={!loading}
             />
+            {touched.email && errors.email && (
+              <Text style={styles.errorText}>⚠ {errors.email}</Text>
+            )}
 
             <Text style={styles.label}>Password</Text>
             <View style={styles.pwRow}>
               <TextInput
-                style={[styles.input, { flex: 1, marginBottom: 0 }]}
+                style={[styles.input, { flex: 1, marginBottom: 0 }, touched.password && errors.password && styles.inputError]}
                 placeholder="••••••••"
                 placeholderTextColor="#aaa"
                 value={password}
-                onChangeText={setPassword}
+                onChangeText={v => handleChange('password', v, setPassword)}
+                onBlur={() => handleBlur('password', password)}
                 secureTextEntry={!showPw}
                 editable={!loading}
               />
@@ -215,6 +251,9 @@ export default function LoginScreen({ navigation }) {
                 <Text style={styles.eye}>{showPw ? '👁' : '👁️‍🗨️'}</Text>
               </TouchableOpacity>
             </View>
+            {touched.password && errors.password && (
+              <Text style={[styles.errorText, { marginTop: 6 }]}>⚠ {errors.password}</Text>
+            )}
 
             <TouchableOpacity
               style={[styles.btn, loading && styles.btnDisabled]}
@@ -370,7 +409,17 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: '#222',
     backgroundColor: '#fafafa',
-    marginBottom: 16,
+    marginBottom: 4,
+  },
+  inputError: {
+    borderColor: '#E53935',
+    backgroundColor: '#FFF5F5',
+  },
+  errorText: {
+    fontSize: 12,
+    color: '#E53935',
+    marginBottom: 12,
+    marginLeft: 2,
   },
   pwRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 16 },
   eyeBtn: { padding: 12, marginLeft: 4 },
