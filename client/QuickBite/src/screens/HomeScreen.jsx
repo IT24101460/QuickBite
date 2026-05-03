@@ -177,7 +177,7 @@ export default function HomeScreen({ navigation }) {
     return (
       <View style={styles.center}>
         <ActivityIndicator size="large" color={COLORS.primary} />
-        <Text style={styles.loadingText}>Loading {branding?.appName || 'QuickBite'}...</Text>
+        <Text style={styles.loadingText}>Loading {branding?.appName || 'UniEats'}...</Text>
       </View>
     );
   }
@@ -229,7 +229,7 @@ export default function HomeScreen({ navigation }) {
                 <Text style={styles.promoEmoji}>🎉</Text>
               </View>
               <View style={styles.promoOverlay}>
-                <Text style={styles.promoTitle}>Welcome to {branding?.appName || 'QuickBite'}!</Text>
+                <Text style={styles.promoTitle}>Welcome to {branding?.appName || 'UniEats'}!</Text>
                 <Text style={styles.promoDiscount}>Enjoy 10% OFF on your first purchase today</Text>
               </View>
             </TouchableOpacity>

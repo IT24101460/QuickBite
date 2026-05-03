@@ -12,12 +12,12 @@ const ORANGE = '#FF6B35';
 
 export default function AdminBrandingScreen({ navigation }) {
     const { branding, refreshBranding } = useBranding();
-    const [appName, setAppName] = useState('QuickBite');
+    const [appName, setAppName] = useState('UniEats');
     const [image, setImage] = useState(null);
     const [saving, setSaving] = useState(false);
 
     useEffect(() => {
-        setAppName(branding?.appName || 'QuickBite');
+        setAppName(branding?.appName || 'UniEats');
     }, [branding]);
 
     const pickLogo = () => {
@@ -32,7 +32,7 @@ export default function AdminBrandingScreen({ navigation }) {
         setSaving(true);
         try {
             const formData = new FormData();
-            formData.append('appName', appName || 'QuickBite');
+            formData.append('appName', appName || 'UniEats');
 
             if (image) {
                 formData.append('logo', {
@@ -80,14 +80,14 @@ export default function AdminBrandingScreen({ navigation }) {
             <ScrollView contentContainerStyle={styles.content}>
                 <View style={styles.previewBox}>
                     <Image source={logoSource} style={styles.logoPreview} resizeMode="contain" />
-                    <Text style={styles.previewName}>{appName || 'QuickBite'}</Text>
+                    <Text style={styles.previewName}>{appName || 'UniEats'}</Text>
                 </View>
 
                 <Text style={styles.label}>App Name</Text>
                 <TextInput
                     value={appName}
                     onChangeText={setAppName}
-                    placeholder="QuickBite"
+                    placeholder="UniEats"
                     placeholderTextColor="#999"
                     style={styles.input}
                 />
