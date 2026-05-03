@@ -76,7 +76,7 @@ export default function AdminPromotionsScreen({ navigation }) {
                         <View style={styles.card}>
                             {item.bannerImage
                                 ? <Image source={{ uri: getImageUrl(item.bannerImage) }} style={styles.banner} resizeMode="cover" />
-                                : <View style={styles.bannerPlaceholder}><Text style={{ fontSize: 28 }}>🎁</Text></View>}
+                                : <View style={styles.bannerPlaceholder}><Text style={styles.bannerPlaceholderIcon}>🎁</Text></View>}
                             <View style={styles.cardBody}>
                                 <View style={styles.cardTop}>
                                     <Text style={styles.promoTitle} numberOfLines={1}>{item.title}</Text>
@@ -148,6 +148,7 @@ const styles = StyleSheet.create({
     card: { backgroundColor: '#fff', borderRadius: 14, overflow: 'hidden', marginBottom: 12, elevation: 2 },
     banner: { width: '100%', height: 100 },
     bannerPlaceholder: { width: '100%', height: 100, backgroundColor: '#FFF0E8', justifyContent: 'center', alignItems: 'center' },
+    bannerPlaceholderIcon: { fontSize: 28 },
     cardBody: { padding: 12 },
     cardTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 },
     promoTitle: { fontSize: 15, fontWeight: 'bold', color: '#222', flex: 1, marginRight: 8 },

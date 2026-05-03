@@ -60,7 +60,7 @@ export default function FoodDetailScreen({ navigation, route }) {
                 {/* Food Image */}
                 {food.image
                     ? <Image source={{ uri: getImageUrl(food.image) }} style={styles.heroImg} resizeMode="cover" />
-                    : <View style={styles.heroPlaceholder}><Text style={{ fontSize: 80 }}>🍽️</Text></View>}
+                    : <View style={styles.heroPlaceholder}><Text style={styles.heroPlaceholderIcon}>🍽️</Text></View>}
 
 
 
@@ -149,6 +149,7 @@ const styles = StyleSheet.create({
     container: { flex: 1, backgroundColor: '#F8F9FA' },
     heroImg: { width: '100%', height: 240 },
     heroPlaceholder: { width: '100%', height: 240, backgroundColor: '#FFF0E8', justifyContent: 'center', alignItems: 'center' },
+    heroPlaceholderIcon: { fontSize: 80 },
     details: { backgroundColor: '#fff', borderRadius: 20, margin: 12, padding: 20, elevation: 3 },
     nameRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 },
     foodName: { fontSize: 22, fontWeight: 'bold', color: '#222', flex: 1, marginRight: 8 },

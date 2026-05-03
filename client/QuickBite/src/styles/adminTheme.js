@@ -65,6 +65,11 @@ export const TYPOGRAPHY = {
     fontWeight: '600',
     color: COLORS.textPrimary,
   },
+  h4: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: COLORS.textPrimary,
+  },
   body1: {
     fontSize: 16,
     fontWeight: '400',

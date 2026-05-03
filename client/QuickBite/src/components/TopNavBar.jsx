@@ -38,7 +38,7 @@ export default function TopNavBar({ navigation, search, setSearch, placeholder =
 
                 {setSearch && (
                     <View style={styles.centerSearchWrapper}>
-                        <Text style={{ fontSize: 13, marginRight: 6 }}>🔍</Text>
+                        <Text style={styles.searchIcon}>🔍</Text>
                         <TextInput
                             style={styles.centerSearchInput}
                             placeholder="Search..."
@@ -214,5 +214,9 @@ const styles = StyleSheet.create({
     },
     navTitleText: {
         fontSize: 20, color: '#222', fontWeight: 'bold', letterSpacing: 0.3
+    },
+    searchIcon: {
+        fontSize: 13,
+        marginRight: 6,
     },
 });
