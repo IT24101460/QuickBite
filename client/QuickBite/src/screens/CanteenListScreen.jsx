@@ -42,7 +42,7 @@ export default function CanteenListScreen({ navigation }) {
                                         resizeMode="cover"
                                     />
                                 ) : (
-                                    <View style={styles.placeholderImg}><Text style={{ fontSize: 30 }}>🏪</Text></View>
+                                    <View style={styles.placeholderImg}><Text style={styles.placeholderIcon}>🏪</Text></View>
                                 )}
                             </View>
                             <View style={styles.cardInfo}>
@@ -69,6 +69,7 @@ const styles = StyleSheet.create({
     imageContainer: { width: 70, height: 70, borderRadius: 12, overflow: 'hidden', backgroundColor: '#FFF0E8', marginRight: 12 },
     canteenImage: { width: '100%', height: '100%' },
     placeholderImg: { width: '100%', height: '100%', justifyContent: 'center', alignItems: 'center' },
+    placeholderIcon: { fontSize: 30 },
     cardInfo: { flex: 1 },
     name: { fontSize: 16, fontWeight: 'bold', color: '#222', marginBottom: 4 },
     location: { fontSize: 13, color: '#666' },

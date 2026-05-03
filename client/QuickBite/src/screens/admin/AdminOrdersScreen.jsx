@@ -147,15 +147,25 @@ const styles = StyleSheet.create({
         fontSize: TYPOGRAPHY.h3.fontSize, 
         fontWeight: TYPOGRAPHY.h3.fontWeight 
     },
+    filterBar: { 
+        height: SIZES.inputHeight, 
+        backgroundColor: COLORS.background, 
+        justifyContent: 'center' 
+    },
+    filterContent: { 
+        paddingHorizontal: SPACING.md, 
+        alignItems: 'center' 
+    },
     chip: { 
+        minHeight: 34, 
         borderWidth: 1.5, 
-        borderColor: COLORS.border, 
+        borderColor: COLORS.borderLight, 
         borderRadius: BORDER_RADIUS.round, 
         paddingHorizontal: SPACING.md, 
-        paddingVertical: SPACING.sm, 
         marginRight: SPACING.sm, 
         backgroundColor: COLORS.surface,
-        ...SHADOWS.sm,
+        justifyContent: 'center', 
+        alignItems: 'center' 
     },
     chipActive: { 
         backgroundColor: COLORS.primary, 
@@ -163,18 +173,19 @@ const styles = StyleSheet.create({
     },
     chipText: { 
         fontSize: TYPOGRAPHY.caption.fontSize, 
+        lineHeight: 16, 
         color: COLORS.textSecondary, 
-        fontWeight: '600' 
+        fontWeight: '600', 
+        includeFontPadding: false, 
+        textAlignVertical: 'center' 
     },
-    chipTextActive: { 
-        color: COLORS.textWhite 
-    },
+    chipTextActive: { color: COLORS.textWhite },
     card: { 
         backgroundColor: COLORS.surface, 
         borderRadius: BORDER_RADIUS.lg, 
-        padding: SPACING.lg, 
-        marginBottom: SPACING.md, 
-        ...SHADOWS.md,
+        padding: SPACING.md, 
+        marginBottom: SPACING.sm, 
+        ...SHADOWS.sm,
         borderWidth: 1,
         borderColor: COLORS.borderLight,
     },
@@ -186,11 +197,11 @@ const styles = StyleSheet.create({
     },
     qNum: { 
         fontSize: TYPOGRAPHY.body2.fontSize, 
-        fontWeight: '600', 
+        fontWeight: 'bold', 
         color: COLORS.textPrimary 
     },
     badge: { 
-        borderRadius: BORDER_RADIUS.md, 
+        borderRadius: BORDER_RADIUS.round, 
         paddingHorizontal: SPACING.sm, 
         paddingVertical: SPACING.xs 
     },
@@ -199,10 +210,36 @@ const styles = StyleSheet.create({
         fontSize: TYPOGRAPHY.caption.fontSize, 
         fontWeight: 'bold' 
     },
-    items: { 
+    itemList: { marginBottom: SPACING.sm },
+    itemRow: { 
+        flexDirection: 'row', 
+        alignItems: 'center', 
+        marginBottom: SPACING.xs 
+    },
+    itemName: { 
+        flex: 1, 
+        minWidth: 0, 
         fontSize: TYPOGRAPHY.caption.fontSize, 
         color: COLORS.textSecondary, 
-        marginBottom: SPACING.xs 
+        marginRight: SPACING.sm 
+    },
+    categoryBadge: {
+        maxWidth: 120,
+        height: 24,
+        backgroundColor: COLORS.primaryUltraLight,
+        borderRadius: BORDER_RADIUS.round,
+        paddingHorizontal: SPACING.sm,
+        justifyContent: 'center',
+        alignItems: 'center',
+        flexShrink: 0,
+    },
+    categoryBadgeText: { 
+        color: COLORS.primary, 
+        fontSize: TYPOGRAPHY.caption.fontSize, 
+        lineHeight: 14, 
+        fontWeight: '700', 
+        includeFontPadding: false, 
+        textAlignVertical: 'center' 
     },
     amount: { 
         fontSize: TYPOGRAPHY.body2.fontSize, 
@@ -211,7 +248,7 @@ const styles = StyleSheet.create({
     },
     pickup: { 
         fontSize: TYPOGRAPHY.caption.fontSize, 
-        color: COLORS.textTertiary, 
+        color: COLORS.textSecondary, 
         marginTop: SPACING.xs 
     },
     statusBtn: { 
@@ -220,9 +257,7 @@ const styles = StyleSheet.create({
         borderRadius: BORDER_RADIUS.md, 
         paddingHorizontal: SPACING.sm, 
         paddingVertical: SPACING.xs, 
-        marginRight: SPACING.xs,
-        backgroundColor: COLORS.surface,
-        ...SHADOWS.sm,
+        marginRight: SPACING.xs 
     },
     statusBtnText: { 
         fontSize: TYPOGRAPHY.caption.fontSize, 
@@ -232,12 +267,11 @@ const styles = StyleSheet.create({
     empty: { 
         textAlign: 'center', 
         color: COLORS.textTertiary, 
-        paddingVertical: SPACING.xxxl,
-        fontSize: TYPOGRAPHY.body2.fontSize 
+        paddingVertical: SPACING.xxxl 
     },
     slipBox: { 
-        marginTop: SPACING.md, 
-        backgroundColor: COLORS.surfaceVariant, 
+        marginTop: SPACING.sm, 
+        backgroundColor: COLORS.background, 
         borderRadius: BORDER_RADIUS.md, 
         padding: SPACING.sm, 
         borderWidth: 1, 
@@ -255,44 +289,6 @@ const styles = StyleSheet.create({
         marginTop: SPACING.xs, 
         fontWeight: 'bold' 
     },
-    container: { flex: 1, backgroundColor: '#F8F9FA' },
-    header: { backgroundColor: ORANGE, paddingTop: 52, paddingBottom: 16, paddingHorizontal: 16, flexDirection: 'row', alignItems: 'center' },
-    backBtn: { marginRight: 10, padding: 4 },
-    back: { color: '#fff', fontSize: 22, fontWeight: 'bold' },
-    headerTitle: { color: '#fff', fontSize: 18, fontWeight: 'bold' },
-    filterBar: { height: 52, backgroundColor: '#F8F9FA', justifyContent: 'center' },
-    filterContent: { paddingHorizontal: 10, alignItems: 'center' },
-    chip: { minHeight: 34, borderWidth: 1.5, borderColor: '#E8E8E8', borderRadius: 17, paddingHorizontal: 14, marginRight: 8, backgroundColor: '#fff', justifyContent: 'center', alignItems: 'center' },
-    chipActive: { backgroundColor: ORANGE, borderColor: ORANGE },
-    chipText: { fontSize: 13, lineHeight: 16, color: '#666', fontWeight: '600', includeFontPadding: false, textAlignVertical: 'center' },
-    chipTextActive: { color: '#fff' },
-    card: { backgroundColor: '#fff', borderRadius: 14, padding: 14, marginBottom: 10, elevation: 2 },
-    cardTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 },
-    qNum: { fontSize: 14, fontWeight: 'bold', color: '#222' },
-    badge: { borderRadius: 10, paddingHorizontal: 8, paddingVertical: 4 },
-    badgeText: { color: '#fff', fontSize: 10, fontWeight: 'bold' },
-    itemList: { marginBottom: 6 },
-    itemRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 6 },
-    itemName: { flex: 1, minWidth: 0, fontSize: 12, color: '#666', marginRight: 10 },
-    categoryBadge: {
-        maxWidth: 120,
-        height: 24,
-        backgroundColor: '#FFF0E8',
-        borderRadius: 12,
-        paddingHorizontal: 9,
-        justifyContent: 'center',
-        alignItems: 'center',
-        flexShrink: 0,
-    },
-    categoryBadgeText: { color: ORANGE, fontSize: 10, lineHeight: 14, fontWeight: '700', includeFontPadding: false, textAlignVertical: 'center' },
-    amount: { fontSize: 14, fontWeight: 'bold', color: ORANGE },
-    pickup: { fontSize: 12, color: '#888', marginTop: 2 },
-    statusBtn: { borderWidth: 1, borderColor: '#E0E0E0', borderRadius: 12, paddingHorizontal: 10, paddingVertical: 5, marginRight: 6 },
-    statusBtnText: { fontSize: 11, fontWeight: '600', color: '#555' },
-    empty: { textAlign: 'center', color: '#aaa', paddingVertical: 40 },
-    slipBox: { marginTop: 10, backgroundColor: '#f9f9f9', borderRadius: 8, padding: 8, borderWidth: 1, borderColor: '#eee' },
-    slip: { width: '100%', height: 120, borderRadius: 6 },
-    slipLabel: { fontSize: 10, color: '#999', textAlign: 'center', marginTop: 4, fontWeight: 'bold' },
 });
 
 // ─── AdminFoodItemsScreen ──────────────────────────────────────────────────

@@ -62,7 +62,7 @@ export default function OwnerFeedbacksScreen({ route, navigation }) {
         return (
             <View style={{ flexDirection: 'row' }}>
                 {[...Array(5)].map((_, i) => (
-                    <Text key={i} style={{ color: i < rating ? ORANGE : '#ccc', fontSize: 16 }}>★</Text>
+                    <Text key={i} style={[styles.star, { color: i < rating ? ORANGE : '#ccc' }]}>★</Text>
                 ))}
             </View>
         );
@@ -167,6 +167,7 @@ const styles = StyleSheet.create({
     cardHeader: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 6 },
     studentName: { fontSize: 16, fontWeight: 'bold', color: '#222' },
     dateText: { fontSize: 12, color: '#999' },
+    star: { fontSize: 16 },
     comment: { fontSize: 15, color: '#333', marginTop: 10, fontStyle: 'italic' },
     
     imageContainer: { marginTop: 12, borderRadius: 8, overflow: 'hidden', borderWidth: 1, borderColor: '#eee' },

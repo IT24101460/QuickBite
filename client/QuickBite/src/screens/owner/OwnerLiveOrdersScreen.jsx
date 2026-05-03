@@ -115,7 +115,7 @@ export default function OwnerLiveOrdersScreen({ route, navigation }) {
                                             {cartItem.quantity}x {cartItem.name}
                                         </Text>
                                         {cartItem.note ? (
-                                            <Text style={{ fontSize: 13, color: '#e67e22', fontStyle: 'italic', marginLeft: 8 }}>
+                                            <Text style={styles.itemNote}>
                                                 ↳ {cartItem.note}
                                             </Text>
                                         ) : null}
@@ -173,6 +173,7 @@ const styles = StyleSheet.create({
 
     itemList: { marginBottom: 12 },
     foodText: { fontSize: 15, color: '#444', marginBottom: 4 },
+    itemNote: { fontSize: 13, color: '#e67e22', fontStyle: 'italic', marginLeft: 8 },
 
     footerRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end', marginTop: 10 },
     paymentMetric: { fontSize: 14, fontWeight: 'bold', color: '#2ecc71' },

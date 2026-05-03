@@ -40,7 +40,7 @@ export default function OrderDetailScreen({ navigation, route }) {
                                 <Text style={styles.itemPrice}>LKR {(item.price * item.quantity).toFixed(2)}</Text>
                             </View>
                             {item.note ? (
-                                <Text style={{ fontSize: 13, color: '#888', marginTop: 2 }}>↳ Note: {item.note}</Text>
+                                <Text style={styles.itemNote}>↳ Note: {item.note}</Text>
                             ) : null}
                         </View>
                     ))}
@@ -105,6 +105,7 @@ const styles = StyleSheet.create({
     itemRow: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 6 },
     itemName: { fontSize: 14, color: '#444', flex: 1 },
     itemPrice: { fontSize: 14, fontWeight: '600', color: '#333' },
+    itemNote: { fontSize: 13, color: '#888', marginTop: 2 },
     divider: { height: 1, backgroundColor: '#F0F0F0', marginVertical: 8 },
     totalLabel: { fontSize: 16, fontWeight: 'bold', color: '#222' },
     totalValue: { fontSize: 16, fontWeight: 'bold', color: ORANGE },

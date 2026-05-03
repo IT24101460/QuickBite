@@ -72,7 +72,7 @@ export default function AdminFoodItemsScreen({ navigation }) {
                         <View style={styles.card}>
                             {item.image
                                 ? <Image source={{ uri: getImageUrl(item.image) }} style={styles.itemImg} resizeMode="cover" />
-                                : <View style={styles.itemImgPlaceholder}><Text style={{ fontSize: 24 }}>🍽️</Text></View>}
+                                : <View style={styles.itemImgPlaceholder}><Text style={styles.placeholderIcon}>🍽️</Text></View>}
                             <View style={styles.cardInfo}>
                                 <Text style={styles.cardName}>{item.name}</Text>
                                 <Text style={styles.cardSub}>{item.category} · LKR {item.price}</Text>
@@ -184,6 +184,7 @@ const styles = StyleSheet.create({
         borderWidth: 1,
         borderColor: COLORS.primaryLight,
     },
+    placeholderIcon: { fontSize: 24 },
     cardInfo: { flex: 1 },
     cardName: { 
         fontSize: TYPOGRAPHY.body1.fontSize,

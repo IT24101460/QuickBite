@@ -1,24 +1,18 @@
 import React from 'react';
 import {
-    View, Text, StyleSheet, TouchableOpacity, ScrollView,
+    View, Text, StyleSheet, TouchableOpacity, ScrollView, ImageBackground
 } from 'react-native';
 import { useAuth } from '../../context/AuthContext';
 import { COLORS, SPACING, TYPOGRAPHY, BORDER_RADIUS, SHADOWS, SIZES } from '../../styles/adminTheme';
 
 const CARDS = [
-    { emoji: '🏪', title: 'Canteens', desc: 'Add, edit, delete canteens', screen: 'AdminCanteens', color: COLORS.primaryUltraLight, iconColor: COLORS.primary },
-    { emoji: '🍽️', title: 'Food Items', desc: 'Manage menu items & images', screen: 'AdminFoodItems', color: '#F3E5F5', iconColor: '#9B59B6' },
-    { emoji: '📦', title: 'Orders', desc: 'Update order status', screen: 'AdminOrders', color: '#E8F5E9', iconColor: '#27AE60' },
-    { emoji: '🎁', title: 'Promotions', desc: 'Create & manage promotions', screen: 'AdminPromotions', color: '#FFF8E1', iconColor: '#F39C12' },
-    { emoji: '👥', title: 'Owners', desc: 'Create and manage owner accounts', screen: 'AdminOwners', color: '#E0F7FA', iconColor: '#3498DB' },
-    { emoji: '🌟', title: 'Feedback', desc: 'Monitor reviews and images', screen: 'AdminFeedback', color: '#FFF3E0', iconColor: '#E67E22' },
-    { emoji: '🏪', title: 'Canteens', desc: 'Add, edit, delete canteens', screen: 'AdminCanteens', color: '#E3F2FD' },
-    { emoji: '🍽️', title: 'Food Items', desc: 'Manage menu items & images', screen: 'AdminFoodItems', color: '#F3E5F5' },
-    { emoji: '📦', title: 'Orders', desc: 'Update order status', screen: 'AdminOrders', color: '#E8F5E9' },
-    { emoji: '🎁', title: 'Promotions', desc: 'Create & manage promotions', screen: 'AdminPromotions', color: '#FFF8E1' },
-    { emoji: '👥', title: 'Owners', desc: 'Create and manage owner accounts', screen: 'AdminOwners', color: '#E0F7FA' },
-    { emoji: '🌟', title: 'Feedback', desc: 'Monitor reviews and images', screen: 'AdminFeedback', color: '#FFF3E0' },
-    { emoji: '🖼️', title: 'Branding', desc: 'Upload app logo', screen: 'AdminBranding', color: '#F1F8E9' },
+    { emoji: '🏪', title: 'Canteens', desc: 'Add, edit, delete canteens', screen: 'AdminCanteens', image: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRPuD46k_zFL6h_1jG7ai3FzvV68QzcMFdpPw&s' },
+    { emoji: '🍽️', title: 'Food Items', desc: 'Manage menu items & images', screen: 'AdminFoodItems', image: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTrputZL2ItlxOH_6FhfLbIgM-H0_FGcFVIYQ&s' },
+    { emoji: '📦', title: 'Orders', desc: 'Update order status', screen: 'AdminOrders', image: 'https://www.lhpack.com/uploads/e755ce996.jpg' },
+    { emoji: '🎁', title: 'Promotions', desc: 'Create & manage promotions', screen: 'AdminPromotions', image: 'https://static.vecteezy.com/system/resources/previews/048/070/160/non_2x/seafood-restaurant-promotion-poster-design-free-psd.png' },
+    { emoji: '👥', title: 'Owners', desc: 'Create and manage owner accounts', screen: 'AdminOwners', image: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSis9h27SVYwpOyLhpbS5roA_mu75Gh0DkImg&s' },
+    { emoji: '🌟', title: 'Feedback', desc: 'Monitor reviews and images', screen: 'AdminFeedback', image: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRE3kWcnEKd1yqnZzxI2uaeL3yCq7hWut_IDw&s' },
+    { emoji: '🖼️', title: 'Branding', desc: 'Upload app logo', screen: 'AdminBranding', image: 'https://static.vecteezy.com/system/resources/thumbnails/010/411/845/small/restaurant-logo-design-template-free-vector.jpg' },
 ];
 
 export default function AdminDashboardScreen({ navigation }) {
@@ -26,15 +20,17 @@ export default function AdminDashboardScreen({ navigation }) {
 
     return (
         <View style={styles.container}>
-            <View style={styles.header}>
-                <View>
-                    <Text style={styles.headerTitle}>⚙️ Admin Dashboard</Text>
-                    <Text style={styles.headerSub}>QuickBite Management</Text>
+            <ImageBackground source={require('../../assets/SLIIT KANDY UNI.jpg')} style={styles.headerBg}>
+                <View style={styles.header}>
+                    <View>
+                        <Text style={styles.headerTitle}>⚙️ Admin Dashboard</Text>
+                        <Text style={styles.headerSub}>QuickBite Management</Text>
+                    </View>
+                    <TouchableOpacity onPress={logout} style={styles.logoutBtn}>
+                        <Text style={styles.logoutText}>Logout</Text>
+                    </TouchableOpacity>
                 </View>
-                <TouchableOpacity onPress={logout} style={styles.logoutBtn}>
-                    <Text style={styles.logoutText}>Logout</Text>
-                </TouchableOpacity>
-            </View>
+            </ImageBackground>
 
             <ScrollView contentContainerStyle={styles.scroll}>
                 <Text style={styles.welcome}>Welcome, Admin 👋</Text>
@@ -44,14 +40,21 @@ export default function AdminDashboardScreen({ navigation }) {
                     {CARDS.map(card => (
                         <TouchableOpacity
                             key={card.screen}
-                            style={[styles.card, { backgroundColor: card.color }]}
+                            style={styles.card}
                             onPress={() => navigation.navigate(card.screen)}
                             activeOpacity={0.8}
                         >
-                            <Text style={styles.cardEmoji}>{card.emoji}</Text>
-                            <Text style={styles.cardTitle}>{card.title}</Text>
-                            <Text style={styles.cardDesc}>{card.desc}</Text>
-                            <Text style={styles.cardArrow}>→</Text>
+                            <ImageBackground source={{ uri: card.image }} style={styles.actionImageBg} imageStyle={{ borderRadius: BORDER_RADIUS.xl }}>
+                                <View style={styles.actionOverlay}>
+                                    <View style={styles.actionHeaderOverlay}>
+                                        <Text style={styles.actionIconOverlay}>{card.emoji}</Text>
+                                    </View>
+                                    <View style={styles.actionTextContainer}>
+                                        <Text style={styles.cardTitle}>{card.title}</Text>
+                                        <Text style={styles.cardDesc}>{card.desc}</Text>
+                                    </View>
+                                </View>
+                            </ImageBackground>
                         </TouchableOpacity>
                     ))}
                 </View>
@@ -62,85 +65,99 @@ export default function AdminDashboardScreen({ navigation }) {
 
 const styles = StyleSheet.create({
     container: { flex: 1, backgroundColor: COLORS.background },
+    headerBg: {
+        width: '100%',
+        ...SHADOWS.lg,
+    },
     header: {
-        backgroundColor: COLORS.primary,
+        backgroundColor: 'rgba(0,0,0,0.65)',
         paddingTop: 52,
         paddingBottom: SPACING.xl,
         paddingHorizontal: SPACING.lg,
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
-        ...SHADOWS.lg,
     },
-    logoutBtn: { 
-        backgroundColor: 'rgba(255,255,255,0.2)', 
-        paddingHorizontal: SPACING.md, 
-        paddingVertical: SPACING.sm, 
-        borderRadius: BORDER_RADIUS.md 
+    logoutBtn: {
+        backgroundColor: 'rgba(255,255,255,0.2)',
+        paddingHorizontal: SPACING.md,
+        paddingVertical: SPACING.sm,
+        borderRadius: BORDER_RADIUS.md
     },
-    logoutText: { 
-        color: COLORS.textWhite, 
-        fontWeight: TYPOGRAPHY.button.fontWeight, 
-        fontSize: TYPOGRAPHY.caption.fontSize 
+    logoutText: {
+        color: COLORS.textWhite,
+        fontWeight: TYPOGRAPHY.button.fontWeight,
+        fontSize: TYPOGRAPHY.caption.fontSize
     },
-    headerTitle: { 
-        color: COLORS.textWhite, 
-        fontSize: TYPOGRAPHY.h2.fontSize, 
-        fontWeight: TYPOGRAPHY.h2.fontWeight 
+    headerTitle: {
+        color: COLORS.textWhite,
+        fontSize: TYPOGRAPHY.h2.fontSize,
+        fontWeight: TYPOGRAPHY.h2.fontWeight
     },
-    headerSub: { 
-        color: 'rgba(255,255,255,0.9)', 
+    headerSub: {
+        color: 'rgba(255,255,255,0.9)',
         fontSize: TYPOGRAPHY.body2.fontSize,
         marginTop: 2
     },
     scroll: { padding: SPACING.lg },
-    welcome: { 
-        fontSize: TYPOGRAPHY.h1.fontSize, 
-        fontWeight: TYPOGRAPHY.h1.fontWeight, 
-        color: COLORS.textPrimary, 
-        marginBottom: SPACING.xs 
+    welcome: {
+        fontSize: TYPOGRAPHY.h1.fontSize,
+        fontWeight: TYPOGRAPHY.h1.fontWeight,
+        color: COLORS.textPrimary,
+        marginBottom: SPACING.xs
     },
-    wSub: { 
-        fontSize: TYPOGRAPHY.body2.fontSize, 
-        color: COLORS.textSecondary, 
-        marginBottom: SPACING.xl 
+    wSub: {
+        fontSize: TYPOGRAPHY.body2.fontSize,
+        color: COLORS.textSecondary,
+        marginBottom: SPACING.xl
     },
     grid: { flexDirection: 'row', flexWrap: 'wrap', gap: SPACING.md },
     card: {
-        width: '47%', 
-        borderRadius: BORDER_RADIUS.xl, 
-        padding: SPACING.lg, 
-        minHeight: 140,
+        width: '48%',
+        borderRadius: BORDER_RADIUS.xl,
+        marginBottom: SPACING.md,
         ...SHADOWS.md,
-        borderWidth: 1,
-        borderColor: COLORS.borderLight,
-        position: 'relative',
+        minHeight: 140,
+        elevation: 3,
+    },
+    actionImageBg: {
+        flex: 1,
+        borderRadius: BORDER_RADIUS.xl,
+        overflow: 'hidden',
+        justifyContent: 'flex-end',
+    },
+    actionOverlay: {
+        ...StyleSheet.absoluteFillObject,
+        backgroundColor: 'rgba(0,0,0,0.5)',
+        padding: SPACING.lg,
+        justifyContent: 'space-between',
+    },
+    actionHeaderOverlay: {
+        alignItems: 'flex-end',
+    },
+    actionIconOverlay: {
+        fontSize: 22,
+        backgroundColor: 'rgba(255,255,255,0.2)',
+        borderRadius: BORDER_RADIUS.round,
+        paddingHorizontal: 8,
+        paddingVertical: 5,
         overflow: 'hidden',
     },
-    cardEmoji: { 
-        fontSize: 36, 
-        marginBottom: SPACING.sm,
-        alignSelf: 'center',
+    actionTextContainer: {
+        marginTop: 'auto',
     },
-    cardTitle: { 
-        fontSize: TYPOGRAPHY.body1.fontSize, 
-        fontWeight: '600', 
-        color: COLORS.textPrimary, 
-        marginBottom: SPACING.xs,
-        textAlign: 'center'
+    cardTitle: {
+        fontSize: 16,
+        fontWeight: 'bold',
+        color: COLORS.textWhite,
+        textShadowColor: 'rgba(0, 0, 0, 0.75)',
+        textShadowOffset: { width: -1, height: 1 },
+        textShadowRadius: 10,
+        marginBottom: 2,
     },
-    cardDesc: { 
-        fontSize: TYPOGRAPHY.caption.fontSize, 
-        color: COLORS.textSecondary, 
-        flex: 1,
-        textAlign: 'center',
-        lineHeight: 16
-    },
-    cardArrow: { 
-        fontSize: 20, 
-        color: COLORS.textTertiary, 
-        marginTop: SPACING.sm, 
-        alignSelf: 'center',
-        fontWeight: 'bold'
+    cardDesc: {
+        fontSize: 12,
+        color: 'rgba(255,255,255,0.85)',
+        fontWeight: '500',
     },
 });
