@@ -14,13 +14,13 @@ const { width, height } = Dimensions.get('window');
 
 // Real food images shown in the animated background
 const FOOD_ITEMS = [
-  'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=200&q=80', // burger
+  'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=200&q=80',// burger
   'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=200&q=80', // pizza
   'https://images.unsplash.com/photo-1569718212165-3a8278d5f624?w=200&q=80', // noodles
   'https://images.unsplash.com/photo-1553621042-f6e147245754?w=200&q=80', // sushi
   'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=200&q=80', // salad
   'https://images.unsplash.com/photo-1563245372-f21724e3856d?w=200&q=80', // fried rice
-  'https://images.unsplash.com/photo-1576107232684-1279f8e-7b09?w=200&q=80', // sandwich
+  'https://images.unsplash.com/photo-1553909489-cd47e0ef937f?w=200&q=80', // sandwich
   'https://images.unsplash.com/photo-1551024601-bec78aea704b?w=200&q=80', // dessert
   'https://images.unsplash.com/photo-1585937421612-70a008356fbe?w=200&q=80', // curry
   'https://images.unsplash.com/photo-1600891964092-4316c288032e?w=200&q=80', // steak
@@ -56,29 +56,45 @@ function buildGrid() {
   return tiles;
 }
 
-// One row of tiles that slides continuously to the left
+// One row of tiles that slides endlessly — uses recursive timing for true infinite loop
 function AnimatedRow({ rowIndex, tiles }) {
   const translateX = useRef(new Animated.Value(0)).current;
-  const rowWidth = COLS * (TILE_SIZE + 10);
-  const direction = rowIndex % 2 === 0 ? -1 : 1; // alternate row directions
-  const duration = 18000 + rowIndex * 2000;
+  const animRef = useRef(null);
+  const isMounted = useRef(true);
+
+  // Triple tiles so there's always content visible during any reset point
+  const tripled = [...tiles, ...tiles, ...tiles];
+  // A single "unit" is one full copy of tiles
+  const rowWidth = tiles.length * (TILE_SIZE + 10);
+  const direction = rowIndex % 2 === 0 ? -1 : 1;
+  const duration = (16000 + rowIndex * 2500) * tiles.length / 6; // scale duration per tile count
 
   useEffect(() => {
-    const start = direction === -1 ? 0 : -(rowWidth / 2);
-    const end = direction === -1 ? -(rowWidth / 2) : 0;
-    translateX.setValue(start);
+    isMounted.current = true;
 
-    Animated.loop(
-      Animated.timing(translateX, {
-        toValue: end,
+    const startVal = direction === -1 ? 0 : -rowWidth;
+    const endVal = direction === -1 ? -rowWidth : 0;
+
+    const runLoop = () => {
+      if (!isMounted.current) return;
+      translateX.setValue(startVal);
+      animRef.current = Animated.timing(translateX, {
+        toValue: endVal,
         duration,
         useNativeDriver: true,
-      })
-    ).start();
-  }, []);
+      });
+      animRef.current.start(({ finished }) => {
+        if (finished && isMounted.current) runLoop(); // restart immediately
+      });
+    };
 
-  // Duplicate tiles for seamless looping
-  const doubled = [...tiles, ...tiles];
+    runLoop();
+
+    return () => {
+      isMounted.current = false;
+      if (animRef.current) animRef.current.stop();
+    };
+  }, []);
 
   return (
     <Animated.View
@@ -90,7 +106,7 @@ function AnimatedRow({ rowIndex, tiles }) {
         },
       ]}
     >
-      {doubled.map((tile, i) => (
+      {tripled.map((tile, i) => (
         <View key={i} style={styles.tile}>
           <Image
             source={{ uri: tile.emoji }}
