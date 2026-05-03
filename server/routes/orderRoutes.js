@@ -1,4 +1,5 @@
 import express from "express";
+import upload from "../middleware/upload.js";
 import {
     placeOrder,
     getMyOrders,
@@ -10,14 +11,14 @@ import {
 
 const orderRouter = express.Router();
 
-// Student routes
-orderRouter.post("/", placeOrder);                        // POST   /orders        — place order
-orderRouter.get("/my", getMyOrders);                      // GET    /orders/my     — my order history
-orderRouter.get("/:id", getOrderById);                    // GET    /orders/:id    — single order (queue screen)
-orderRouter.patch("/:id/cancel", cancelOrder);            // PATCH  /orders/:id/cancel
+// User routes
+orderRouter.post("/", upload.single("requestImage"), placeOrder);  // POST   /orders
+orderRouter.get("/my", getMyOrders);                               // GET    /orders/my
+orderRouter.patch("/:id/cancel", cancelOrder);                     // PATCH  /orders/:id/cancel
 
 // Admin routes
-orderRouter.get("/", getAllOrders);                       // GET    /orders?status=preparing
-orderRouter.patch("/:id/status", updateOrderStatus);      // PATCH  /orders/:id/status
+orderRouter.get("/", getAllOrders);                                // GET    /orders?status=
+orderRouter.patch("/:id/status", updateOrderStatus);              // PATCH  /orders/:id/status
+orderRouter.get("/:id", getOrderById);                            // GET    /orders/:id
 
 export default orderRouter;

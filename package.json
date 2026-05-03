@@ -1,0 +1,8 @@
+{
+  "scripts": {
+    "server": "cd server && npm run dev",
+    "client": "cd client/QuickBite && npm start",
+    "android": "cd client/QuickBite && npm run android",
+    "dev": "concurrently \"npm run server\" \"npm run client\""
+  }
+}
