@@ -1,93 +1,5 @@
-# 🔀 Branch Naming & Push Guide (QuickBite)
 
-## 📌 Rule
 
-Each member must create a branch using their **function/module name**
-
----
-
-## ✅ Branch Names (use these)
-
-```bash
-canteen-management
-food-item-management
-order-management
-payment-management
-feedback-management
-promotions-management
-```
-
----
-
-## 🚀 First Time Setup (VERY IMPORTANT)
-
-After cloning:
-
-```bash
-git clone https://github.com/IT24101460/QuickBite.git
-cd QuickBite
-```
-
-Create your branch:
-
-```bash
-git checkout -b your-branch-name
-```
-
-Example:
-
-```bash
-git checkout -b payment-management
-```
-
-Push branch first time:
-
-```bash
-git push -u origin payment-management
-```
-
----
-
-## 🔁 Daily Routine (EVERY DAY)
-
-### Step 1: Go to main and get latest code
-
-```bash
-git checkout main
-git pull origin main
-```
-
----
-
-### Step 2: Switch to your branch
-
-```bash
-git checkout your-branch-name
-```
-
----
-
-### Step 3: Update your branch with latest main
-
-```bash
-git merge main
-```
-
----
-
-### Step 4: Do your coding
-
----
-
-### Step 5: Add, commit, push
-
-```bash
-git add .
-git commit -m "clear message"
-git push
-```
-
----
 
 ## 🎯 Example (Payment member)
 
@@ -115,52 +27,17 @@ Do NOT do:
 git push origin main
 ```
 
----
 
 ### ✅ ALWAYS use your branch
 
 ```bash
 git push
-```
 
----
 
 ### ✅ ALWAYS pull before coding
 
 ```bash
 git pull origin main
-```
-
----
-
-### ✅ Commit messages must be clear
-
-Good:
-
-```bash
-"Add food item CRUD"
-"Create order API"
-"Fix payment validation"
-```
-
-Bad:
-
-```bash
-"done"
-"update"
-"final"
-```
-
----
-
-## 🔥 Why use branches?
-
-* avoids conflicts
-* each member works safely
-* easier to debug
-* professional workflow
-
----
 
 ## 🧠 Summary
 

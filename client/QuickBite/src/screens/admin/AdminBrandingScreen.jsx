@@ -66,7 +66,7 @@ export default function AdminBrandingScreen({ navigation }) {
         ? { uri: image.uri }
         : branding?.logoUrl
             ? { uri: getImageUrl(branding.logoUrl) }
-            : require('../../assets/my-logo.png');
+            : null;
 
     return (
         <View style={styles.container}>

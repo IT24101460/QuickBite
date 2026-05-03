@@ -23,7 +23,7 @@ export default function SignUpScreen({ navigation }) {
   const [loading, setLoading] = useState(false);
   const { login } = useAuth();
   const { branding } = useBranding();
-  const logoSource = branding?.logoUrl ? { uri: getImageUrl(branding.logoUrl) } : require('../assets/my-logo.png');
+  const logoSource = branding?.logoUrl ? { uri: getImageUrl(branding.logoUrl) } : null;
 
   const set = (key) => (val) => setForm(f => ({ ...f, [key]: val }));
 
@@ -67,10 +67,12 @@ export default function SignUpScreen({ navigation }) {
             <Text style={styles.backButtonText}>←</Text>
           </TouchableOpacity>
         <View style={styles.hero}>
-
-          <Image
-            source={logoSource}
-            style={{ width: 100, height: 100, resizeMode: 'contain' }} />
+          {logoSource && (
+            <Image
+              source={logoSource}
+              style={{ width: 100, height: 100, resizeMode: 'contain', marginBottom: 10 }} 
+            />
+          )}
 
           <Text style={styles.appName}>{branding?.appName || 'QuickBite'}</Text>
         </View>
