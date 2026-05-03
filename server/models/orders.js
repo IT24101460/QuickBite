@@ -1,32 +1,54 @@
 import mongoose from "mongoose";
 
 const orderItemSchema = new mongoose.Schema({
-    foodItemId: { type: mongoose.Schema.Types.ObjectId, ref: "FoodItem", required: true },
+    foodItemId: { type: String, required: true },
     name: { type: String, required: true },
+    category: { type: String, default: "General" },
     price: { type: Number, required: true },
-    quantity: { type: Number, required: true, min: 1 }
+    quantity: { type: Number, required: true },
+    image: { type: String, default: "" },
+    note: { type: String, default: "" },
 });
+
+const statusHistorySchema = new mongoose.Schema(
+    {
+        status: { type: String, required: true },
+        message: { type: String, default: "" },
+        updatedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User", default: null },
+        updatedByRole: { type: String, default: "" },
+    },
+    { timestamps: true }
+);
 
 const orderSchema = new mongoose.Schema(
     {
         userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
         studentName: { type: String, required: true },
         uniId: { type: String, required: true },
+        canteenId: { type: mongoose.Schema.Types.ObjectId, ref: "Canteen", default: null },
         items: { type: [orderItemSchema], required: true },
         totalAmount: { type: Number, required: true },
+        discountAmount: { type: Number, default: 0 },
+        finalAmount: { type: Number, default: 0 },
+        promotionId: { type: mongoose.Schema.Types.ObjectId, ref: "Promotions", default: null },
+        pickupTime: { type: String, default: "" },
+        requestImage: { type: String, default: "" },
         queueNumber: { type: Number },
         status: {
             type: String,
-            enum: ["pending", "preparing", "ready", "completed", "cancelled"],
+            enum: ["pending", "confirmed", "preparing", "ready", "completed", "cancelled"],
             default: "pending"
         },
+        statusHistory: { type: [statusHistorySchema], default: [] },
+        lastStatusMessage: { type: String, default: "" },
+        statusUpdatedAt: { type: Date, default: null },
         note: { type: String, default: "" }
     },
     { timestamps: true }
 );
 
 // Auto-assign queue number before saving a new order
-orderSchema.pre("save", async function (next) {
+orderSchema.pre("save", async function () {
     if (this.isNew) {
         const today = new Date();
         today.setHours(0, 0, 0, 0);
@@ -37,9 +59,13 @@ orderSchema.pre("save", async function (next) {
         });
         this.queueNumber = count + 1;
     }
-    next();
 });
 
 const Order = mongoose.model("Order", orderSchema);
+
+// Hotfix: Forcefully drop the aggressively cached unique index that was inherited structurally from the root Food schema.
+Order.collection.dropIndex("items.foodItemId_1").catch(err => {
+    // Suppress if the index has already been forcefully cleared!
+});
 
 export default Order;
