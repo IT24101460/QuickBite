@@ -3,6 +3,7 @@ import {
     View, Text, StyleSheet, TouchableOpacity, ScrollView, ImageBackground
 } from 'react-native';
 import { useAuth } from '../../context/AuthContext';
+import { useBranding } from '../../context/BrandingContext';
 import { COLORS, SPACING, TYPOGRAPHY, BORDER_RADIUS, SHADOWS, SIZES } from '../../styles/adminTheme';
 
 const CARDS = [
@@ -16,6 +17,7 @@ const CARDS = [
 ];
 
 export default function AdminDashboardScreen({ navigation }) {
+    const { branding } = useBranding();
     const { logout } = useAuth();
 
     return (
@@ -24,7 +26,7 @@ export default function AdminDashboardScreen({ navigation }) {
                 <View style={styles.header}>
                     <View>
                         <Text style={styles.headerTitle}>⚙️ Admin Dashboard</Text>
-                        <Text style={styles.headerSub}>QuickBite Management</Text>
+                        <Text style={styles.headerSub}>{(branding?.appName || 'QuickBite')} Management</Text>
                     </View>
                     <TouchableOpacity onPress={logout} style={styles.logoutBtn}>
                         <Text style={styles.logoutText}>Logout</Text>
