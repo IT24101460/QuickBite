@@ -2,7 +2,6 @@ import Canteen from "../models/Canteen.js";
 import { supabase } from "../config/supabase.js";
 
 // Create a new canteen (Admin only)
-// ✨ CRUD: CREATE - Adds a new canteen to the database
 export async function createCanteen(req, res) {
   try {
     if (!req.user?.isAdmin) {
@@ -11,8 +10,12 @@ export async function createCanteen(req, res) {
 
     const { canteenName, location, contactDetails, ownerDetails, openingTime, closingTime } = req.body;
 
+    // 🛡️ VALIDATION: Server-side check - contactDetails must be exactly 10 digits
+    if (contactDetails && !/^[0-9]{10}$/.test(contactDetails.trim())) {
+      return res.status(400).json({ message: 'Contact number must be exactly 10 digits.' });
+    }
+
     // Check for duplicate canteen name
-    // 🛡️ VALIDATION: Server-side validation for checking if the canteen name already exists
     const existingCanteen = await Canteen.findOne({
       canteenName: { $regex: new RegExp(`^${canteenName}$`, 'i') }
     });
@@ -89,7 +92,6 @@ export async function createCanteen(req, res) {
 }
 
 // Get all canteens (with optional search)
-// ✨ CRUD: READ - Fetches a list of all canteens from the database
 export async function getAllCanteens(req, res) {
   try {
     const { search } = req.query;
@@ -105,7 +107,6 @@ export async function getAllCanteens(req, res) {
 }
 
 // Get single canteen by ID
-// ✨ CRUD: READ - Fetches details of a single specific canteen using its ID
 export async function getCanteenById(req, res) {
   try {
     const canteen = await Canteen.findById(req.params.id);
@@ -148,7 +149,6 @@ export async function getMyCanteen(req, res) {
 }
 
 // Update canteen (Admin and Owner)
-// ✨ CRUD: UPDATE - Modifies existing canteen data in the database
 export async function updateCanteen(req, res) {
   try {
     if (!req.user?.isAdmin && req.user?.role !== "owner") {
@@ -248,7 +248,6 @@ export async function updateCanteen(req, res) {
 }
 
 // Delete canteen (Admin only)
-// ✨ CRUD: DELETE - Removes a canteen from the database entirely
 export async function deleteCanteen(req, res) {
   try {
     if (!req.user?.isAdmin) {

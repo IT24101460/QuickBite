@@ -18,11 +18,26 @@ export default function AdminCanteensScreen({ navigation }) {
     const [image, setImage] = useState(null);
     const [saving, setSaving] = useState(false);
     const [nameError, setNameError] = useState('');
+    const [phoneError, setPhoneError] = useState('');
 
     const set = k => v => {
+        // 🛡️ VALIDATION: Limit contact/phone input to 10 numeric digits only
+        if (k === 'contactDetails') {
+            const digitsOnly = v.replace(/[^0-9]/g, '').slice(0, 10);
+            setForm(f => ({ ...f, [k]: digitsOnly }));
+            if (digitsOnly.length > 0 && digitsOnly.length < 10) {
+                setPhoneError('Phone number must be exactly 10 digits');
+            } else if (digitsOnly.length === 0) {
+                setPhoneError('Phone number is required');
+            } else {
+                setPhoneError('');
+            }
+            return;
+        }
+
         setForm(f => ({ ...f, [k]: v }));
 
-        //  VALIDATION: Frontend real-time check for duplicate canteen names while typing
+        // 🛡️ VALIDATION: Frontend real-time check for duplicate canteen names while typing
         if (k === 'canteenName' && v) {
             const duplicateName = canteens.find(c =>
                 c.canteenName.toLowerCase() === v.toLowerCase() &&
@@ -36,23 +51,40 @@ export default function AdminCanteensScreen({ navigation }) {
         }
     };
 
+    // ✨ CRUD: READ - Fetching the list of canteens from backend API
     const fetch = async () => {
-        // CRUD: READ - Fetching the list of canteens from backend API
         try {
             const r = await API.get('/canteens');
             setCanteens(r.data?.canteens || []);
         } catch (e) { } finally { setLoading(false); setRefreshing(false); }
     };
+
     const fetchOwners = async () => {
         try {
             const r = await API.get('/users/owners');
             setOwners(r.data || []);
         } catch (e) { }
     };
+
     useEffect(() => { fetch(); fetchOwners(); }, []);
 
-    const openAdd = () => { setEditing(null); setForm({ canteenName: '', location: '', contactDetails: '', ownerDetails: '', openingTime: '08:00 AM', closingTime: '05:00 PM', createdBy: '' }); setImage(null); setModal(true); };
-    const openEdit = (c) => { setEditing(c); setForm({ canteenName: c.canteenName, location: c.location, contactDetails: c.contactDetails, ownerDetails: c.ownerDetails, openingTime: c.openingTime, closingTime: c.closingTime, createdBy: c.createdBy }); setImage(null); setModal(true); };
+    const openAdd = () => {
+        setEditing(null);
+        setForm({ canteenName: '', location: '', contactDetails: '', ownerDetails: '', openingTime: '08:00 AM', closingTime: '05:00 PM', createdBy: '' });
+        setNameError('');
+        setPhoneError('');
+        setImage(null);
+        setModal(true);
+    };
+
+    const openEdit = (c) => {
+        setEditing(c);
+        setForm({ canteenName: c.canteenName, location: c.location, contactDetails: c.contactDetails, ownerDetails: c.ownerDetails, openingTime: c.openingTime, closingTime: c.closingTime, createdBy: c.createdBy });
+        setNameError('');
+        setPhoneError('');
+        setImage(null);
+        setModal(true);
+    };
 
     const pickImg = () => launchImageLibrary({
         mediaType: 'photo',
@@ -74,12 +106,17 @@ export default function AdminCanteensScreen({ navigation }) {
         }
     });
 
+    // ✨ CRUD: CREATE & UPDATE - Determines whether to CREATE (add new) or UPDATE (edit existing) based on 'editing' state
     const save = async () => {
-        // CRUD: CREATE & UPDATE - Determines whether to act as CREATE (add new) or UPDATE (edit existing) based on 'editing' state
-
-        // VALIDATION: Frontend check to ensure all required fields are filled before saving
+        // 🛡️ VALIDATION: Ensure all required fields are filled before saving
         if (!form.canteenName || !form.location || !form.contactDetails || !form.ownerDetails || !form.createdBy) {
             return Alert.alert('Error', 'Fill all required fields including assigning an owner');
+        }
+
+        // 🛡️ VALIDATION: Ensure phone number is exactly 10 digits before sending to server
+        if (!/^[0-9]{10}$/.test(form.contactDetails)) {
+            setPhoneError('Phone number must be exactly 10 digits');
+            return Alert.alert('Invalid Phone Number', 'Contact number must be exactly 10 digits.');
         }
 
         // Check for duplicate name in frontend (optimistic validation)
@@ -87,7 +124,6 @@ export default function AdminCanteensScreen({ navigation }) {
             c.canteenName.toLowerCase() === form.canteenName.toLowerCase() &&
             c._id !== editing?._id
         );
-
         if (duplicateName) {
             return Alert.alert('Duplicate Name', 'A canteen with this name already exists. Please choose a different name.');
         }
@@ -98,11 +134,10 @@ export default function AdminCanteensScreen({ navigation }) {
             Object.entries(form).forEach(([k, v]) => fd.append(k, v));
             if (image) fd.append('canteenImage', { uri: image.uri, name: image.fileName || 'img.jpg', type: image.type || 'image/jpeg' });
 
-            let response;
             if (editing) {
-                response = await API.put(`/canteens/${editing._id}`, fd, { headers: { 'Content-Type': 'multipart/form-data' } });
+                await API.put(`/canteens/${editing._id}`, fd, { headers: { 'Content-Type': 'multipart/form-data' } });
             } else {
-                response = await API.post('/canteens', fd, { headers: { 'Content-Type': 'multipart/form-data' } });
+                await API.post('/canteens', fd, { headers: { 'Content-Type': 'multipart/form-data' } });
             }
 
             setModal(false);
@@ -127,7 +162,7 @@ export default function AdminCanteensScreen({ navigation }) {
         }
     };
 
-    //  CRUD: DELETE - Sends delete request to backend and re-fetches the list
+    // ✨ CRUD: DELETE - Sends delete request to backend and re-fetches the list
     const deleteCanteen = (id) => Alert.alert('Delete', 'Are you sure?', [
         { text: 'Cancel', style: 'cancel' },
         { text: 'Delete', style: 'destructive', onPress: async () => { await API.delete(`/canteens/${id}`); fetch(); } },
@@ -183,7 +218,7 @@ export default function AdminCanteensScreen({ navigation }) {
                         {[
                             ['Canteen Name *', 'canteenName'],
                             ['Location *', 'location'],
-                            ['Contact Details *', 'contactDetails'],
+                            ['Contact Number * (10 digits)', 'contactDetails'],
                             ['Owner Details (Text) *', 'ownerDetails'],
                             ['Opening Time', 'openingTime'],
                             ['Closing Time', 'closingTime']
@@ -191,14 +226,22 @@ export default function AdminCanteensScreen({ navigation }) {
                             <View key={k} style={{ marginBottom: 12 }}>
                                 <Text style={styles.label}>{label}</Text>
                                 <TextInput
-                                    style={[styles.input, nameError && k === 'canteenName' && styles.inputError]}
+                                    style={[styles.input,
+                                    (nameError && k === 'canteenName') || (phoneError && k === 'contactDetails')
+                                        ? styles.inputError : null
+                                    ]}
                                     value={form[k]}
                                     onChangeText={set(k)}
-                                    placeholder={label}
+                                    keyboardType={k === 'contactDetails' ? 'phone-pad' : 'default'}
+                                    maxLength={k === 'contactDetails' ? 10 : undefined}
+                                    placeholder={k === 'contactDetails' ? 'e.g. 0712345678' : label}
                                     placeholderTextColor="#aaa"
                                 />
                                 {nameError && k === 'canteenName' && (
                                     <Text style={styles.errorText}>{nameError}</Text>
+                                )}
+                                {phoneError && k === 'contactDetails' && (
+                                    <Text style={styles.errorText}>{phoneError}</Text>
                                 )}
                             </View>
                         ))}
