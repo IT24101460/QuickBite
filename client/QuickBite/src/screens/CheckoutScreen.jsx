@@ -143,7 +143,28 @@ export default function CheckoutScreen({ route, navigation }) {
                 canteenId: cartItems[0].canteenId || null
             };
 
-            const orderRes = await API.post('/orders', orderPayload);
+            let orderRes;
+            // Check if any item has a custom cake design image
+            const cakeWithImage = cartItems.find(i => i.designImage);
+
+            if (cakeWithImage) {
+                const fd = new FormData();
+                fd.append('items', JSON.stringify(orderPayload.items));
+                fd.append('pickupTime', orderPayload.pickupTime);
+                fd.append('discountAmount', String(orderPayload.discountAmount));
+                fd.append('promotionId', orderPayload.promotionId || "");
+                fd.append('canteenId', orderPayload.canteenId || "");
+                fd.append('requestImage', {
+                    uri: cakeWithImage.designImage.uri,
+                    name: cakeWithImage.designImage.name,
+                    type: cakeWithImage.designImage.type,
+                });
+                orderRes = await API.post('/orders', fd, {
+                    headers: { 'Content-Type': 'multipart/form-data' }
+                });
+            } else {
+                orderRes = await API.post('/orders', orderPayload);
+            }
             const order = orderRes.data.order;
 
             // 2. Create payment

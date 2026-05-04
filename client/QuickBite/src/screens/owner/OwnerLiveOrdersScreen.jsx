@@ -130,6 +130,13 @@ export default function OwnerLiveOrdersScreen({ route, navigation }) {
                                 </View>
                             ) : null}
 
+                            {item.requestImage ? (
+                                <View style={styles.slipBox}>
+                                    <Image source={{ uri: getImageUrl(item.requestImage) }} style={styles.slip} resizeMode="contain" />
+                                    <Text style={[styles.slipLabel, { color: '#E91E8C' }]}>🎂 Cake Design Reference (Customer Upload)</Text>
+                                </View>
+                            ) : null}
+
                             <View style={styles.footerRow}>
                                 <View>
                                     <Text style={styles.paymentMetric}>Paid: Rs {item.finalAmount}</Text>

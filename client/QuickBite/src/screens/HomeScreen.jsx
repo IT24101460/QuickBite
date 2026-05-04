@@ -28,6 +28,7 @@ export default function HomeScreen({ navigation }) {
   const [currentPromoIndex, setCurrentPromoIndex] = useState(0);
 
   const categories = ['All', 'Rice', 'Noodles', 'Snacks', 'Drinks', 'Desserts', 'Other'];
+  const CAKE_CHIP = 'Order a Cake';
 
   const fetchData = useCallback(async () => {
     try {
@@ -266,19 +267,34 @@ export default function HomeScreen({ navigation }) {
           </View>
         )}
 
-        {/* Category Filter */}
+        {/* Category Filter + Cake Order Button */}
         <View style={{ marginTop: 15 }}>
           <FlatList
-            data={categories}
+            data={[CAKE_CHIP, ...categories]}
             horizontal
-            renderItem={({ item }) => (
-              <TouchableOpacity
-                style={[styles.catChip, category === item && styles.catChipActive]}
-                onPress={() => setCategory(item)}
-              >
-                <Text style={[styles.catChipText, category === item && styles.catChipTextActive]}>{item}</Text>
-              </TouchableOpacity>
-            )}
+            renderItem={({ item }) => {
+              const isCake = item === CAKE_CHIP;
+              return (
+                <TouchableOpacity
+                  style={[
+                    styles.catChip,
+                    category === item && styles.catChipActive
+                  ]}
+                  onPress={() => {
+                    if (isCake) {
+                      navigation.navigate('CakeOrder');
+                    } else {
+                      setCategory(item);
+                    }
+                  }}
+                >
+                  <Text style={[
+                    styles.catChipText,
+                    category === item && styles.catChipTextActive
+                  ]}>{item}</Text>
+                </TouchableOpacity>
+              );
+            }}
             keyExtractor={i => i}
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 8 }}
@@ -328,10 +344,10 @@ export default function HomeScreen({ navigation }) {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#FFF7F2' },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'transparent' },
-  loadingText: { 
-    marginTop: SPACING.md, 
-    color: COLORS.textSecondary, 
-    fontSize: TYPOGRAPHY.body2.fontSize 
+  loadingText: {
+    marginTop: SPACING.md,
+    color: COLORS.textSecondary,
+    fontSize: TYPOGRAPHY.body2.fontSize
   },
   promoContainer: { width: '100%', alignItems: 'center' },
   promoBanner: {
@@ -345,186 +361,186 @@ const styles = StyleSheet.create({
     ...SHADOWS.sm,
   },
   promoBannerImg: { width: '100%', height: '100%' },
-  promoBannerPlaceholder: { 
-    width: '100%', 
-    height: '100%', 
-    backgroundColor: COLORS.primaryLight 
+  promoBannerPlaceholder: {
+    width: '100%',
+    height: '100%',
+    backgroundColor: COLORS.primaryLight
   },
   promoOverlay: {
     position: 'absolute', bottom: 0, left: 0, right: 0,
-    backgroundColor: 'rgba(0,0,0,0.6)', 
-    padding: SPACING.md, 
+    backgroundColor: 'rgba(0,0,0,0.6)',
+    padding: SPACING.md,
     paddingTop: SPACING.lg
   },
-  promoTitle: { 
-    color: COLORS.textWhite, 
-    fontWeight: 'bold', 
-    fontSize: TYPOGRAPHY.body1.fontSize 
+  promoTitle: {
+    color: COLORS.textWhite,
+    fontWeight: 'bold',
+    fontSize: TYPOGRAPHY.body1.fontSize
   },
-  promoDiscount: { 
-    color: '#FFD700', 
-    fontWeight: 'bold', 
-    fontSize: TYPOGRAPHY.caption.fontSize, 
-    marginTop: SPACING.xs 
+  promoDiscount: {
+    color: '#FFD700',
+    fontWeight: 'bold',
+    fontSize: TYPOGRAPHY.caption.fontSize,
+    marginTop: SPACING.xs
   },
-  dotsRow: { 
-    flexDirection: 'row', 
-    position: 'absolute', 
-    bottom: SPACING.sm, 
-    width: '100%', 
-    justifyContent: 'center' 
+  dotsRow: {
+    flexDirection: 'row',
+    position: 'absolute',
+    bottom: SPACING.sm,
+    width: '100%',
+    justifyContent: 'center'
   },
-  dot: { 
-    width: 6, 
-    height: 6, 
-    borderRadius: BORDER_RADIUS.round, 
-    backgroundColor: 'rgba(255,255,255,0.4)', 
-    marginLeft: SPACING.xs 
+  dot: {
+    width: 6,
+    height: 6,
+    borderRadius: BORDER_RADIUS.round,
+    backgroundColor: 'rgba(255,255,255,0.4)',
+    marginLeft: SPACING.xs
   },
-  dotActive: { 
-    backgroundColor: COLORS.textWhite, 
-    width: 14 
+  dotActive: {
+    backgroundColor: COLORS.textWhite,
+    width: 14
   },
   section: { marginTop: SPACING.md },
   sectionBot: { marginTop: SPACING.xs, paddingBottom: SPACING.xxxl },
-  sectionRow: { 
-    flexDirection: 'row', 
-    justifyContent: 'space-between', 
-    alignItems: 'center', 
-    paddingHorizontal: SPACING.md, 
-    marginBottom: SPACING.sm 
+  sectionRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: SPACING.md,
+    marginBottom: SPACING.sm
   },
-  sectionTitle: { 
-    fontSize: TYPOGRAPHY.h4.fontSize, 
-    fontWeight: TYPOGRAPHY.h4.fontWeight, 
-    color: COLORS.textPrimary, 
-    paddingHorizontal: SPACING.md, 
-    marginBottom: SPACING.sm 
+  sectionTitle: {
+    fontSize: TYPOGRAPHY.h4.fontSize,
+    fontWeight: TYPOGRAPHY.h4.fontWeight,
+    color: COLORS.textPrimary,
+    paddingHorizontal: SPACING.md,
+    marginBottom: SPACING.sm
   },
-  seeAll: { 
-    fontSize: TYPOGRAPHY.caption.fontSize, 
-    color: COLORS.primary, 
-    fontWeight: '600' 
+  seeAll: {
+    fontSize: TYPOGRAPHY.caption.fontSize,
+    color: COLORS.primary,
+    fontWeight: '600'
   },
   canteenChip: {
-    backgroundColor: COLORS.surface, 
-    borderRadius: BORDER_RADIUS.round, 
-    paddingHorizontal: SPACING.md, 
+    backgroundColor: COLORS.surface,
+    borderRadius: BORDER_RADIUS.round,
+    paddingHorizontal: SPACING.md,
     paddingVertical: SPACING.sm,
-    marginRight: SPACING.sm, 
-    borderWidth: 1.5, 
-    borderColor: COLORS.borderLight, 
-    flexDirection: 'row', 
+    marginRight: SPACING.sm,
+    borderWidth: 1.5,
+    borderColor: COLORS.borderLight,
+    flexDirection: 'row',
     alignItems: 'center',
     ...SHADOWS.sm,
   },
-  canteenSmallLogo: { 
-    width: 20, 
-    height: 20, 
-    borderRadius: BORDER_RADIUS.sm, 
-    marginRight: SPACING.xs 
+  canteenSmallLogo: {
+    width: 20,
+    height: 20,
+    borderRadius: BORDER_RADIUS.sm,
+    marginRight: SPACING.xs
   },
-  canteenChipText: { 
-    fontSize: TYPOGRAPHY.caption.fontSize, 
-    color: COLORS.textPrimary, 
-    fontWeight: '600', 
-    marginLeft: SPACING.xs 
+  canteenChipText: {
+    fontSize: TYPOGRAPHY.caption.fontSize,
+    color: COLORS.textPrimary,
+    fontWeight: '600',
+    marginLeft: SPACING.xs
   },
   catChip: {
-    backgroundColor: COLORS.surface, 
-    borderRadius: BORDER_RADIUS.round, 
-    paddingHorizontal: SPACING.sm, 
+    backgroundColor: COLORS.surface,
+    borderRadius: BORDER_RADIUS.round,
+    paddingHorizontal: SPACING.sm,
     paddingVertical: SPACING.xs,
-    marginRight: SPACING.sm, 
-    borderWidth: 1.5, 
+    marginRight: SPACING.sm,
+    borderWidth: 1.5,
     borderColor: COLORS.border,
   },
-  catChipActive: { 
-    backgroundColor: COLORS.primary, 
-    borderColor: COLORS.primary 
+  catChipActive: {
+    backgroundColor: COLORS.primary,
+    borderColor: COLORS.primary
   },
-  catChipText: { 
-    fontSize: TYPOGRAPHY.caption.fontSize, 
-    color: COLORS.textSecondary, 
-    fontWeight: '600' 
+  catChipText: {
+    fontSize: TYPOGRAPHY.caption.fontSize,
+    color: COLORS.textSecondary,
+    fontWeight: '600'
   },
   catChipTextActive: { color: COLORS.textWhite },
-  sortRow: { 
-    flexDirection: 'row', 
-    alignItems: 'center', 
-    paddingHorizontal: SPACING.md, 
-    marginVertical: SPACING.md 
+  sortRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: SPACING.md,
+    marginVertical: SPACING.md
   },
-  sortLabel: { 
-    fontSize: TYPOGRAPHY.caption.fontSize, 
-    fontWeight: 'bold', 
-    color: COLORS.textSecondary, 
-    marginRight: SPACING.sm 
+  sortLabel: {
+    fontSize: TYPOGRAPHY.caption.fontSize,
+    fontWeight: 'bold',
+    color: COLORS.textSecondary,
+    marginRight: SPACING.sm
   },
-  sortBtn: { 
-    paddingHorizontal: SPACING.sm, 
-    paddingVertical: SPACING.xs, 
-    borderRadius: BORDER_RADIUS.sm, 
-    backgroundColor: '#FFF7F2',
-    marginRight: SPACING.xs 
+  sortBtn: {
+    paddingHorizontal: SPACING.sm,
+    paddingVertical: SPACING.xs,
+    borderRadius: BORDER_RADIUS.sm,
+    backgroundColor: COLORS.background,
+    marginRight: SPACING.xs
   },
   sortBtnActive: { backgroundColor: COLORS.primaryUltraLight },
-  sortBtnText: { 
-    fontSize: TYPOGRAPHY.caption.fontSize, 
-    color: COLORS.textSecondary, 
-    fontWeight: '600' 
+  sortBtnText: {
+    fontSize: TYPOGRAPHY.caption.fontSize,
+    color: COLORS.textSecondary,
+    fontWeight: '600'
   },
-  sortBtnTextActive: { 
-    color: COLORS.primary, 
-    fontWeight: 'bold' 
+  sortBtnTextActive: {
+    color: COLORS.primary,
+    fontWeight: 'bold'
   },
   foodGrid: { paddingHorizontal: SPACING.sm },
   foodCard: {
-    flex: 1, 
-    margin: SPACING.sm, 
-    backgroundColor: COLORS.surface, 
-    borderRadius: BORDER_RADIUS.xl, 
+    flex: 1,
+    margin: SPACING.sm,
+    backgroundColor: COLORS.surface,
+    borderRadius: BORDER_RADIUS.xl,
     overflow: 'hidden',
     ...SHADOWS.md,
     borderWidth: 1,
     borderColor: COLORS.borderLight,
   },
   foodImg: { width: '100%', height: 120 },
-  foodImgPlaceholder: { 
-    width: '100%', 
-    height: 120, 
-    backgroundColor: COLORS.primaryUltraLight, 
-    justifyContent: 'center', 
-    alignItems: 'center' 
+  foodImgPlaceholder: {
+    width: '100%',
+    height: 120,
+    backgroundColor: COLORS.primaryUltraLight,
+    justifyContent: 'center',
+    alignItems: 'center'
   },
   foodInfo: { padding: SPACING.sm },
-  foodName: { 
-    fontSize: TYPOGRAPHY.body2.fontSize, 
-    fontWeight: '600', 
-    color: COLORS.textPrimary 
+  foodName: {
+    fontSize: TYPOGRAPHY.body2.fontSize,
+    fontWeight: '600',
+    color: COLORS.textPrimary
   },
-  foodCat: { 
-    fontSize: TYPOGRAPHY.caption.fontSize, 
-    color: COLORS.textSecondary, 
-    marginTop: SPACING.xs 
+  foodCat: {
+    fontSize: TYPOGRAPHY.caption.fontSize,
+    color: COLORS.textSecondary,
+    marginTop: SPACING.xs
   },
-  foodPrice: { 
-    fontSize: TYPOGRAPHY.body2.fontSize, 
-    fontWeight: 'bold', 
-    color: COLORS.primary, 
-    marginTop: SPACING.xs 
+  foodPrice: {
+    fontSize: TYPOGRAPHY.body2.fontSize,
+    fontWeight: 'bold',
+    color: COLORS.primary,
+    marginTop: SPACING.xs
   },
   ratingRow: { marginTop: SPACING.xs },
-  ratingText: { 
-    fontSize: TYPOGRAPHY.caption.fontSize, 
-    fontWeight: 'bold', 
-    color: COLORS.textSecondary 
+  ratingText: {
+    fontSize: TYPOGRAPHY.caption.fontSize,
+    fontWeight: 'bold',
+    color: COLORS.textSecondary
   },
-  emptyText: { 
-    textAlign: 'center', 
-    color: COLORS.textTertiary, 
-    paddingVertical: SPACING.xxxl, 
-    fontSize: TYPOGRAPHY.body2.fontSize 
+  emptyText: {
+    textAlign: 'center',
+    color: COLORS.textTertiary,
+    paddingVertical: SPACING.xxxl,
+    fontSize: TYPOGRAPHY.body2.fontSize
   },
   placeholderIcon: { fontSize: 40 },
   promoEmoji: { fontSize: 50 },

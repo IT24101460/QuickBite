@@ -45,12 +45,42 @@ export default function AdminOwnersScreen({ navigation }) {
     };
 
     const save = async () => {
-        if (!form.firstName || !form.lastName || !form.email || !form.phoneNumber) {
+        const { firstName, lastName, email, phoneNumber, password } = form;
+
+        // Basic presence check
+        if (!firstName || !lastName || !email || !phoneNumber) {
             return Alert.alert('Error', 'Fill all required fields');
         }
-        if (!editingOwner && !form.password) {
+
+        // Name validations (letters and spaces only, min 2 chars)
+        const nameRegex = /^[A-Za-z\s]{2,}$/;
+        if (!nameRegex.test(firstName)) {
+            return Alert.alert('Validation Error', 'First name must be at least 2 characters and contain only letters.');
+        }
+        if (!nameRegex.test(lastName)) {
+            return Alert.alert('Validation Error', 'Last name must be at least 2 characters and contain only letters.');
+        }
+
+        // Email validation
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+            return Alert.alert('Validation Error', 'Please enter a valid email address.');
+        }
+
+        // Phone number validation (exactly 10 digits)
+        const phoneRegex = /^\d{10}$/;
+        if (!phoneRegex.test(phoneNumber)) {
+            return Alert.alert('Validation Error', 'Phone number must be exactly 10 digits.');
+        }
+
+        if (!editingOwner && !password) {
             return Alert.alert('Error', 'Password is required when creating a new owner');
         }
+
+        if (password && password.length < 6) {
+            return Alert.alert('Validation Error', 'Password must be at least 6 characters.');
+        }
+
         setSaving(true);
         try {
             if (editingOwner) {
