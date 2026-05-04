@@ -43,11 +43,34 @@ export async function createOwner(req, res) {
 
         const passwordHash = await bcrypt.hashSync(req.body.password, 10);
 
+        const { firstName, lastName, email, phoneNumber } = req.body;
+
+        // Validations
+        const nameRegex = /^[A-Za-z\s]{2,}$/;
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        const phoneRegex = /^\d{10}$/;
+
+        if (!firstName || !lastName || !email || !phoneNumber) {
+            return res.status(400).json({ message: "All required fields must be provided" });
+        }
+        if (!nameRegex.test(firstName)) {
+            return res.status(400).json({ message: "First name must be at least 2 characters and contain only letters" });
+        }
+        if (!nameRegex.test(lastName)) {
+            return res.status(400).json({ message: "Last name must be at least 2 characters and contain only letters" });
+        }
+        if (!emailRegex.test(email)) {
+            return res.status(400).json({ message: "Invalid email format" });
+        }
+        if (!phoneRegex.test(phoneNumber)) {
+            return res.status(400).json({ message: "Phone number must be exactly 10 digits" });
+        }
+
         const newOwner = new User({
-            email: req.body.email,
-            firstName: req.body.firstName,
-            lastName: req.body.lastName,
-            phoneNumber: req.body.phoneNumber,
+            email,
+            firstName,
+            lastName,
+            phoneNumber,
             password: passwordHash,
             role: "owner"
         });
@@ -181,6 +204,20 @@ export async function updateUserDetails(req, res) {
         }
 
         const isAdminUpdate = req.user.role === 'admin' && req.user._id !== userId;
+
+        // Validations
+        const nameRegex = /^[A-Za-z\s]{2,}$/;
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+        if (updates.firstName && !nameRegex.test(updates.firstName)) {
+            return res.status(400).json({ error: "First name must be at least 2 characters and contain only letters." });
+        }
+        if (updates.lastName && !nameRegex.test(updates.lastName)) {
+            return res.status(400).json({ error: "Last name must be at least 2 characters and contain only letters." });
+        }
+        if (updates.email && !emailRegex.test(updates.email)) {
+            return res.status(400).json({ error: "Invalid email format." });
+        }
 
         // Phone number validation (exactly 10 digits)
         if (updates.phoneNumber && !/^\d{10}$/.test(updates.phoneNumber.toString())) {

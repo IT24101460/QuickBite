@@ -63,9 +63,18 @@ export async function placeOrder(req, res) {
             return res.status(401).json({ message: "Please login to place an order" });
         }
 
-        const { items, note, pickupTime, promotionId, discountAmount, canteenId } = req.body;
+        let { items, note, pickupTime, promotionId, discountAmount, canteenId } = req.body;
 
-        if (!items || items.length === 0) {
+        // If data comes from FormData (multipart), string fields like 'items' need to be parsed
+        if (typeof items === 'string') {
+            try {
+                items = JSON.parse(items);
+            } catch (e) {
+                return res.status(400).json({ message: "Invalid items format" });
+            }
+        }
+
+        if (!items || !Array.isArray(items) || items.length === 0) {
             return res.status(400).json({ message: "Order must contain at least one item" });
         }
 
