@@ -21,9 +21,51 @@ export default function OwnerPromotionsScreen({ route, navigation }) {
     const [description, setDescription] = useState('');
     const [discountType, setDiscountType] = useState('percentage'); // 'percentage' | 'fixed'
     const [discountValue, setDiscountValue] = useState('');
-    const [durationDays, setDurationDays] = useState('7');
     const [applicableTo, setApplicableTo] = useState('all'); // 'all' | 'specific'
     const [selectedFoods, setSelectedFoods] = useState([]);
+    
+    // Date picker states
+    const [startDate, setStartDate] = useState(new Date());
+    const [endDate, setEndDate] = useState(new Date());
+    const [showStartDatePicker, setShowStartDatePicker] = useState(false);
+    const [showEndDatePicker, setShowEndDatePicker] = useState(false);
+    const [tempStartDate, setTempStartDate] = useState(new Date());
+    const [tempEndDate, setTempEndDate] = useState(new Date());
+    
+    // Generate date options
+    const generateDateOptions = () => {
+        const days = Array.from({ length: 31 }, (_, i) => i + 1);
+        const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        const currentYear = new Date().getFullYear();
+        const years = Array.from({ length: 3 }, (_, i) => currentYear + i);
+        return { days, months, years };
+    };
+    
+    const { days, months, years } = generateDateOptions();
+    
+    const formatDate = (date) => {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+    };
+    
+    const handleStartDateSelect = () => {
+        setStartDate(tempStartDate);
+        setShowStartDatePicker(false);
+        // Reset end date if it's before start date
+        if (endDate < tempStartDate) {
+            const newEndDate = new Date(tempStartDate);
+            newEndDate.setDate(newEndDate.getDate() + 7);
+            setEndDate(newEndDate);
+            setTempEndDate(newEndDate);
+        }
+    };
+    
+    const handleEndDateSelect = () => {
+        setEndDate(tempEndDate);
+        setShowEndDatePicker(false);
+    };
 
     const [imagePreview, setImagePreview] = useState(null);
     const [imageFile, setImageFile] = useState(null);
@@ -71,8 +113,16 @@ export default function OwnerPromotionsScreen({ route, navigation }) {
     };
 
     const openAddModal = () => {
+        const today = new Date();
+        const defaultEnd = new Date(today);
+        defaultEnd.setDate(today.getDate() + 7);
+        
         setTitle(''); setDescription(''); setDiscountType('percentage'); setDiscountValue('');
-        setDurationDays('7'); setApplicableTo('all'); setSelectedFoods([]);
+        setApplicableTo('all'); setSelectedFoods([]);
+        setStartDate(today);
+        setEndDate(defaultEnd);
+        setTempStartDate(today);
+        setTempEndDate(defaultEnd);
         setImagePreview(null); setImageFile(null);
         setModalVisible(true);
     };
@@ -90,11 +140,11 @@ export default function OwnerPromotionsScreen({ route, navigation }) {
             return Alert.alert('Error', 'Please fill out Title, Description, and Discount Value.');
         }
 
+        if (startDate >= endDate) {
+            return Alert.alert('Error', 'End date must be after start date.');
+        }
+
         setSaving(true);
-        // Calculate dates natively
-        const startDate = new Date();
-        const endDate = new Date();
-        endDate.setDate(startDate.getDate() + parseInt(durationDays || 7));
 
         try {
             if (imageFile) {
@@ -228,8 +278,45 @@ export default function OwnerPromotionsScreen({ route, navigation }) {
                                 </View>
                             </View>
 
-                            <Text style={styles.label}>Duration Automatically (Days)</Text>
-                            <TextInput style={styles.input} placeholder="7" value={durationDays} onChangeText={setDurationDays} keyboardType="numeric" />
+                            {/* Start Date Picker */}
+                            <Text style={styles.label}>Start Date</Text>
+                            <TouchableOpacity 
+                                style={styles.datePickerBtn}
+                                onPress={() => {
+                                    setTempStartDate(new Date(startDate));
+                                    setShowStartDatePicker(true);
+                                }}
+                            >
+                                <Text style={styles.datePickerText}>
+                                    {startDate.toLocaleDateString('en-US', { 
+                                        weekday: 'short', 
+                                        year: 'numeric', 
+                                        month: 'short', 
+                                        day: 'numeric' 
+                                    })}
+                                </Text>
+                                <Text style={styles.datePickerIcon}>📅</Text>
+                            </TouchableOpacity>
+                            
+                            {/* End Date Picker */}
+                            <Text style={styles.label}>End Date</Text>
+                            <TouchableOpacity 
+                                style={styles.datePickerBtn}
+                                onPress={() => {
+                                    setTempEndDate(new Date(endDate));
+                                    setShowEndDatePicker(true);
+                                }}
+                            >
+                                <Text style={styles.datePickerText}>
+                                    {endDate.toLocaleDateString('en-US', { 
+                                        weekday: 'short', 
+                                        year: 'numeric', 
+                                        month: 'short', 
+                                        day: 'numeric' 
+                                    })}
+                                </Text>
+                                <Text style={styles.datePickerIcon}>📅</Text>
+                            </TouchableOpacity>
 
                             <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginVertical: 10 }}>
                                 <Text style={styles.label}>Apply exclusively to Specific Foods?</Text>
@@ -258,6 +345,136 @@ export default function OwnerPromotionsScreen({ route, navigation }) {
                             </View>
                         </ScrollView>
                     </View>
+                    
+                    {/* Start Date Picker Modal */}
+                    <Modal visible={showStartDatePicker} transparent animationType="fade">
+                        <View style={styles.datePickerModal}>
+                            <View style={styles.datePickerContent}>
+                                <Text style={styles.datePickerTitle}>Select Start Date</Text>
+                                
+                                <View style={styles.dateSelectors}>
+                                    <View style={styles.dateColumn}>
+                                        <Text style={styles.dateColumnLabel}>Day</Text>
+                                        <ScrollView style={styles.dateScroll} showsVerticalScrollIndicator={false}>
+                                            {days.map(day => (
+                                                <TouchableOpacity
+                                                    key={day}
+                                                    style={[styles.dateOption, tempStartDate.getDate() === day && styles.dateOptionSelected]}
+                                                    onPress={() => setTempStartDate(new Date(tempStartDate.getFullYear(), tempStartDate.getMonth(), day))}
+                                                >
+                                                    <Text style={[styles.dateOptionText, tempStartDate.getDate() === day && styles.dateOptionTextSelected]}>{day}</Text>
+                                                </TouchableOpacity>
+                                            ))}
+                                        </ScrollView>
+                                    </View>
+                                    
+                                    <View style={styles.dateColumn}>
+                                        <Text style={styles.dateColumnLabel}>Month</Text>
+                                        <ScrollView style={styles.dateScroll} showsVerticalScrollIndicator={false}>
+                                            {months.map((month, index) => (
+                                                <TouchableOpacity
+                                                    key={index}
+                                                    style={[styles.dateOption, tempStartDate.getMonth() === index && styles.dateOptionSelected]}
+                                                    onPress={() => setTempStartDate(new Date(tempStartDate.getFullYear(), index, tempStartDate.getDate()))}
+                                                >
+                                                    <Text style={[styles.dateOptionText, tempStartDate.getMonth() === index && styles.dateOptionTextSelected]}>{month}</Text>
+                                                </TouchableOpacity>
+                                            ))}
+                                        </ScrollView>
+                                    </View>
+                                    
+                                    <View style={styles.dateColumn}>
+                                        <Text style={styles.dateColumnLabel}>Year</Text>
+                                        <ScrollView style={styles.dateScroll} showsVerticalScrollIndicator={false}>
+                                            {years.map(year => (
+                                                <TouchableOpacity
+                                                    key={year}
+                                                    style={[styles.dateOption, tempStartDate.getFullYear() === year && styles.dateOptionSelected]}
+                                                    onPress={() => setTempStartDate(new Date(year, tempStartDate.getMonth(), tempStartDate.getDate()))}
+                                                >
+                                                    <Text style={[styles.dateOptionText, tempStartDate.getFullYear() === year && styles.dateOptionTextSelected]}>{year}</Text>
+                                                </TouchableOpacity>
+                                            ))}
+                                        </ScrollView>
+                                    </View>
+                                </View>
+                                
+                                <View style={styles.datePickerActions}>
+                                    <TouchableOpacity style={styles.datePickerCancel} onPress={() => setShowStartDatePicker(false)}>
+                                        <Text style={styles.datePickerCancelText}>Cancel</Text>
+                                    </TouchableOpacity>
+                                    <TouchableOpacity style={styles.datePickerConfirm} onPress={handleStartDateSelect}>
+                                        <Text style={styles.datePickerConfirmText}>Confirm</Text>
+                                    </TouchableOpacity>
+                                </View>
+                            </View>
+                        </View>
+                    </Modal>
+                    
+                    {/* End Date Picker Modal */}
+                    <Modal visible={showEndDatePicker} transparent animationType="fade">
+                        <View style={styles.datePickerModal}>
+                            <View style={styles.datePickerContent}>
+                                <Text style={styles.datePickerTitle}>Select End Date</Text>
+                                
+                                <View style={styles.dateSelectors}>
+                                    <View style={styles.dateColumn}>
+                                        <Text style={styles.dateColumnLabel}>Day</Text>
+                                        <ScrollView style={styles.dateScroll} showsVerticalScrollIndicator={false}>
+                                            {days.map(day => (
+                                                <TouchableOpacity
+                                                    key={day}
+                                                    style={[styles.dateOption, tempEndDate.getDate() === day && styles.dateOptionSelected]}
+                                                    onPress={() => setTempEndDate(new Date(tempEndDate.getFullYear(), tempEndDate.getMonth(), day))}
+                                                >
+                                                    <Text style={[styles.dateOptionText, tempEndDate.getDate() === day && styles.dateOptionTextSelected]}>{day}</Text>
+                                                </TouchableOpacity>
+                                            ))}
+                                        </ScrollView>
+                                    </View>
+                                    
+                                    <View style={styles.dateColumn}>
+                                        <Text style={styles.dateColumnLabel}>Month</Text>
+                                        <ScrollView style={styles.dateScroll} showsVerticalScrollIndicator={false}>
+                                            {months.map((month, index) => (
+                                                <TouchableOpacity
+                                                    key={index}
+                                                    style={[styles.dateOption, tempEndDate.getMonth() === index && styles.dateOptionSelected]}
+                                                    onPress={() => setTempEndDate(new Date(tempEndDate.getFullYear(), index, tempEndDate.getDate()))}
+                                                >
+                                                    <Text style={[styles.dateOptionText, tempEndDate.getMonth() === index && styles.dateOptionTextSelected]}>{month}</Text>
+                                                </TouchableOpacity>
+                                            ))}
+                                        </ScrollView>
+                                    </View>
+                                    
+                                    <View style={styles.dateColumn}>
+                                        <Text style={styles.dateColumnLabel}>Year</Text>
+                                        <ScrollView style={styles.dateScroll} showsVerticalScrollIndicator={false}>
+                                            {years.map(year => (
+                                                <TouchableOpacity
+                                                    key={year}
+                                                    style={[styles.dateOption, tempEndDate.getFullYear() === year && styles.dateOptionSelected]}
+                                                    onPress={() => setTempEndDate(new Date(year, tempEndDate.getMonth(), tempEndDate.getDate()))}
+                                                >
+                                                    <Text style={[styles.dateOptionText, tempEndDate.getFullYear() === year && styles.dateOptionTextSelected]}>{year}</Text>
+                                                </TouchableOpacity>
+                                            ))}
+                                        </ScrollView>
+                                    </View>
+                                </View>
+                                
+                                <View style={styles.datePickerActions}>
+                                    <TouchableOpacity style={styles.datePickerCancel} onPress={() => setShowEndDatePicker(false)}>
+                                        <Text style={styles.datePickerCancelText}>Cancel</Text>
+                                    </TouchableOpacity>
+                                    <TouchableOpacity style={styles.datePickerConfirm} onPress={handleEndDateSelect}>
+                                        <Text style={styles.datePickerConfirmText}>Confirm</Text>
+                                    </TouchableOpacity>
+                                </View>
+                            </View>
+                        </View>
+                    </Modal>
                 </KeyboardAvoidingView>
             </Modal>
         </View>
@@ -307,5 +524,30 @@ const styles = StyleSheet.create({
     foodToggleText: { fontSize: 14, color: '#555' },
 
     cancelBtn: { flex: 1, backgroundColor: '#eee', padding: 15, borderRadius: 10, alignItems: 'center' },
-    saveBtn: { flex: 2, backgroundColor: ORANGE, padding: 15, borderRadius: 10, alignItems: 'center' }
+    saveBtn: { flex: 2, backgroundColor: ORANGE, padding: 15, borderRadius: 10, alignItems: 'center' },
+    
+    // Date picker styles
+    datePickerBtn: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', borderWidth: 1, borderColor: '#E8E8E8', borderRadius: 10, padding: 12, backgroundColor: '#F8F9FA', marginBottom: 12 },
+    datePickerText: { fontSize: 14, color: '#333', flex: 1 },
+    datePickerIcon: { fontSize: 16, marginLeft: 8 },
+    
+    datePickerModal: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center', padding: 20 },
+    datePickerContent: { backgroundColor: '#fff', borderRadius: 16, padding: 20, width: '100%', maxWidth: 320 },
+    datePickerTitle: { fontSize: 18, fontWeight: 'bold', color: '#222', textAlign: 'center', marginBottom: 20 },
+    
+    dateSelectors: { flexDirection: 'row', height: 200, marginBottom: 20 },
+    dateColumn: { flex: 1, marginHorizontal: 4 },
+    dateColumnLabel: { fontSize: 12, fontWeight: '600', color: '#666', textAlign: 'center', marginBottom: 8 },
+    dateScroll: { flex: 1 },
+    
+    dateOption: { paddingVertical: 12, alignItems: 'center', borderRadius: 8, marginVertical: 1 },
+    dateOptionSelected: { backgroundColor: ORANGE },
+    dateOptionText: { fontSize: 14, color: '#333' },
+    dateOptionTextSelected: { color: '#fff', fontWeight: '600' },
+    
+    datePickerActions: { flexDirection: 'row', gap: 10 },
+    datePickerCancel: { flex: 1, paddingVertical: 12, borderRadius: 8, borderWidth: 1, borderColor: '#E8E8E8', alignItems: 'center' },
+    datePickerCancelText: { fontSize: 14, color: '#666', fontWeight: '600' },
+    datePickerConfirm: { flex: 1, paddingVertical: 12, borderRadius: 8, backgroundColor: ORANGE, alignItems: 'center' },
+    datePickerConfirmText: { fontSize: 14, color: '#fff', fontWeight: '600' },
 });

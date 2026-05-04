@@ -13,7 +13,7 @@ const { width, height } = Dimensions.get('window');
 
 export default function CanteenDetailScreen({ navigation, route }) {
     const { canteen } = route.params;
-    const { addToCart, cartItems, cartTotal, applyPromotion } = useCart();
+    const { addToCart, cartItems, cartTotal, applyPromotion, clearCart } = useCart();
     const { user } = useAuth();
 
     const [foodItems, setFoodItems] = useState([]);
@@ -162,7 +162,32 @@ export default function CanteenDetailScreen({ navigation, route }) {
                     canteenId: promotion.canteenId?._id || promotion.canteenId || canteen._id,
                 };
 
-                addToCart(itemToAdd, 1);
+                // Check canteen validation before adding
+                if (cartItems.length > 0) {
+                    const firstCanteenId = cartItems[0]?.canteenId;
+                    const itemCanteenId = itemToAdd.canteenId;
+                    
+                    if (firstCanteenId && itemCanteenId && firstCanteenId !== itemCanteenId) {
+                        Alert.alert(
+                            'Different Canteen Detected',
+                            `Your cart contains items from another canteen. Would you like to clear your cart and add items from ${canteen.canteenName}?`,
+                            [
+                                { text: 'Cancel', style: 'cancel' },
+                                { 
+                                    text: 'Clear Cart & Add', 
+                                    style: 'destructive',
+                                    onPress: () => {
+                                        clearCart();
+                                        addToCart(itemToAdd, 1, false);
+                                    }
+                                }
+                            ]
+                        );
+                        return;
+                    }
+                }
+
+                addToCart(itemToAdd, 1, false);
                 nextCartItems = [...cartItems, { ...itemToAdd, quantity: 1 }];
                 nextCartTotal = nextCartItems.reduce((sum, item) => sum + (item.price || 0) * item.quantity, 0);
             }
@@ -253,7 +278,31 @@ export default function CanteenDetailScreen({ navigation, route }) {
                 )}
 
                 <View style={{ marginTop: 15 }}>
-                    <Text style={styles.sectionTitle}>📋 Categories</Text>
+                    <View style={styles.categoryHeader}>
+                        <Text style={styles.sectionTitle}>📋 Categories</Text>
+                        <TouchableOpacity 
+                            style={styles.customOrderBtn}
+                            onPress={() => navigation.navigate('CustomOrder', { canteenId: canteen._id, canteenName: canteen.canteenName })}
+                        >
+                            <Text style={styles.customOrderIcon}>🎂</Text>
+                            <Text style={styles.customOrderText}>Custom Order</Text>
+                        </TouchableOpacity>
+                    </View>
+                    
+                    {/* Add a more visible custom order section */}
+                    <View style={styles.customOrderSection}>
+                        <TouchableOpacity 
+                            style={styles.customOrderLargeBtn}
+                            onPress={() => navigation.navigate('CustomOrder', { canteenId: canteen._id, canteenName: canteen.canteenName })}
+                        >
+                            <Text style={styles.customOrderLargeIcon}>🎂</Text>
+                            <View style={styles.customOrderContent}>
+                                <Text style={styles.customOrderTitle}>Create Custom Order</Text>
+                                <Text style={styles.customOrderSubtitle}>Birthday cakes, special desserts & more</Text>
+                            </View>
+                            <Text style={styles.customOrderArrow}>→</Text>
+                        </TouchableOpacity>
+                    </View>
                     <FlatList
                         data={categories}
                         horizontal
@@ -307,7 +356,7 @@ export default function CanteenDetailScreen({ navigation, route }) {
                                 <View style={{ padding: 8 }}>
                                     <Text style={styles.foodName} numberOfLines={1}>{item.name}</Text>
                                     <Text style={styles.foodPrice}>LKR {item.price ? item.price.toFixed(2) : '0.00'}</Text>
-                                    <TouchableOpacity style={styles.addBtn} onPress={() => addToCart(item, 1)}>
+                                    <TouchableOpacity style={styles.addBtn} onPress={() => handleAddToCart(item)}>
                                         <Text style={styles.addBtnText}>+ Add to Cart</Text>
                                     </TouchableOpacity>
                                 </View>
@@ -401,9 +450,33 @@ const styles = StyleSheet.create({
     dotsRow: { flexDirection: 'row', position: 'absolute', bottom: 10, width: '100%', justifyContent: 'center' },
     dot: { width: 6, height: 6, borderRadius: 3, backgroundColor: 'rgba(255,255,255,0.4)', marginLeft: 6 },
     dotActive: { backgroundColor: '#fff', width: 14 },
-    catChip: { backgroundColor: '#fff', borderRadius: 25, paddingHorizontal: 22, paddingVertical: 12, marginRight: 10, borderWidth: 1.5, borderColor: '#E8E8E8' },
+    categoryHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 16, marginBottom: 8, minHeight: 40 },
+    customOrderBtn: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#FFF0E8', paddingHorizontal: 12, paddingVertical: 8, borderRadius: 20, borderWidth: 2, borderColor: ORANGE, shadowColor: ORANGE, shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.2, shadowRadius: 4, elevation: 3 },
+    customOrderIcon: { fontSize: 18, marginRight: 4 },
+    customOrderText: { fontSize: 12, color: ORANGE, fontWeight: '700' },
+    customOrderSection: { marginHorizontal: 16, marginBottom: 16 },
+    customOrderLargeBtn: { 
+        flexDirection: 'row', 
+        alignItems: 'center', 
+        backgroundColor: '#FFF0E8', 
+        padding: 16, 
+        borderRadius: 12, 
+        borderWidth: 2, 
+        borderColor: ORANGE,
+        shadowColor: ORANGE, 
+        shadowOffset: { width: 0, height: 3 }, 
+        shadowOpacity: 0.25, 
+        shadowRadius: 6, 
+        elevation: 4 
+    },
+    customOrderLargeIcon: { fontSize: 32, marginRight: 12 },
+    customOrderContent: { flex: 1 },
+    customOrderTitle: { fontSize: 16, fontWeight: 'bold', color: '#333', marginBottom: 2 },
+    customOrderSubtitle: { fontSize: 12, color: '#666' },
+    customOrderArrow: { fontSize: 20, color: ORANGE, fontWeight: 'bold', marginLeft: 8 },
+    catChip: { backgroundColor: '#fff', borderRadius: 20, paddingVertical: 8, paddingHorizontal: 16, marginRight: 8, borderWidth: 1, borderColor: '#FFE0D6' },
     catChipActive: { backgroundColor: ORANGE, borderColor: ORANGE },
-    catChipText: { fontSize: 16, color: '#666', fontWeight: '600' },
+    catChipText: { fontSize: 13, color: '#666', fontWeight: '600' },
     catChipTextActive: { color: '#fff' },
     sortRow: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, marginVertical: 12 },
     sortLabel: { fontSize: 13, fontWeight: 'bold', color: '#555', marginRight: 10 },

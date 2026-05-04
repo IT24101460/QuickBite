@@ -22,6 +22,7 @@ export default function CheckoutScreen({ route, navigation }) {
     const { user } = useAuth();
     const [method, setMethod] = useState('cash');
     const pickupTime = route.params?.pickupTime || '';
+    const isCustomOrder = route.params?.customOrder || false;
 
     // Card Payment States
     const [savedCards, setSavedCards] = useState([]);
@@ -107,15 +108,16 @@ export default function CheckoutScreen({ route, navigation }) {
     };
 
     const handleConfirm = async () => {
-        if (!pickupTime) {
+        // Skip pickup time validation for custom orders
+        if (!isCustomOrder && !pickupTime) {
             return Alert.alert('Pickup Time Required', 'Please go back to your cart and choose a pickup time.');
         }
         if (method === 'bank' && !paymentProof) {
             return Alert.alert('Payment Slip Required', 'Please upload your bank transfer slip before placing the order.');
         }
 
-        // Validate pickup time against canteen open/close hours and future time
-        if (canteen) {
+        // Validate pickup time against canteen open/close hours and future time (only for regular orders)
+        if (!isCustomOrder && canteen) {
             const chosenMin = timeToMinutes(pickupTime);
             const openMin = timeToMinutes(canteen.openingTime || '08:00 AM');
             const closeMin = timeToMinutes(canteen.closingTime || '05:00 PM');
@@ -152,11 +154,14 @@ export default function CheckoutScreen({ route, navigation }) {
                     price: i.price,
                     quantity: i.quantity,
                     note: i.note || "",
+                    isCustomOrder: i.isCustomOrder || false,
+                    customOrderData: i.customOrderData || null
                 })),
-                pickupTime,
+                pickupTime: isCustomOrder ? 'Custom Order' : pickupTime,
                 discountAmount: discountAmount || 0,
                 promotionId: appliedPromotion ? appliedPromotion._id : null,
-                canteenId: cartItems[0].canteenId || null
+                canteenId: cartItems[0].canteenId || null,
+                isCustomOrder: isCustomOrder
             };
 
             let orderRes;
@@ -238,16 +243,40 @@ export default function CheckoutScreen({ route, navigation }) {
 
             <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ padding: 16, paddingTop: 85 }}>
 
-                {/* Pickup Time */}
-                <View style={styles.card}>
-                    <Text style={styles.cardTitle}>⏰ Pickup Time</Text>
-                    <Text style={styles.descText}>
-                        Canteen Hours: {canteen?.openingTime || '08:00 AM'} - {canteen?.closingTime || '05:00 PM'}
-                    </Text>
-                    <View style={styles.timeDisplay}>
-                        <Text style={styles.timeDisplayText}>{pickupTime || 'Not selected'}</Text>
+                {/* Pickup Time - Only show for regular orders */}
+                {!isCustomOrder && (
+                    <View style={styles.card}>
+                        <Text style={styles.cardTitle}>⏰ Pickup Time</Text>
+                        <Text style={styles.descText}>
+                            Canteen Hours: {canteen?.openingTime || '08:00 AM'} - {canteen?.closingTime || '05:00 PM'}
+                        </Text>
+                        <View style={styles.timeDisplay}>
+                            <Text style={styles.timeDisplayText}>{pickupTime || 'Not selected'}</Text>
+                        </View>
                     </View>
-                </View>
+                )}
+
+                {/* Custom Order Info - Only show for custom orders */}
+                {isCustomOrder && cartItems.find(item => item.isCustomOrder) && (
+                    <View style={styles.card}>
+                        <Text style={styles.cardTitle}>🎂 Custom Order Details</Text>
+                        <View style={styles.customOrderSummary}>
+                            <Text style={styles.customOrderTitle}>{cartItems.find(item => item.isCustomOrder)?.name}</Text>
+                            <Text style={styles.customOrderDesc}>{cartItems.find(item => item.isCustomOrder)?.description}</Text>
+                            <Text style={styles.customOrderInfo}>
+                                Pickup Date: {new Date(cartItems.find(item => item.isCustomOrder)?.customOrderData?.pickupDate).toLocaleDateString()}
+                            </Text>
+                            <Text style={styles.customOrderInfo}>
+                                Budget: LKR {cartItems.find(item => item.isCustomOrder)?.customOrderData?.budget}
+                            </Text>
+                            {cartItems.find(item => item.isCustomOrder)?.customOrderData?.referenceImages?.length > 0 && (
+                                <Text style={styles.customOrderInfo}>
+                                    📎 {cartItems.find(item => item.isCustomOrder)?.customOrderData.referenceImages.length} reference image(s)
+                                </Text>
+                            )}
+                        </View>
+                    </View>
+                )}
 
                 {/* Order Summary */}
                 <View style={styles.card}>
@@ -407,8 +436,10 @@ const styles = StyleSheet.create({
     guestNoticeText: { fontSize: 14, color: '#E65100', fontWeight: '600', marginBottom: 12, textAlign: 'center' },
     guestLoginBtn: { backgroundColor: ORANGE, borderRadius: 8, paddingHorizontal: 16, paddingVertical: 10 },
     guestLoginBtnText: { color: '#fff', fontSize: 13, fontWeight: 'bold' },
-    newCardForm: { marginTop: 10, borderTopWidth: 1, borderTopColor: '#eee', paddingTop: 12 },
-    stripeInput: { borderWidth: 1, borderColor: '#ddd', borderRadius: 8, padding: 10, fontSize: 14, color: '#333', backgroundColor: '#fff', marginBottom: 10 },
+    customOrderSummary: { backgroundColor: '#FFF0E8', borderRadius: 12, padding: 16, marginBottom: 8 },
+    customOrderTitle: { fontSize: 16, fontWeight: 'bold', color: '#333', marginBottom: 4 },
+    customOrderDesc: { fontSize: 14, color: '#666', marginBottom: 8, fontStyle: 'italic' },
+    customOrderInfo: { fontSize: 13, color: '#555', marginBottom: 2 },
     footer: { backgroundColor: '#fff', padding: 16, borderTopWidth: 1, borderTopColor: '#F0F0F0' },
     confirmBtn: {
         backgroundColor: ORANGE, borderRadius: 14, paddingVertical: 15, alignItems: 'center',
