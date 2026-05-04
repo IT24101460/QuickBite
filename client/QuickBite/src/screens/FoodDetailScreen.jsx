@@ -93,7 +93,7 @@ export default function FoodDetailScreen({ navigation, route }) {
             <TopNavBar navigation={navigation} placeholder={food.name} />
             
 
-            <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingTop: 85, paddingBottom: 20 }}>
+            <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingTop: 150, paddingBottom: 20 }}>
                 {/* Food Image */}
                 {food.image
                     ? <Image source={{ uri: getImageUrl(food.image) }} style={styles.heroImg} resizeMode="cover" />
@@ -206,8 +206,8 @@ export default function FoodDetailScreen({ navigation, route }) {
 
 const styles = StyleSheet.create({
     container: { flex: 1, backgroundColor: '#FFF7F2' },
-    heroImg: { width: '100%', height: 240 },
-    heroPlaceholder: { width: '100%', height: 240, backgroundColor: '#FFF0E8', justifyContent: 'center', alignItems: 'center' },
+    heroImg: { width: '100%', height: 350 },
+    heroPlaceholder: { width: '100%', height: 300, backgroundColor: '#FFF0E8', justifyContent: 'center', alignItems: 'center' },
     heroPlaceholderIcon: { fontSize: 80 },
     details: { backgroundColor: '#fff', borderRadius: 20, margin: 12, padding: 20, elevation: 3 },
     nameRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 },

@@ -17,7 +17,9 @@ export default function OwnerLiveOrdersScreen({ route, navigation }) {
         try {
             const url = passedCanteenId ? `/orders?canteenId=${passedCanteenId}` : '/orders';
             const res = await API.get(url);
-            setOrders(res.data.orders || []);
+            const orders = res.data.orders || [];
+            console.log('Fetched orders:', orders.map(o => ({ id: o._id, status: o.status })));
+            setOrders(orders);
         } catch (error) {
             console.log("Error loading queue:", error);
         } finally {
@@ -35,6 +37,7 @@ export default function OwnerLiveOrdersScreen({ route, navigation }) {
     const updateStatus = async (orderId, newStatus) => {
         setUpdatingId(orderId);
         try {
+            console.log('Updating order', orderId, 'to status:', newStatus);
             await API.patch(`/orders/${orderId}/status`, { status: newStatus });
             fetchOrders();
         } catch (error) {
@@ -62,7 +65,7 @@ export default function OwnerLiveOrdersScreen({ route, navigation }) {
         if (order.status === 'ready') {
             return (
                 <TouchableOpacity style={[styles.actionBtn, { backgroundColor: '#2ecc71' }]} onPress={() => updateStatus(order._id, 'completed')}>
-                    <Text style={styles.actionText}>Hand to Student</Text>
+                    <Text style={styles.actionText}>Hand to Customer</Text>
                 </TouchableOpacity>
             );
         }
@@ -71,6 +74,7 @@ export default function OwnerLiveOrdersScreen({ route, navigation }) {
 
     // Derived states
     const filteredOrders = orders.filter(o => o.status === activeTab.toLowerCase());
+    console.log('Active Tab:', activeTab, 'Filtered Orders:', filteredOrders.length, 'Total Orders:', orders.length);
 
     return (
         <View style={styles.container}>
@@ -101,7 +105,7 @@ export default function OwnerLiveOrdersScreen({ route, navigation }) {
                     renderItem={({ item }) => (
                         <View style={styles.card}>
                             <View style={styles.cardHeader}>
-                                <Text style={styles.studentName}>{item.studentName?.toUpperCase()}</Text>
+                                <Text style={styles.customerName}>{item.studentName?.toUpperCase()}</Text>
                                 <View style={{ alignItems: 'flex-end' }}>
                                     <Text style={styles.statusPill}>{item.status?.toUpperCase()}</Text>
                                     <Text style={styles.timeLabel}>{new Date(item.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</Text>
@@ -126,7 +130,7 @@ export default function OwnerLiveOrdersScreen({ route, navigation }) {
                             {item.paymentProof ? (
                                 <View style={styles.slipBox}>
                                     <Image source={{ uri: getImageUrl(item.paymentProof) }} style={styles.slip} resizeMode="contain" />
-                                    <Text style={styles.slipLabel}>Payment Receipt (Student Upload)</Text>
+                                    <Text style={styles.slipLabel}>Payment Receipt (Customer Upload)</Text>
                                 </View>
                             ) : null}
 
@@ -174,7 +178,7 @@ const styles = StyleSheet.create({
 
     card: { backgroundColor: '#fff', borderRadius: 12, padding: 16, marginBottom: 15, elevation: 2, borderLeftWidth: 4, borderColor: ORANGE },
     cardHeader: { flexDirection: 'row', justifyContent: 'space-between', borderBottomWidth: 1, borderBottomColor: '#eee', paddingBottom: 8, marginBottom: 10 },
-    studentName: { fontSize: 16, fontWeight: 'bold', color: '#222' },
+    customerName: { fontSize: 16, fontWeight: 'bold', color: '#222' },
     statusPill: { backgroundColor: '#FFF0E8', color: ORANGE, fontSize: 10, lineHeight: 13, fontWeight: 'bold', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 9, marginBottom: 4, overflow: 'hidden' },
     timeLabel: { fontSize: 13, color: '#888' },
 

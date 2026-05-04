@@ -422,7 +422,7 @@ export default function CustomOrderScreen({ navigation, route }) {
 
 const styles = StyleSheet.create({
     container: { flex: 1, backgroundColor: '#FFF7F2' },
-    scrollContent: { padding: 16, paddingBottom: 30 },
+    scrollContent: { padding: 16, paddingTop: 120, paddingBottom: 30 },
     
     headerSection: { marginBottom: 24 },
     headerTitle: { fontSize: 24, fontWeight: 'bold', color: '#222', marginBottom: 4 },

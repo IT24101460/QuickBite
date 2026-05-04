@@ -48,7 +48,7 @@ export default function OwnerFeedbacksScreen({ route, navigation }) {
                 response: replyText,
                 status: 'resolved'
             });
-            Alert.alert("Sent", "Your response has been published to the student!");
+            Alert.alert("Sent", "Your response has been published to the customer!");
             setReplyingTo(null);
             fetchFeedbacks();
         } catch (error) {
@@ -72,7 +72,7 @@ export default function OwnerFeedbacksScreen({ route, navigation }) {
         <View style={styles.container}>
             <View style={styles.header}>
                 <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}><Text style={styles.backArrow}>←</Text></TouchableOpacity>
-                <Text style={styles.title}>Student Feedbacks</Text>
+                <Text style={styles.title}>Customer Feedbacks</Text>
             </View>
 
             {loading ? <ActivityIndicator size="large" color={ORANGE} style={{ marginTop: 50 }} /> : (
@@ -83,7 +83,7 @@ export default function OwnerFeedbacksScreen({ route, navigation }) {
                     renderItem={({ item }) => (
                         <View style={styles.card}>
                             <View style={styles.cardHeader}>
-                                <Text style={styles.studentName}>{item.userId?.firstName} {item.userId?.lastName}</Text>
+                                <Text style={styles.customerName}>{item.userId?.firstName} {item.userId?.lastName}</Text>
                                 <Text style={styles.dateText}>{new Date(item.createdAt).toLocaleDateString()}</Text>
                             </View>
 
@@ -117,12 +117,12 @@ export default function OwnerFeedbacksScreen({ route, navigation }) {
                                 </View>
                             ) : (
                                 <TouchableOpacity style={styles.replyBtn} onPress={() => openReplyModal(item)}>
-                                    <Text style={styles.replyBtnText}>Reply To Student</Text>
+                                    <Text style={styles.replyBtnText}>Reply To Customer</Text>
                                 </TouchableOpacity>
                             )}
                         </View>
                     )}
-                    ListEmptyComponent={<Text style={styles.empty}>No student feedback found yet.</Text>}
+                    ListEmptyComponent={<Text style={styles.empty}>No customer feedback found yet.</Text>}
                 />
             )}
 
@@ -165,7 +165,7 @@ const styles = StyleSheet.create({
 
     card: { backgroundColor: '#fff', padding: 16, borderRadius: 12, marginBottom: 15, elevation: 2 },
     cardHeader: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 6 },
-    studentName: { fontSize: 16, fontWeight: 'bold', color: '#222' },
+    customerName: { fontSize: 16, fontWeight: 'bold', color: '#222' },
     dateText: { fontSize: 12, color: '#999' },
     star: { fontSize: 16 },
     comment: { fontSize: 15, color: '#333', marginTop: 10, fontStyle: 'italic' },

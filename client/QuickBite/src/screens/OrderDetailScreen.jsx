@@ -243,7 +243,7 @@ export default function OrderDetailScreen({ navigation, route }) {
 
 const styles = StyleSheet.create({
     container: { flex: 1, backgroundColor: '#FFF7F2' },
-    scrollContent: { padding: 16, paddingBottom: 20 },
+    scrollContent: { padding: 16, paddingTop: 150, paddingBottom: 20 },
     
     // Status Card
     statusCard: {

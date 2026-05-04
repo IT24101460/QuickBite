@@ -310,7 +310,7 @@ export default function CartScreen({ navigation }) {
         <View style={styles.container}>
             <TopNavBar navigation={navigation} hideBottomRow={true} />
 
-            <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingTop: 85, paddingBottom: 20 }}>
+            <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingTop: 150, paddingBottom: 20 }}>
                 <FlatList
                     data={cartItems}
                     renderItem={renderItem}
