@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
     View, Text, StyleSheet, FlatList, TouchableOpacity,
     TextInput, Alert, Image, ScrollView,
@@ -18,11 +18,64 @@ export default function CartScreen({ navigation }) {
     const [promoCode, setPromoCode] = useState('');
     const [promoLoading, setPromoLoading] = useState(false);
     const [pickupTime, setPickupTime] = useState('');
+    const [pickupSlots, setPickupSlots] = useState([]);
+    const [canteen, setCanteen] = useState(null);
 
-    const pickupSlots = ['09:00 AM', '09:30 AM', '10:00 AM', '10:30 AM', '11:00 AM', '11:30 AM', '12:00 PM', '12:30 PM', '01:00 PM', '01:30 PM'];
+    const validatePromoCode = (code) => {
+        if (!code || !code.trim()) {
+            return 'Enter a promotion ID';
+        }
+        
+        const trimmedCode = code.trim();
+        
+        // Length validation
+        if (trimmedCode.length < 3) {
+            return 'Promotion ID must be at least 3 characters';
+        }
+        
+        if (trimmedCode.length > 50) {
+            return 'Promotion ID cannot exceed 50 characters';
+        }
+        
+        // Character validation (alphanumeric, hyphens, underscores)
+        const validPattern = /^[a-zA-Z0-9-_]+$/;
+        if (!validPattern.test(trimmedCode)) {
+            return 'Promotion ID can only contain letters, numbers, hyphens, and underscores';
+        }
+        
+        return null; // No error
+    };
+    
+    const validateCartForPromotion = () => {
+        if (cartItems.length === 0) {
+            return 'Your cart is empty. Add items to apply a promotion.';
+        }
+        
+        if (cartTotal <= 0) {
+            return 'Invalid cart total. Cannot apply promotion.';
+        }
+        
+        return null; // No error
+    };
 
     const handleApplyPromo = async () => {
-        if (!promoCode.trim()) return Alert.alert('Error', 'Enter a promotion ID');
+        // Validate promo code format
+        const promoError = validatePromoCode(promoCode);
+        if (promoError) {
+            return Alert.alert('Invalid Promotion ID', promoError);
+        }
+        
+        // Validate cart state
+        const cartError = validateCartForPromotion();
+        if (cartError) {
+            return Alert.alert('Cart Error', cartError);
+        }
+        
+        // Check if promotion is already applied
+        if (appliedPromotion && appliedPromotion._id === promoCode.trim()) {
+            return Alert.alert('Already Applied', 'This promotion is already applied to your cart.');
+        }
+        
         setPromoLoading(true);
         try {
             const res = await API.post('/promotions/apply', {
@@ -30,14 +83,118 @@ export default function CartScreen({ navigation }) {
                 cartTotal,
                 cartItems: cartItems.map(i => ({ foodItemId: i.foodItemId || i._id })),
             });
-            applyPromotion({ ...res.data.promotion, _id: promoCode.trim() }, res.data.discountAmount);
-            Alert.alert('✅ Applied!', `${res.data.promotion.title} — LKR ${res.data.discountAmount.toFixed(2)} off`);
+            
+            // Validate response
+            if (!res.data || !res.data.promotion) {
+                throw new Error('Invalid promotion response');
+            }
+            
+            const { promotion, discountAmount, finalTotal } = res.data;
+            
+            // Additional client-side validation
+            if (discountAmount <= 0) {
+                throw new Error('No discount applied');
+            }
+            
+            if (finalTotal < 0) {
+                throw new Error('Invalid final total calculation');
+            }
+            
+            applyPromotion({ ...promotion, _id: promoCode.trim() }, discountAmount);
+            Alert.alert(
+                '✅ Promotion Applied!', 
+                `${promotion.title}\nDiscount: LKR ${discountAmount.toFixed(2)}\nNew Total: LKR ${finalTotal.toFixed(2)}`
+            );
         } catch (err) {
-            Alert.alert('Error', err.response?.data?.message || 'Invalid promotion');
+            console.error('Promotion application error:', err);
+            const errorMessage = err.response?.data?.message || err.message || 'Invalid promotion';
+            
+            // Provide user-friendly error messages
+            let userMessage = errorMessage;
+            if (errorMessage.includes('not found') || errorMessage.includes('expired')) {
+                userMessage = 'This promotion is not valid or has expired.';
+            } else if (errorMessage.includes('qualify')) {
+                userMessage = 'Your cart items do not qualify for this promotion.';
+            } else if (errorMessage.includes('already applied')) {
+                userMessage = 'This promotion is already applied to your cart.';
+            }
+            
+            Alert.alert('Promotion Error', userMessage);
         } finally {
             setPromoLoading(false);
         }
     };
+
+    // Time conversion helper
+    const timeToMinutes = (timeStr) => {
+        if (!timeStr) return 0;
+        const match = timeStr.match(/(\d+):(\d+)\s*(AM|PM)/i);
+        if (!match) return 0;
+        let h = parseInt(match[1], 10);
+        let m = parseInt(match[2], 10);
+        let mode = match[3].toUpperCase();
+        if (h === 12 && mode === 'AM') h = 0;
+        if (h < 12 && mode === 'PM') h += 12;
+        return h * 60 + m;
+    };
+
+    const minutesToTime = (minutes) => {
+        const h = Math.floor(minutes / 60);
+        const m = minutes % 60;
+        const period = h >= 12 ? 'PM' : 'AM';
+        const displayHour = h === 0 ? 12 : h > 12 ? h - 12 : h;
+        return `${displayHour.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')} ${period}`;
+    };
+
+    // Generate dynamic pickup slots
+    const generatePickupSlots = () => {
+        if (!canteen) return [];
+        
+        const now = new Date();
+        const currentMinutes = now.getHours() * 60 + now.getMinutes();
+        const openMin = timeToMinutes(canteen.openingTime || '08:00 AM');
+        const closeMin = timeToMinutes(canteen.closingTime || '05:00 PM');
+        
+        // Start from the next 30-minute slot after current time
+        let nextSlot = Math.ceil((currentMinutes + 1) / 30) * 30;
+        
+        // If current time is before opening, start from opening time
+        if (currentMinutes < openMin) {
+            nextSlot = openMin;
+        }
+        
+        const slots = [];
+        while (nextSlot <= closeMin - 30 && slots.length < 10) { // Show max 10 slots
+            slots.push(minutesToTime(nextSlot));
+            nextSlot += 30; // 30-minute intervals
+        }
+        
+        return slots;
+    };
+
+    useEffect(() => {
+        // Fetch canteen info for the first item in cart
+        if (cartItems.length > 0) {
+            API.get('/canteens').then(res => {
+                const canteens = res.data?.canteens || [];
+                const matching = canteens.find(c => String(c._id) === String(cartItems[0]?.canteenId)) || canteens[0];
+                if (matching) {
+                    setCanteen(matching);
+                }
+            }).catch(ignore => {});
+        }
+    }, [cartItems]);
+
+    useEffect(() => {
+        if (canteen) {
+            const slots = generatePickupSlots();
+            setPickupSlots(slots);
+            // Reset pickup time if current selection is no longer valid
+            if (pickupTime && !slots.includes(pickupTime)) {
+                setPickupTime('');
+            }
+        }
+    }, [canteen, pickupTime]);
 
     const renderItem = ({ item }) => (
         <View style={styles.cartItemWrapper}>
@@ -140,20 +297,31 @@ export default function CartScreen({ navigation }) {
                 {/* Pickup Time */}
                 <View style={styles.promoCard}>
                     <Text style={styles.cardLabel}>⏰ Pickup Time</Text>
-                    <FlatList
-                        data={pickupSlots}
-                        horizontal
-                        renderItem={({ item }) => (
-                            <TouchableOpacity
-                                style={[styles.slotBtn, pickupTime === item && styles.slotBtnActive]}
-                                onPress={() => setPickupTime(item)}
-                            >
-                                <Text style={[styles.slotText, pickupTime === item && styles.slotTextActive]}>{item}</Text>
-                            </TouchableOpacity>
-                        )}
-                        keyExtractor={i => i}
-                        showsHorizontalScrollIndicator={false}
-                    />
+                    <Text style={styles.canteenHours}>
+                        Canteen Hours: {canteen?.openingTime || '08:00 AM'} - {canteen?.closingTime || '05:00 PM'}
+                    </Text>
+                    {pickupSlots.length > 0 ? (
+                        <FlatList
+                            data={pickupSlots}
+                            horizontal
+                            renderItem={({ item }) => (
+                                <TouchableOpacity
+                                    style={[styles.slotBtn, pickupTime === item && styles.slotBtnActive]}
+                                    onPress={() => setPickupTime(item)}
+                                >
+                                    <Text style={[styles.slotText, pickupTime === item && styles.slotTextActive]}>{item}</Text>
+                                </TouchableOpacity>
+                            )}
+                            keyExtractor={i => i}
+                            showsHorizontalScrollIndicator={false}
+                        />
+                    ) : (
+                        <View style={styles.noSlotsContainer}>
+                            <Text style={styles.noSlotsText}>
+                                {canteen ? 'No available pickup slots for today. Canteen may be closed or all slots have passed.' : 'Loading canteen information...'}
+                            </Text>
+                        </View>
+                    )}
                 </View>
 
                 {/* Summary */}
@@ -237,6 +405,9 @@ const styles = StyleSheet.create({
     slotBtnActive: { backgroundColor: ORANGE, borderColor: ORANGE },
     slotText: { fontSize: 12, color: '#555', fontWeight: '600' },
     slotTextActive: { color: '#fff' },
+    canteenHours: { fontSize: 12, color: '#888', marginBottom: 10, fontStyle: 'italic' },
+    noSlotsContainer: { padding: 16, backgroundColor: '#FFF3E8', borderRadius: 8, alignItems: 'center' },
+    noSlotsText: { fontSize: 13, color: '#FF6B35', textAlign: 'center', lineHeight: 18 },
     summaryCard: { backgroundColor: '#fff', margin: 12, marginTop: 0, borderRadius: 14, padding: 16, elevation: 2 },
     summaryRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 },
     summaryLabel: { fontSize: 14, color: '#666' },

@@ -148,9 +148,29 @@ export async function updateOwnFeedback(req, res) {
         if (comment !== undefined) feedback.comment = comment;
         if (complaintType) feedback.complaintType = complaintType;
 
+        // Handle image upload if new image is provided
+        if (req.file) {
+            const fileName = `feedback_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
+            const { data, error } = await supabase.storage
+                .from("quickbite-images")
+                .upload(fileName, req.file.buffer, { contentType: req.file.mimetype });
+
+            if (error) {
+                console.error("Supabase feedback upload error:", error);
+                throw error;
+            }
+
+            const { data: publicUrlData } = supabase.storage
+                .from('quickbite-images')
+                .getPublicUrl(fileName);
+
+            feedback.complaintImage = publicUrlData.publicUrl;
+        }
+
         await feedback.save();
         res.status(200).json({ message: "Feedback updated", feedback });
     } catch (error) {
+        console.error("Feedback update error:", error);
         res.status(500).json({ message: "Error updating feedback", error: error.message });
     }
 }

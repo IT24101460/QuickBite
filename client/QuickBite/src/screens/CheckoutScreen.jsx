@@ -114,16 +114,29 @@ export default function CheckoutScreen({ route, navigation }) {
             return Alert.alert('Payment Slip Required', 'Please upload your bank transfer slip before placing the order.');
         }
 
-        // Validate pickup time against canteen open/close hours
+        // Validate pickup time against canteen open/close hours and future time
         if (canteen) {
             const chosenMin = timeToMinutes(pickupTime);
             const openMin = timeToMinutes(canteen.openingTime || '08:00 AM');
             const closeMin = timeToMinutes(canteen.closingTime || '05:00 PM');
+            
+            // Get current time
+            const now = new Date();
+            const currentMin = now.getHours() * 60 + now.getMinutes();
 
             if (chosenMin < openMin || chosenMin > closeMin) {
                 return Alert.alert(
                     'Invalid Pickup Time',
                     `Canteen operating hours are ${canteen.openingTime || '08:00 AM'} to ${canteen.closingTime || '05:00 PM'}. Please select a time within this window.`
+                );
+            }
+            
+            // Validate that pickup time is in the future (at least 15 minutes from now)
+            if (chosenMin < currentMin + 15) {
+                const currentTimeStr = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+                return Alert.alert(
+                    'Invalid Pickup Time',
+                    `Pickup time must be at least 15 minutes from now. Current time is ${currentTimeStr}. Please select a future time slot.`
                 );
             }
         }

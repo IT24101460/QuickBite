@@ -5,6 +5,7 @@ import {
 } from 'react-native';
 import API from '../services/api';
 import { useCart } from '../context/CartContext';
+import { useAuth } from '../context/AuthContext';
 import TopNavBar from '../components/TopNavBar';
 import { getImageUrl } from '../utils/imageUtils';
 
@@ -13,6 +14,7 @@ const ORANGE = '#FF6B35';
 export default function FoodDetailScreen({ navigation, route }) {
     const { item: food } = route.params;
     const { addToCart } = useCart();
+    const { user } = useAuth();
     const [feedbacks, setFeedbacks] = useState([]);
     const [fbLoading, setFbLoading] = useState(true);
     const [quantity, setQuantity] = useState(1);
@@ -31,6 +33,41 @@ export default function FoodDetailScreen({ navigation, route }) {
         } finally {
             setFbLoading(false);
         }
+    };
+
+    const handleEditReview = (feedback) => {
+        navigation.navigate('Feedback', { 
+            foodItemId: food._id,
+            canteenId: food.canteenId?._id || food.canteenId,
+            foodName: food.name,
+            editMode: true,
+            existingFeedback: feedback
+        });
+    };
+
+    const handleDeleteReview = async (feedbackId) => {
+        Alert.alert(
+            'Delete Review',
+            'Are you sure you want to delete your review?',
+            [
+                { text: 'Cancel', style: 'cancel' },
+                {
+                    text: 'Delete',
+                    style: 'destructive',
+                    onPress: async () => {
+                        try {
+                            await API.delete(`/feedback/user/${feedbackId}`);
+                            // Refresh feedbacks
+                            const updatedFeedbacks = feedbacks.filter(f => f._id !== feedbackId);
+                            setFeedbacks(updatedFeedbacks);
+                            Alert.alert('Success', 'Your review has been deleted.');
+                        } catch (err) {
+                            Alert.alert('Error', 'Failed to delete review. Please try again.');
+                        }
+                    }
+                }
+            ]
+        );
     };
 
     const handleAddToCart = () => {
@@ -121,23 +158,45 @@ export default function FoodDetailScreen({ navigation, route }) {
                     ) : feedbacks.length === 0 ? (
                         <Text style={styles.noReviews}>No reviews yet. Be the first!</Text>
                     ) : (
-                        feedbacks.map(fb => (
-                            <View key={fb._id} style={styles.reviewCard}>
-                                <View style={styles.reviewTop}>
-                                    <Text style={styles.reviewer}>{fb.userId?.firstName || 'Student'}</Text>
-                                    <Text style={styles.stars}>{renderStar(fb.rating)}</Text>
+                        feedbacks.map(fb => {
+                            const isOwnReview = user && String(fb.userId?._id) === String(user._id);
+                            return (
+                                <View key={fb._id} style={styles.reviewCard}>
+                                    <View style={styles.reviewTop}>
+                                        <View style={styles.reviewerInfo}>
+                                            <Text style={styles.reviewer}>{fb.userId?.firstName || 'Student'}</Text>
+                                            {isOwnReview && <Text style={styles.ownReviewBadge}>Your Review</Text>}
+                                        </View>
+                                        <Text style={styles.stars}>{renderStar(fb.rating)}</Text>
+                                    </View>
+                                    <Text style={styles.reviewComment}>{fb.comment}</Text>
+                                    {fb.complaintImage ? (
+                                        <Image
+                                            source={{ uri: getImageUrl(fb.complaintImage) }}
+                                            style={styles.reviewImg}
+                                            resizeMode="cover"
+                                        />
+                                    ) : null}
+                                    <Text style={styles.reviewDate}>{new Date(fb.createdAt).toLocaleDateString()}</Text>
+                                    {isOwnReview && (
+                                        <View style={styles.reviewActions}>
+                                            <TouchableOpacity 
+                                                style={[styles.actionBtn, styles.editBtn]}
+                                                onPress={() => handleEditReview(fb)}
+                                            >
+                                                <Text style={styles.actionBtnText}>✏️ Edit</Text>
+                                            </TouchableOpacity>
+                                            <TouchableOpacity 
+                                                style={[styles.actionBtn, styles.deleteBtn]}
+                                                onPress={() => handleDeleteReview(fb._id)}
+                                            >
+                                                <Text style={styles.actionBtnText}>🗑️ Delete</Text>
+                                            </TouchableOpacity>
+                                        </View>
+                                    )}
                                 </View>
-                                <Text style={styles.reviewComment}>{fb.comment}</Text>
-                                {fb.complaintImage ? (
-                                    <Image
-                                        source={{ uri: getImageUrl(fb.complaintImage) }}
-                                        style={styles.reviewImg}
-                                        resizeMode="cover"
-                                    />
-                                ) : null}
-                                <Text style={styles.reviewDate}>{new Date(fb.createdAt).toLocaleDateString()}</Text>
-                            </View>
-                        ))
+                            );
+                        })
                     )}
                 </View>
             </ScrollView>
@@ -180,9 +239,16 @@ const styles = StyleSheet.create({
     noReviews: { color: '#aaa', textAlign: 'center', paddingVertical: 20, fontSize: 14 },
     reviewCard: { backgroundColor: '#fff', borderRadius: 14, padding: 14, marginBottom: 10, elevation: 2 },
     reviewTop: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 6 },
+    reviewerInfo: { flexDirection: 'column', flex: 1 },
     reviewer: { fontWeight: 'bold', color: '#333', fontSize: 14 },
+    ownReviewBadge: { fontSize: 11, color: ORANGE, fontWeight: '600', marginTop: 2 },
     stars: { color: '#FFB800', fontSize: 14 },
     reviewComment: { color: '#555', fontSize: 14, lineHeight: 20 },
     reviewImg: { width: '100%', height: 140, borderRadius: 8, marginTop: 8 },
     reviewDate: { fontSize: 11, color: '#bbb', marginTop: 6 },
+    reviewActions: { flexDirection: 'row', justifyContent: 'flex-end', marginTop: 12, gap: 8 },
+    actionBtn: { paddingHorizontal: 12, paddingVertical: 6, borderRadius: 6, borderWidth: 1 },
+    editBtn: { borderColor: '#4CAF50', backgroundColor: '#E8F5E8' },
+    deleteBtn: { borderColor: '#f44336', backgroundColor: '#FFEBEE' },
+    actionBtnText: { fontSize: 12, fontWeight: '600' },
 });

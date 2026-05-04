@@ -30,7 +30,8 @@ export default function CanteenListScreen({ navigation }) {
                 <FlatList
                     data={canteens}
                     keyExtractor={i => i._id}
-                    contentContainerStyle={{ padding: 12 }}
+                    contentContainerStyle={{ padding: 12, paddingBottom: 20 }}
+                    style={{ marginTop: 140 }}
                     refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); fetchCanteens(); }} colors={[ORANGE]} />}
                     renderItem={({ item }) => (
                         <TouchableOpacity style={styles.card} onPress={() => navigation.navigate('CanteenDetail', { canteen: item })}>
