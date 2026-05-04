@@ -3,6 +3,32 @@ import bcrypt from "bcrypt"
 import jwt from "jsonwebtoken"
 import { supabase } from "../config/supabase.js";
 
+const NAME_REGEX = /^[A-Za-z][A-Za-z\s'-]{1,49}$/;
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const PHONE_REGEX = /^\d{10}$/;
+
+function sanitizeText(value) {
+    return typeof value === "string" ? value.trim() : value;
+}
+
+function validateOwnerProfileFields({ firstName, lastName, email, phoneNumber }) {
+    const errors = [];
+
+    if (!firstName) errors.push("First name is required.");
+    else if (!NAME_REGEX.test(firstName)) errors.push("First name can only contain letters, spaces, apostrophes or hyphens (2-50 chars).");
+
+    if (!lastName) errors.push("Last name is required.");
+    else if (!NAME_REGEX.test(lastName)) errors.push("Last name can only contain letters, spaces, apostrophes or hyphens (2-50 chars).");
+
+    if (!email) errors.push("Email is required.");
+    else if (!EMAIL_REGEX.test(email)) errors.push("Enter a valid email address.");
+
+    if (!phoneNumber) errors.push("Phone number is required.");
+    else if (!PHONE_REGEX.test(String(phoneNumber))) errors.push("Phone number must be exactly 10 digits.");
+
+    return errors;
+}
+
 export async function createUser(req, res) {
 
     try {
@@ -36,7 +62,22 @@ export async function createOwner(req, res) {
             return res.status(403).json({ message: "Forbidden: Only admins can create owners" });
         }
 
-        const user = await User.findOne({ email: req.body.email });
+        const ownerPayload = {
+            firstName: sanitizeText(req.body.firstName),
+            lastName: sanitizeText(req.body.lastName),
+            email: sanitizeText(req.body.email)?.toLowerCase(),
+            phoneNumber: sanitizeText(req.body.phoneNumber),
+        };
+        const fieldErrors = validateOwnerProfileFields(ownerPayload);
+        if (fieldErrors.length > 0) {
+            return res.status(400).json({ message: fieldErrors[0], errors: fieldErrors });
+        }
+
+        if (!req.body.password || String(req.body.password).trim().length < 6) {
+            return res.status(400).json({ message: "Password is required and must be at least 6 characters." });
+        }
+
+        const user = await User.findOne({ email: ownerPayload.email });
         if (user != null) {
             return res.status(400).json({ message: "An owner with this email already exists!" });
         }
@@ -44,10 +85,10 @@ export async function createOwner(req, res) {
         const passwordHash = await bcrypt.hashSync(req.body.password, 10);
 
         const newOwner = new User({
-            email: req.body.email,
-            firstName: req.body.firstName,
-            lastName: req.body.lastName,
-            phoneNumber: req.body.phoneNumber,
+            email: ownerPayload.email,
+            firstName: ownerPayload.firstName,
+            lastName: ownerPayload.lastName,
+            phoneNumber: ownerPayload.phoneNumber,
             password: passwordHash,
             role: "owner"
         });
@@ -181,10 +222,41 @@ export async function updateUserDetails(req, res) {
         }
 
         const isAdminUpdate = req.user.role === 'admin' && req.user._id !== userId;
+        const targetRole = updates.role || currentUser.role;
+
+        // Normalize incoming values before validation and uniqueness checks
+        if (updates.firstName !== undefined) updates.firstName = sanitizeText(updates.firstName);
+        if (updates.lastName !== undefined) updates.lastName = sanitizeText(updates.lastName);
+        if (updates.email !== undefined) updates.email = sanitizeText(updates.email)?.toLowerCase();
+        if (updates.phoneNumber !== undefined) updates.phoneNumber = sanitizeText(updates.phoneNumber);
+
+        // Validate individual fields when provided
+        if (updates.firstName !== undefined && !NAME_REGEX.test(updates.firstName || "")) {
+            return res.status(400).json({ error: "First name can only contain letters, spaces, apostrophes or hyphens (2-50 chars)." });
+        }
+        if (updates.lastName !== undefined && !NAME_REGEX.test(updates.lastName || "")) {
+            return res.status(400).json({ error: "Last name can only contain letters, spaces, apostrophes or hyphens (2-50 chars)." });
+        }
+        if (updates.email !== undefined && !EMAIL_REGEX.test(updates.email || "")) {
+            return res.status(400).json({ error: "Enter a valid email address." });
+        }
 
         // Phone number validation (exactly 10 digits)
-        if (updates.phoneNumber && !/^\d{10}$/.test(updates.phoneNumber.toString())) {
+        if (updates.phoneNumber !== undefined && !PHONE_REGEX.test(updates.phoneNumber.toString())) {
             return res.status(400).json({ error: "Phone number must be exactly 10 digits." });
+        }
+
+        // Admin dashboard owner update: enforce required owner profile fields
+        if (isAdminUpdate && targetRole === "owner") {
+            const ownerFieldErrors = validateOwnerProfileFields({
+                firstName: updates.firstName ?? currentUser.firstName,
+                lastName: updates.lastName ?? currentUser.lastName,
+                email: updates.email ?? currentUser.email,
+                phoneNumber: updates.phoneNumber ?? currentUser.phoneNumber,
+            });
+            if (ownerFieldErrors.length > 0) {
+                return res.status(400).json({ error: ownerFieldErrors[0], errors: ownerFieldErrors });
+            }
         }
 
         // Role-based Registration Number Validation

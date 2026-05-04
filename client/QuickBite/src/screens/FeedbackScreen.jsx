@@ -1,20 +1,33 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View, Text, StyleSheet, TouchableOpacity, ScrollView,
   TextInput, Alert, Image, ActivityIndicator,
 } from 'react-native';
 import { launchImageLibrary } from 'react-native-image-picker';
 import API from '../services/api';
+import { getImageUrl } from '../utils/imageUtils';
 
 const ORANGE = '#FF6B35';
 
 export default function FeedbackScreen({ navigation, route }) {
-  const { orderId, foodItemId, canteenId, foodName } = route.params || {};
+  const { orderId, foodItemId, canteenId, foodName, editMode, existingFeedback } = route.params || {};
   const [rating, setRating] = useState(0);
   const [comment, setComment] = useState('');
   const [complaintType, setComplaintType] = useState('general');
   const [image, setImage] = useState(null);
   const [loading, setLoading] = useState(false);
+
+  // Initialize form with existing feedback data if in edit mode
+  useEffect(() => {
+    if (editMode && existingFeedback) {
+      setRating(existingFeedback.rating || 0);
+      setComment(existingFeedback.comment || '');
+      setComplaintType(existingFeedback.complaintType || 'general');
+      if (existingFeedback.complaintImage) {
+        setImage({ uri: getImageUrl(existingFeedback.complaintImage) });
+      }
+    }
+  }, [editMode, existingFeedback]);
 
   const TYPES = ['general', 'food_quality', 'service', 'hygiene', 'other'];
 
@@ -39,7 +52,8 @@ export default function FeedbackScreen({ navigation, route }) {
       if (foodItemId) formData.append('foodItemId', foodItemId);
       if (orderId) formData.append('orderId', orderId);
       if (canteenId) formData.append('canteenId', canteenId);
-      if (image) {
+      if (image && !image.uri.startsWith('http')) {
+        // Only append new image, not existing ones
         formData.append('complaintImage', {
           uri: image.uri,
           name: image.fileName || 'complaint.jpg',
@@ -47,11 +61,22 @@ export default function FeedbackScreen({ navigation, route }) {
         });
       }
 
-      await API.post('/feedback', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
-
-      Alert.alert('✅ Thank you!', 'Your feedback has been submitted.', [
-        { text: 'OK', onPress: () => navigation.goBack() },
-      ]);
+      let response;
+      if (editMode && existingFeedback) {
+        // Update existing feedback
+        response = await API.put(`/feedback/user/${existingFeedback._id}`, formData, { 
+          headers: { 'Content-Type': 'multipart/form-data' } 
+        });
+        Alert.alert('✅ Updated!', 'Your review has been updated.', [
+          { text: 'OK', onPress: () => navigation.goBack() },
+        ]);
+      } else {
+        // Create new feedback
+        response = await API.post('/feedback', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
+        Alert.alert('✅ Thank you!', 'Your feedback has been submitted.', [
+          { text: 'OK', onPress: () => navigation.goBack() },
+        ]);
+      }
     } catch (err) {
       Alert.alert('Error', err.response?.data?.message || 'Failed to submit feedback');
     } finally {
@@ -65,7 +90,7 @@ export default function FeedbackScreen({ navigation, route }) {
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
           <Text style={styles.backArrow}>←</Text>
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>⭐ Feedback</Text>
+        <Text style={styles.headerTitle}>{editMode ? '✏️ Edit Review' : '⭐ Feedback'}</Text>
       </View>
 
       <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
@@ -134,7 +159,7 @@ export default function FeedbackScreen({ navigation, route }) {
           onPress={handleSubmit}
           disabled={loading}
         >
-          {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.submitText}>Submit Feedback</Text>}
+          {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.submitText}>{editMode ? 'Update Review' : 'Submit Feedback'}</Text>}
         </TouchableOpacity>
       </ScrollView>
     </View>

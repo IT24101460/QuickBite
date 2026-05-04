@@ -21,7 +21,7 @@ feedbackRouter.get("/canteen/:canteenId", getFeedbackByCanteen);           // GE
 
 // User endpoints
 feedbackRouter.get("/user/my-feedback", getUserFeedback);                 // GET    /feedback/user/my-feedback
-feedbackRouter.put("/user/:id", updateOwnFeedback);                       // PUT    /feedback/user/:id (user edits own feedback)
+feedbackRouter.put("/user/:id", upload.single("complaintImage"), updateOwnFeedback); // PUT    /feedback/user/:id (user edits own feedback)
 feedbackRouter.delete("/user/:id", deleteOwnFeedback);                    // DELETE /feedback/user/:id (user deletes own feedback)
 feedbackRouter.put("/:id", updateFeedback);                                // PUT    /feedback/:id (admin reply/status)
 feedbackRouter.delete("/:id", deleteFeedback);                             // DELETE /feedback/:id (admin)

@@ -17,20 +17,65 @@ export async function createPromotion(req, res) {
 
         const { title, description, discountType, discountValue, applicableTo, foodItems, canteenId, startDate, endDate } = req.body;
 
+        // Required fields validation
         if (!title || !description || !discountType || discountValue == null || !startDate || !endDate) {
-            return res.status(400).json({ message: "Missing required fields" });
+            return res.status(400).json({ message: "Missing required fields: title, description, discountType, discountValue, startDate, endDate" });
         }
 
-        if (discountType === "percentage" && (discountValue <= 0 || discountValue > 100)) {
-            return res.status(400).json({ message: "Percentage discount must be between 1 and 100" });
+        // Title validation
+        if (title.length < 3 || title.length > 100) {
+            return res.status(400).json({ message: "Title must be between 3 and 100 characters" });
         }
 
-        if (discountType === "fixed" && discountValue <= 0) {
-            return res.status(400).json({ message: "Fixed discount value must be greater than 0" });
+        // Description validation
+        if (description.length < 10 || description.length > 500) {
+            return res.status(400).json({ message: "Description must be between 10 and 500 characters" });
         }
 
-        if (new Date(startDate) >= new Date(endDate)) {
+        // Discount type validation
+        if (!["percentage", "fixed"].includes(discountType)) {
+            return res.status(400).json({ message: "Invalid discount type. Must be 'percentage' or 'fixed'" });
+        }
+
+        // Discount value validation
+        if (discountType === "percentage") {
+            if (discountValue <= 0 || discountValue > 100) {
+                return res.status(400).json({ message: "Percentage discount must be between 1 and 100" });
+            }
+        } else if (discountType === "fixed") {
+            if (discountValue <= 0 || discountValue > 10000) {
+                return res.status(400).json({ message: "Fixed discount must be between 1 and 10000" });
+            }
+        }
+
+        // Date validation
+        const start = new Date(startDate);
+        const end = new Date(endDate);
+        const now = new Date();
+        
+        if (start >= end) {
             return res.status(400).json({ message: "End date must be after start date" });
+        }
+        
+        if (start < now) {
+            return res.status(400).json({ message: "Start date cannot be in the past" });
+        }
+        
+        // Maximum duration validation (30 days)
+        const durationMs = end - start;
+        const durationDays = durationMs / (1000 * 60 * 60 * 24);
+        if (durationDays > 30) {
+            return res.status(400).json({ message: "Promotion duration cannot exceed 30 days" });
+        }
+
+        // ApplicableTo validation
+        if (applicableTo && !["all", "specific"].includes(applicableTo)) {
+            return res.status(400).json({ message: "Invalid applicableTo value. Must be 'all' or 'specific'" });
+        }
+
+        // Food items validation for specific promotions
+        if (applicableTo === "specific" && (!foodItems || foodItems.length === 0)) {
+            return res.status(400).json({ message: "At least one food item must be selected when applicableTo is 'specific'" });
         }
 
         let bannerImage = req.body.bannerImage || "";
@@ -118,10 +163,61 @@ export async function updatePromotion(req, res) {
             req.body.canteenId = myCanteen._id;
         }
 
-        const { startDate, endDate, applicableTo, foodItems } = req.body;
+        const { title, description, discountType, discountValue, startDate, endDate, applicableTo, foodItems } = req.body;
 
-        if (startDate && endDate && new Date(startDate) >= new Date(endDate)) {
-            return res.status(400).json({ message: "End date must be after start date" });
+        // Title validation (if provided)
+        if (title && (title.length < 3 || title.length > 100)) {
+            return res.status(400).json({ message: "Title must be between 3 and 100 characters" });
+        }
+
+        // Description validation (if provided)
+        if (description && (description.length < 10 || description.length > 500)) {
+            return res.status(400).json({ message: "Description must be between 10 and 500 characters" });
+        }
+
+        // Discount value validation (if provided)
+        if (discountType && discountValue !== undefined) {
+            if (discountType === "percentage") {
+                if (discountValue <= 0 || discountValue > 100) {
+                    return res.status(400).json({ message: "Percentage discount must be between 1 and 100" });
+                }
+            } else if (discountType === "fixed") {
+                if (discountValue <= 0 || discountValue > 10000) {
+                    return res.status(400).json({ message: "Fixed discount must be between 1 and 10000" });
+                }
+            }
+        }
+
+        // Date validation (if provided)
+        if (startDate && endDate) {
+            const start = new Date(startDate);
+            const end = new Date(endDate);
+            const now = new Date();
+            
+            if (start >= end) {
+                return res.status(400).json({ message: "End date must be after start date" });
+            }
+            
+            if (start < now) {
+                return res.status(400).json({ message: "Start date cannot be in the past" });
+            }
+            
+            // Maximum duration validation (30 days)
+            const durationMs = end - start;
+            const durationDays = durationMs / (1000 * 60 * 60 * 24);
+            if (durationDays > 30) {
+                return res.status(400).json({ message: "Promotion duration cannot exceed 30 days" });
+            }
+        }
+
+        // ApplicableTo validation (if provided)
+        if (applicableTo && !["all", "specific"].includes(applicableTo)) {
+            return res.status(400).json({ message: "Invalid applicableTo value. Must be 'all' or 'specific'" });
+        }
+
+        // Food items validation for specific promotions
+        if (applicableTo === "specific" && (!foodItems || foodItems.length === 0)) {
+            return res.status(400).json({ message: "At least one food item must be selected when applicableTo is 'specific'" });
         }
 
         const updateData = { ...req.body };
@@ -209,6 +305,23 @@ export async function applyPromotion(req, res) {
             return res.status(400).json({ message: "promotionId and cartTotal are required" });
         }
 
+        // Cart total validation
+        if (cartTotal <= 0) {
+            return res.status(400).json({ message: "Cart total must be greater than 0" });
+        }
+
+        // Cart items validation
+        if (!cartItems || cartItems.length === 0) {
+            return res.status(400).json({ message: "Cart must contain at least one item" });
+        }
+
+        // Validate cart items structure
+        for (const item of cartItems) {
+            if (!item.foodItemId) {
+                return res.status(400).json({ message: "Each cart item must have a foodItemId" });
+            }
+        }
+
         const now = new Date();
         const promotion = await Promotions.findOne({
             _id: promotionId,
@@ -222,6 +335,10 @@ export async function applyPromotion(req, res) {
         }
 
         if (promotion.applicableTo === "specific" && cartItems?.length > 0) {
+            if (!promotion.foodItems || promotion.foodItems.length === 0) {
+                return res.status(400).json({ message: "Promotion has no applicable food items configured" });
+            }
+            
             const applicableIds = promotion.foodItems.map(f => f._id.toString());
             const hasMatch = cartItems.some(item => applicableIds.includes(item.foodItemId?.toString()));
             if (!hasMatch) {
@@ -232,11 +349,22 @@ export async function applyPromotion(req, res) {
         let discountAmount = 0;
         if (promotion.discountType === "percentage") {
             discountAmount = (cartTotal * promotion.discountValue) / 100;
+            // Ensure discount doesn't exceed cart total
+            discountAmount = Math.min(discountAmount, cartTotal);
         } else {
             discountAmount = Math.min(promotion.discountValue, cartTotal);
         }
 
+        // Ensure final total is not negative
         const finalTotal = parseFloat((cartTotal - discountAmount).toFixed(2));
+        if (finalTotal < 0) {
+            return res.status(400).json({ message: "Invalid discount calculation" });
+        }
+
+        // Maximum discount validation
+        if (discountAmount > cartTotal) {
+            return res.status(400).json({ message: "Discount cannot exceed cart total" });
+        }
 
         res.status(200).json({
             message: "Promotion applied successfully",
