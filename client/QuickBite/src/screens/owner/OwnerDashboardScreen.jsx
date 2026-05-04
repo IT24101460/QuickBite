@@ -47,8 +47,8 @@ export default function OwnerDashboardScreen({ navigation }) {
     const fetchCanteenFeedbacks = async (canteenId) => {
         if (!canteenId) return;
         try {
-            const res = await API.get(`/feedbacks/canteen/${canteenId}`);
-            setFeedbacks(res.data.feedbacks || []);
+            const res = await API.get(`/feedback/canteen/${canteenId}`);
+            setFeedbacks(res.data.feedback || []);
         } catch (e) {
             setFeedbacks([]);
         }
@@ -212,7 +212,10 @@ export default function OwnerDashboardScreen({ navigation }) {
                         <View style={{ flex: 1, paddingLeft: 12 }}>
                             <Text style={styles.alertTitle}>Latest Feedback for {selectedCanteen.canteenName}</Text>
                             <Text style={styles.alertDesc}>
-                                "{feedbacks[0].comment || 'Great service!'}" - {feedbacks[0].studentName || 'Student'}
+                                "{feedbacks[0].comment || 'Great service!'}" -{" "}
+                                {feedbacks[0].userId?.firstName
+                                    ? `${feedbacks[0].userId.firstName}${feedbacks[0].userId.lastName ? ` ${feedbacks[0].userId.lastName}` : ""}`
+                                    : "Student"}
                             </Text>
                             <Text style={styles.ratingText}>⭐ {feedbacks[0].rating || '5.0'}/5.0</Text>
                         </View>

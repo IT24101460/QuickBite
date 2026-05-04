@@ -21,17 +21,20 @@ export async function createFeedback(req, res) {
         }
 
         const { rating, comment, canteenId, foodItemId, orderId, complaintType } = req.body;
+        const numericRating = Number(rating);
 
-        if (!rating || !comment) {
+        if (!Number.isFinite(numericRating) || numericRating < 1 || numericRating > 5) {
+            return res.status(400).json({ message: "Rating must be between 1 and 5" });
+        }
+        if (!comment || !String(comment).trim()) {
             return res.status(400).json({ message: "Rating and comment are required" });
         }
 
         let complaintImage = "";
         if (req.file) {
-            // Uploading to Supabase bucket 'quickbite-images'
             const fileName = `feedback_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
             const { data, error } = await supabase.storage
-                .from('quickbite-images')
+                .from("quickbite-images")
                 .upload(fileName, req.file.buffer, { contentType: req.file.mimetype });
 
             if (error) {
@@ -54,7 +57,7 @@ export async function createFeedback(req, res) {
             foodItemId: foodItemId || null,
             orderId: orderId || null,
             complaintType: complaintType || "general",
-            complaintImage
+            complaintImage,
         });
 
         await feedback.save();
@@ -175,7 +178,7 @@ export async function deleteOwnFeedback(req, res) {
 // Update feedback status / reply (Admin / Owner)
 export async function updateFeedback(req, res) {
     try {
-        if (!req.user?.isAdmin && req.user?.role !== 'owner') {
+        if (!req.user?.isAdmin && req.user?.role !== "owner") {
             return res.status(403).json({ message: "Elevated access required" });
         }
 

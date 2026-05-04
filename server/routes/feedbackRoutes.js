@@ -9,7 +9,7 @@ import {
     updateOwnFeedback,
     deleteOwnFeedback,
     updateFeedback,
-    deleteFeedback
+    deleteFeedback,
 } from "../controllers/feedbackController.js";
 
 const feedbackRouter = express.Router();
