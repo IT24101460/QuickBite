@@ -22,8 +22,7 @@ export default function AdminCanteensScreen({ navigation }) {
     const set = k => v => {
         setForm(f => ({ ...f, [k]: v }));
 
-        // Real-time validation for canteen name
-        // 🛡️ VALIDATION: Frontend real-time check for duplicate canteen names while typing
+        //  VALIDATION: Frontend real-time check for duplicate canteen names while typing
         if (k === 'canteenName' && v) {
             const duplicateName = canteens.find(c =>
                 c.canteenName.toLowerCase() === v.toLowerCase() &&
@@ -38,7 +37,7 @@ export default function AdminCanteensScreen({ navigation }) {
     };
 
     const fetch = async () => {
-        // ✨ CRUD: READ - Fetching the list of canteens from backend API
+        // CRUD: READ - Fetching the list of canteens from backend API
         try {
             const r = await API.get('/canteens');
             setCanteens(r.data?.canteens || []);
@@ -76,9 +75,9 @@ export default function AdminCanteensScreen({ navigation }) {
     });
 
     const save = async () => {
-        // ✨ CRUD: CREATE & UPDATE - Determines whether to act as CREATE (add new) or UPDATE (edit existing) based on 'editing' state
+        // CRUD: CREATE & UPDATE - Determines whether to act as CREATE (add new) or UPDATE (edit existing) based on 'editing' state
 
-        // 🛡️ VALIDATION: Frontend check to ensure all required fields are filled before saving
+        // VALIDATION: Frontend check to ensure all required fields are filled before saving
         if (!form.canteenName || !form.location || !form.contactDetails || !form.ownerDetails || !form.createdBy) {
             return Alert.alert('Error', 'Fill all required fields including assigning an owner');
         }
@@ -128,7 +127,7 @@ export default function AdminCanteensScreen({ navigation }) {
         }
     };
 
-    // ✨ CRUD: DELETE - Sends delete request to backend and re-fetches the list
+    //  CRUD: DELETE - Sends delete request to backend and re-fetches the list
     const deleteCanteen = (id) => Alert.alert('Delete', 'Are you sure?', [
         { text: 'Cancel', style: 'cancel' },
         { text: 'Delete', style: 'destructive', onPress: async () => { await API.delete(`/canteens/${id}`); fetch(); } },
