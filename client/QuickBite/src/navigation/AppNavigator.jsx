@@ -25,6 +25,7 @@ import FeedbackScreen from '../screens/FeedbackScreen';
 import CanteenListScreen from '../screens/CanteenListScreen';
 import CanteenDetailScreen from '../screens/CanteenDetailScreen';
 import CustomOrderScreen from '../screens/CustomOrderScreen';
+import ImagePreviewScreen from '../screens/ImagePreviewScreen';
 import AddCardScreen from '../screens/AddCardScreen';
 import OTPScreen from '../screens/OTPScreen';
 import PaymentOptionsScreen from '../screens/PaymentOptionsScreen';
@@ -89,6 +90,7 @@ function UserDrawerFlow() {
             <Stack.Screen name="PaymentOptions" component={PaymentOptionsScreen} />
             <Stack.Screen name="OTPVerification" component={OTPScreen} />
             <Stack.Screen name="CakeOrder" component={CakeOrderScreen} />
+            <Stack.Screen name="ImagePreview" component={ImagePreviewScreen} />
           </Stack.Navigator>
         )}
       </Drawer.Screen>

@@ -13,7 +13,7 @@ const { width, height } = Dimensions.get('window');
 
 export default function CanteenDetailScreen({ navigation, route }) {
     const { canteen } = route.params;
-    const { addToCart, cartItems, cartTotal, applyPromotion } = useCart();
+    const { addToCart, cartItems, cartTotal, applyPromotion, clearCart } = useCart();
     const { user } = useAuth();
 
     const [foodItems, setFoodItems] = useState([]);
@@ -162,7 +162,32 @@ export default function CanteenDetailScreen({ navigation, route }) {
                     canteenId: promotion.canteenId?._id || promotion.canteenId || canteen._id,
                 };
 
-                addToCart(itemToAdd, 1);
+                // Check canteen validation before adding
+                if (cartItems.length > 0) {
+                    const firstCanteenId = cartItems[0]?.canteenId;
+                    const itemCanteenId = itemToAdd.canteenId;
+                    
+                    if (firstCanteenId && itemCanteenId && firstCanteenId !== itemCanteenId) {
+                        Alert.alert(
+                            'Different Canteen Detected',
+                            `Your cart contains items from another canteen. Would you like to clear your cart and add items from ${canteen.canteenName}?`,
+                            [
+                                { text: 'Cancel', style: 'cancel' },
+                                { 
+                                    text: 'Clear Cart & Add', 
+                                    style: 'destructive',
+                                    onPress: () => {
+                                        clearCart();
+                                        addToCart(itemToAdd, 1, false);
+                                    }
+                                }
+                            ]
+                        );
+                        return;
+                    }
+                }
+
+                addToCart(itemToAdd, 1, false);
                 nextCartItems = [...cartItems, { ...itemToAdd, quantity: 1 }];
                 nextCartTotal = nextCartItems.reduce((sum, item) => sum + (item.price || 0) * item.quantity, 0);
             }
@@ -331,7 +356,7 @@ export default function CanteenDetailScreen({ navigation, route }) {
                                 <View style={{ padding: 8 }}>
                                     <Text style={styles.foodName} numberOfLines={1}>{item.name}</Text>
                                     <Text style={styles.foodPrice}>LKR {item.price ? item.price.toFixed(2) : '0.00'}</Text>
-                                    <TouchableOpacity style={styles.addBtn} onPress={() => addToCart(item, 1)}>
+                                    <TouchableOpacity style={styles.addBtn} onPress={() => handleAddToCart(item)}>
                                         <Text style={styles.addBtnText}>+ Add to Cart</Text>
                                     </TouchableOpacity>
                                 </View>
