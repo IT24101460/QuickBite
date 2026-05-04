@@ -2,8 +2,9 @@ import axios from 'axios';
 import { Platform } from 'react-native';
 import { getToken } from '../utils/auth';
 
-/** Production API (Railway) — tried first */
-export const DEPLOYED_API_URL = 'https://quickbite-production-cc3e.up.railway.app';
+/** Preferred backend order: Render -> Railway -> Local */
+export const RENDER_API_URL = 'https://quickbite-2069.onrender.com';
+export const RAILWAY_API_URL = 'https://quickbite-production-cc3e.up.railway.app';
 
 /** Local dev server: Android emulator → host machine; iOS simulator → localhost */
 export const LOCAL_API_URL =
@@ -13,7 +14,7 @@ const HEALTH_PATH = '/health';
 const FEEDBACK_USER_PROBE_PATH = '/feedback/user/my-feedback';
 const HEALTH_TIMEOUT_MS = 5000;
 
-let activeBaseUrl = DEPLOYED_API_URL;
+let activeBaseUrl = RENDER_API_URL;
 let initPromise = null;
 
 /**
@@ -31,29 +32,35 @@ export async function initApiBaseUrl() {
   if (initPromise) return initPromise;
 
   initPromise = (async () => {
-    try {
-      // 1) Server is up
-      await axios.get(`${DEPLOYED_API_URL}${HEALTH_PATH}`, {
-        timeout: HEALTH_TIMEOUT_MS,
-        validateStatus: (s) => s === 200,
-      });
+    const backendCandidates = [RENDER_API_URL, RAILWAY_API_URL, LOCAL_API_URL];
 
-      // 2) Ensure deployed has the required feedback user route.
-      //    Without auth this should return 401 if the route exists; 404 means old backend.
-      const probe = await axios.get(`${DEPLOYED_API_URL}${FEEDBACK_USER_PROBE_PATH}`, {
-        timeout: HEALTH_TIMEOUT_MS,
-        validateStatus: () => true,
-      });
+    for (const baseUrl of backendCandidates) {
+      try {
+        // 1) Backend health check
+        await axios.get(`${baseUrl}${HEALTH_PATH}`, {
+          timeout: HEALTH_TIMEOUT_MS,
+          validateStatus: (s) => s === 200,
+        });
 
-      if (probe.status === 401 || probe.status === 403) {
-        activeBaseUrl = DEPLOYED_API_URL;
-      } else {
-        // Most importantly: 404 => route not deployed yet
-        activeBaseUrl = LOCAL_API_URL;
+        // 2) Confirm feedback user route exists.
+        // Without auth, expected status is usually 401/403.
+        const probe = await axios.get(`${baseUrl}${FEEDBACK_USER_PROBE_PATH}`, {
+          timeout: HEALTH_TIMEOUT_MS,
+          validateStatus: () => true,
+        });
+
+        if ([200, 401, 403].includes(probe.status)) {
+          activeBaseUrl = baseUrl;
+          API.defaults.baseURL = activeBaseUrl;
+          return activeBaseUrl;
+        }
+      } catch {
+        // Try next candidate
       }
-    } catch {
-      activeBaseUrl = LOCAL_API_URL;
     }
+
+    // Last resort fallback
+    activeBaseUrl = LOCAL_API_URL;
     API.defaults.baseURL = activeBaseUrl;
     return activeBaseUrl;
   })();
@@ -62,7 +69,7 @@ export async function initApiBaseUrl() {
 }
 
 const API = axios.create({
-  baseURL: DEPLOYED_API_URL,
+  baseURL: RENDER_API_URL,
 });
 
 API.interceptors.request.use(async (config) => {

@@ -110,6 +110,9 @@ export default function CheckoutScreen({ route, navigation }) {
         if (!pickupTime) {
             return Alert.alert('Pickup Time Required', 'Please go back to your cart and choose a pickup time.');
         }
+        if (method === 'bank' && !paymentProof) {
+            return Alert.alert('Payment Slip Required', 'Please upload your bank transfer slip before placing the order.');
+        }
 
         // Validate pickup time against canteen open/close hours
         if (canteen) {
@@ -164,7 +167,9 @@ export default function CheckoutScreen({ route, navigation }) {
                         name: paymentProof.fileName || 'proof.jpg',
                         type: paymentProof.type || 'image/jpeg',
                     });
-                    await API.post('/payments', payFormData);
+                    await API.post('/payments', payFormData, {
+                        headers: { 'Content-Type': 'multipart/form-data' },
+                    });
                 } else {
                     await API.post('/payments', {
                         orderId: order._id,
