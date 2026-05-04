@@ -21,11 +21,12 @@ export default function AdminCanteensScreen({ navigation }) {
 
     const set = k => v => {
         setForm(f => ({ ...f, [k]: v }));
-        
+
         // Real-time validation for canteen name
+        // 🛡️ VALIDATION: Frontend real-time check for duplicate canteen names while typing
         if (k === 'canteenName' && v) {
-            const duplicateName = canteens.find(c => 
-                c.canteenName.toLowerCase() === v.toLowerCase() && 
+            const duplicateName = canteens.find(c =>
+                c.canteenName.toLowerCase() === v.toLowerCase() &&
                 c._id !== editing?._id
             );
             setNameError(duplicateName ? 'A canteen with this name already exists' : '');
@@ -37,6 +38,7 @@ export default function AdminCanteensScreen({ navigation }) {
     };
 
     const fetch = async () => {
+        // ✨ CRUD: READ - Fetching the list of canteens from backend API
         try {
             const r = await API.get('/canteens');
             setCanteens(r.data?.canteens || []);
@@ -53,14 +55,14 @@ export default function AdminCanteensScreen({ navigation }) {
     const openAdd = () => { setEditing(null); setForm({ canteenName: '', location: '', contactDetails: '', ownerDetails: '', openingTime: '08:00 AM', closingTime: '05:00 PM', createdBy: '' }); setImage(null); setModal(true); };
     const openEdit = (c) => { setEditing(c); setForm({ canteenName: c.canteenName, location: c.location, contactDetails: c.contactDetails, ownerDetails: c.ownerDetails, openingTime: c.openingTime, closingTime: c.closingTime, createdBy: c.createdBy }); setImage(null); setModal(true); };
 
-    const pickImg = () => launchImageLibrary({ 
-        mediaType: 'photo', 
+    const pickImg = () => launchImageLibrary({
+        mediaType: 'photo',
         quality: 0.7,
         includeBase64: false,
         maxHeight: 1024,
         maxWidth: 1024,
         selectionLimit: 1
-    }, r => { 
+    }, r => {
         if (!r.didCancel && r.assets?.length) {
             // Check file type
             const asset = r.assets[0];
@@ -74,16 +76,19 @@ export default function AdminCanteensScreen({ navigation }) {
     });
 
     const save = async () => {
+        // ✨ CRUD: CREATE & UPDATE - Determines whether to act as CREATE (add new) or UPDATE (edit existing) based on 'editing' state
+
+        // 🛡️ VALIDATION: Frontend check to ensure all required fields are filled before saving
         if (!form.canteenName || !form.location || !form.contactDetails || !form.ownerDetails || !form.createdBy) {
             return Alert.alert('Error', 'Fill all required fields including assigning an owner');
         }
 
         // Check for duplicate name in frontend (optimistic validation)
-        const duplicateName = canteens.find(c => 
-            c.canteenName.toLowerCase() === form.canteenName.toLowerCase() && 
+        const duplicateName = canteens.find(c =>
+            c.canteenName.toLowerCase() === form.canteenName.toLowerCase() &&
             c._id !== editing?._id
         );
-        
+
         if (duplicateName) {
             return Alert.alert('Duplicate Name', 'A canteen with this name already exists. Please choose a different name.');
         }
@@ -93,14 +98,14 @@ export default function AdminCanteensScreen({ navigation }) {
             const fd = new FormData();
             Object.entries(form).forEach(([k, v]) => fd.append(k, v));
             if (image) fd.append('canteenImage', { uri: image.uri, name: image.fileName || 'img.jpg', type: image.type || 'image/jpeg' });
-            
+
             let response;
             if (editing) {
                 response = await API.put(`/canteens/${editing._id}`, fd, { headers: { 'Content-Type': 'multipart/form-data' } });
             } else {
                 response = await API.post('/canteens', fd, { headers: { 'Content-Type': 'multipart/form-data' } });
             }
-            
+
             setModal(false);
             fetch();
             Alert.alert('Success', editing ? 'Canteen updated successfully!' : 'Canteen created successfully!');
@@ -108,7 +113,7 @@ export default function AdminCanteensScreen({ navigation }) {
             console.error('Save error:', e);
             const errorMessage = e.response?.data?.message || 'Failed to save canteen';
             const errorDetails = e.response?.data?.details;
-            
+
             if (errorDetails && Array.isArray(errorDetails)) {
                 Alert.alert('Validation Error', errorDetails.join('\n'));
             } else if (errorMessage.includes('already exists')) {
@@ -118,11 +123,12 @@ export default function AdminCanteensScreen({ navigation }) {
             } else {
                 Alert.alert('Error', errorMessage);
             }
-        } finally { 
-            setSaving(false); 
+        } finally {
+            setSaving(false);
         }
     };
 
+    // ✨ CRUD: DELETE - Sends delete request to backend and re-fetches the list
     const deleteCanteen = (id) => Alert.alert('Delete', 'Are you sure?', [
         { text: 'Cancel', style: 'cancel' },
         { text: 'Delete', style: 'destructive', onPress: async () => { await API.delete(`/canteens/${id}`); fetch(); } },
@@ -176,33 +182,33 @@ export default function AdminCanteensScreen({ navigation }) {
                     </View>
                     <ScrollView contentContainerStyle={styles.modalScroll}>
                         {[
-    ['Canteen Name *', 'canteenName'], 
-    ['Location *', 'location'], 
-    ['Contact Details *', 'contactDetails'], 
-    ['Owner Details (Text) *', 'ownerDetails'], 
-    ['Opening Time', 'openingTime'], 
-    ['Closing Time', 'closingTime']
-].map(([label, k]) => (
+                            ['Canteen Name *', 'canteenName'],
+                            ['Location *', 'location'],
+                            ['Contact Details *', 'contactDetails'],
+                            ['Owner Details (Text) *', 'ownerDetails'],
+                            ['Opening Time', 'openingTime'],
+                            ['Closing Time', 'closingTime']
+                        ].map(([label, k]) => (
                             <View key={k} style={{ marginBottom: 12 }}>
                                 <Text style={styles.label}>{label}</Text>
-                                <TextInput 
-                                    style={[styles.input, nameError && k === 'canteenName' && styles.inputError]} 
-                                    value={form[k]} 
-                                    onChangeText={set(k)} 
-                                    placeholder={label} 
-                                    placeholderTextColor="#aaa" 
+                                <TextInput
+                                    style={[styles.input, nameError && k === 'canteenName' && styles.inputError]}
+                                    value={form[k]}
+                                    onChangeText={set(k)}
+                                    placeholder={label}
+                                    placeholderTextColor="#aaa"
                                 />
                                 {nameError && k === 'canteenName' && (
                                     <Text style={styles.errorText}>{nameError}</Text>
                                 )}
                             </View>
                         ))}
-                        
+
                         <Text style={styles.label}>Assign Owner Account *</Text>
                         <View style={styles.ownersList}>
                             {owners.map(o => (
-                                <TouchableOpacity 
-                                    key={o._id} 
+                                <TouchableOpacity
+                                    key={o._id}
                                     style={[styles.ownerItem, form.createdBy === o._id && styles.ownerItemSelected]}
                                     onPress={() => set('createdBy')(o._id)}
                                 >
@@ -217,8 +223,8 @@ export default function AdminCanteensScreen({ navigation }) {
                             {image ? (
                                 <View>
                                     <Image source={{ uri: image.uri }} style={styles.imgPreview} resizeMode="cover" />
-                                    <TouchableOpacity 
-                                        style={styles.cancelImgBtn} 
+                                    <TouchableOpacity
+                                        style={styles.cancelImgBtn}
                                         onPress={() => setImage(null)}
                                     >
                                         <Text style={styles.cancelImgBtnText}>✕</Text>
@@ -249,104 +255,104 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         ...SHADOWS.md,
     },
-    backBtn: { 
+    backBtn: {
         marginRight: SPACING.sm,
         padding: SPACING.xs,
         borderRadius: BORDER_RADIUS.round,
         backgroundColor: 'rgba(255,255,255,0.1)'
     },
     back: { color: COLORS.textWhite, fontSize: 22, fontWeight: '700' },
-    headerTitle: { 
-        flex: 1, 
-        color: COLORS.textWhite, 
-        fontSize: TYPOGRAPHY.h3.fontSize, 
-        fontWeight: TYPOGRAPHY.h3.fontWeight 
+    headerTitle: {
+        flex: 1,
+        color: COLORS.textWhite,
+        fontSize: TYPOGRAPHY.h3.fontSize,
+        fontWeight: TYPOGRAPHY.h3.fontWeight
     },
-    addBtn: { 
-        backgroundColor: 'rgba(255,255,255,0.2)', 
-        borderRadius: BORDER_RADIUS.md, 
-        paddingHorizontal: SPACING.md, 
-        paddingVertical: SPACING.sm 
+    addBtn: {
+        backgroundColor: 'rgba(255,255,255,0.2)',
+        borderRadius: BORDER_RADIUS.md,
+        paddingHorizontal: SPACING.md,
+        paddingVertical: SPACING.sm
     },
-    addBtnText: { 
-        color: COLORS.textWhite, 
-        fontWeight: TYPOGRAPHY.button.fontWeight, 
-        fontSize: TYPOGRAPHY.button.fontSize 
+    addBtnText: {
+        color: COLORS.textWhite,
+        fontWeight: TYPOGRAPHY.button.fontWeight,
+        fontSize: TYPOGRAPHY.button.fontSize
     },
-    card: { 
-        flexDirection: 'row', 
-        backgroundColor: COLORS.surface, 
-        borderRadius: BORDER_RADIUS.lg, 
-        padding: SPACING.lg, 
-        marginBottom: SPACING.md, 
+    card: {
+        flexDirection: 'row',
+        backgroundColor: COLORS.surface,
+        borderRadius: BORDER_RADIUS.lg,
+        padding: SPACING.lg,
+        marginBottom: SPACING.md,
         ...SHADOWS.md,
         alignItems: 'center',
         borderWidth: 1,
         borderColor: COLORS.borderLight,
     },
     cardImageContainer: { marginRight: SPACING.md },
-    cardImage: { 
-        width: 70, 
-        height: 70, 
-        borderRadius: BORDER_RADIUS.md, 
+    cardImage: {
+        width: 70,
+        height: 70,
+        borderRadius: BORDER_RADIUS.md,
         backgroundColor: COLORS.surfaceVariant,
         borderWidth: 1,
         borderColor: COLORS.borderLight,
     },
-    cardImagePlaceholder: { 
-        width: 70, 
-        height: 70, 
-        borderRadius: BORDER_RADIUS.md, 
+    cardImagePlaceholder: {
+        width: 70,
+        height: 70,
+        borderRadius: BORDER_RADIUS.md,
         backgroundColor: COLORS.primaryUltraLight,
-        justifyContent: 'center', 
+        justifyContent: 'center',
         alignItems: 'center',
         borderWidth: 1,
         borderColor: COLORS.primaryLight,
     },
     cardImagePlaceholderText: { fontSize: 28, color: COLORS.primary },
     cardInfo: { flex: 1 },
-    cardName: { 
+    cardName: {
         fontSize: TYPOGRAPHY.body1.fontSize,
-        fontWeight: '600', 
-        color: COLORS.textPrimary, 
-        marginBottom: SPACING.xs 
+        fontWeight: '600',
+        color: COLORS.textPrimary,
+        marginBottom: SPACING.xs
     },
-    cardSub: { 
-        fontSize: TYPOGRAPHY.caption.fontSize, 
-        color: COLORS.textSecondary, 
-        marginBottom: 2 
+    cardSub: {
+        fontSize: TYPOGRAPHY.caption.fontSize,
+        color: COLORS.textSecondary,
+        marginBottom: 2
     },
     cardActions: { justifyContent: 'center', gap: SPACING.sm },
-    editBtn: { 
-        backgroundColor: COLORS.info, 
-        borderRadius: BORDER_RADIUS.md, 
-        paddingHorizontal: SPACING.md, 
-        paddingVertical: SPACING.sm 
+    editBtn: {
+        backgroundColor: COLORS.info,
+        borderRadius: BORDER_RADIUS.md,
+        paddingHorizontal: SPACING.md,
+        paddingVertical: SPACING.sm
     },
-    editBtnText: { 
-        color: COLORS.textWhite, 
-        fontWeight: '600', 
-        fontSize: TYPOGRAPHY.caption.fontSize 
+    editBtnText: {
+        color: COLORS.textWhite,
+        fontWeight: '600',
+        fontSize: TYPOGRAPHY.caption.fontSize
     },
-    delBtn: { 
-        backgroundColor: COLORS.danger, 
-        borderRadius: BORDER_RADIUS.md, 
-        paddingHorizontal: SPACING.md, 
-        paddingVertical: SPACING.sm 
+    delBtn: {
+        backgroundColor: COLORS.danger,
+        borderRadius: BORDER_RADIUS.md,
+        paddingHorizontal: SPACING.md,
+        paddingVertical: SPACING.sm
     },
-    delBtnText: { 
-        color: COLORS.textWhite, 
-        fontWeight: '600', 
-        fontSize: TYPOGRAPHY.caption.fontSize 
+    delBtnText: {
+        color: COLORS.textWhite,
+        fontWeight: '600',
+        fontSize: TYPOGRAPHY.caption.fontSize
     },
-    empty: { 
-        textAlign: 'center', 
-        color: COLORS.textTertiary, 
+    empty: {
+        textAlign: 'center',
+        color: COLORS.textTertiary,
         paddingVertical: SPACING.xxxl,
-        fontSize: TYPOGRAPHY.body2.fontSize 
+        fontSize: TYPOGRAPHY.body2.fontSize
     },
     modalContainer: { flex: 1, backgroundColor: COLORS.surface },
-    modalHeader: { 
+    modalHeader: {
         backgroundColor: COLORS.primary,
         paddingTop: 52,
         paddingBottom: SPACING.lg,
@@ -356,106 +362,106 @@ const styles = StyleSheet.create({
         gap: SPACING.md,
         ...SHADOWS.md,
     },
-    modalTitle: { 
-        color: COLORS.textWhite, 
-        fontSize: TYPOGRAPHY.h3.fontSize, 
-        fontWeight: TYPOGRAPHY.h3.fontWeight 
+    modalTitle: {
+        color: COLORS.textWhite,
+        fontSize: TYPOGRAPHY.h3.fontSize,
+        fontWeight: TYPOGRAPHY.h3.fontWeight
     },
     modalScroll: { padding: SPACING.lg },
-    label: { 
-        fontSize: TYPOGRAPHY.label.fontSize, 
-        fontWeight: TYPOGRAPHY.label.fontWeight, 
-        color: COLORS.textSecondary, 
-        marginBottom: SPACING.sm 
+    label: {
+        fontSize: TYPOGRAPHY.label.fontSize,
+        fontWeight: TYPOGRAPHY.label.fontWeight,
+        color: COLORS.textSecondary,
+        marginBottom: SPACING.sm
     },
-    input: { 
-        borderWidth: 1.5, 
-        borderColor: COLORS.border, 
-        borderRadius: BORDER_RADIUS.md, 
-        padding: SPACING.md, 
-        fontSize: TYPOGRAPHY.body2.fontSize, 
-        color: COLORS.textPrimary, 
+    input: {
+        borderWidth: 1.5,
+        borderColor: COLORS.border,
+        borderRadius: BORDER_RADIUS.md,
+        padding: SPACING.md,
+        fontSize: TYPOGRAPHY.body2.fontSize,
+        color: COLORS.textPrimary,
         marginBottom: SPACING.xs,
         backgroundColor: COLORS.surface,
         height: SIZES.inputHeight,
     },
-    inputError: { 
+    inputError: {
         borderColor: COLORS.danger,
         borderWidth: 2,
     },
-    errorText: { 
-        color: COLORS.danger, 
-        fontSize: TYPOGRAPHY.caption.fontSize, 
-        marginTop: SPACING.xs 
+    errorText: {
+        color: COLORS.danger,
+        fontSize: TYPOGRAPHY.caption.fontSize,
+        marginTop: SPACING.xs
     },
-    imgPicker: { 
-        borderWidth: 2, 
-        borderColor: COLORS.primary, 
-        borderStyle: 'dashed', 
-        borderRadius: BORDER_RADIUS.lg, 
-        height: 120, 
-        justifyContent: 'center', 
-        alignItems: 'center', 
-        marginBottom: SPACING.lg, 
+    imgPicker: {
+        borderWidth: 2,
+        borderColor: COLORS.primary,
+        borderStyle: 'dashed',
+        borderRadius: BORDER_RADIUS.lg,
+        height: 120,
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginBottom: SPACING.lg,
         overflow: 'hidden',
         backgroundColor: COLORS.primaryUltraLight,
     },
     imgPreview: { width: '100%', height: '100%' },
-    imgPickerText: { 
-        color: COLORS.primary, 
-        fontWeight: '600', 
-        fontSize: TYPOGRAPHY.body2.fontSize 
+    imgPickerText: {
+        color: COLORS.primary,
+        fontWeight: '600',
+        fontSize: TYPOGRAPHY.body2.fontSize
     },
-    cancelImgBtn: { 
-        position: 'absolute', 
-        top: SPACING.xs, 
-        right: SPACING.xs, 
-        backgroundColor: 'rgba(0,0,0,0.7)', 
-        borderRadius: BORDER_RADIUS.round, 
-        width: 28, 
-        height: 28, 
-        justifyContent: 'center', 
-        alignItems: 'center' 
+    cancelImgBtn: {
+        position: 'absolute',
+        top: SPACING.xs,
+        right: SPACING.xs,
+        backgroundColor: 'rgba(0,0,0,0.7)',
+        borderRadius: BORDER_RADIUS.round,
+        width: 28,
+        height: 28,
+        justifyContent: 'center',
+        alignItems: 'center'
     },
-    cancelImgBtnText: { 
-        color: COLORS.textWhite, 
-        fontSize: 14, 
-        fontWeight: 'bold' 
+    cancelImgBtnText: {
+        color: COLORS.textWhite,
+        fontSize: 14,
+        fontWeight: 'bold'
     },
-    saveBtn: { 
+    saveBtn: {
         backgroundColor: COLORS.primary,
-        borderRadius: BORDER_RADIUS.lg, 
-        paddingVertical: SPACING.md, 
-        alignItems: 'center', 
+        borderRadius: BORDER_RADIUS.lg,
+        paddingVertical: SPACING.md,
+        alignItems: 'center',
         marginTop: SPACING.md,
         height: SIZES.buttonHeight,
         justifyContent: 'center',
         ...SHADOWS.sm,
     },
-    saveBtnText: { 
-        color: COLORS.textWhite, 
-        fontWeight: 'bold', 
-        fontSize: TYPOGRAPHY.button.fontSize 
+    saveBtnText: {
+        color: COLORS.textWhite,
+        fontWeight: 'bold',
+        fontSize: TYPOGRAPHY.button.fontSize
     },
     ownersList: { marginBottom: SPACING.lg, gap: SPACING.sm },
-    ownerItem: { 
-        padding: SPACING.md, 
-        borderRadius: BORDER_RADIUS.md, 
-        borderWidth: 1, 
-        borderColor: COLORS.border, 
-        backgroundColor: COLORS.surfaceVariant 
+    ownerItem: {
+        padding: SPACING.md,
+        borderRadius: BORDER_RADIUS.md,
+        borderWidth: 1,
+        borderColor: COLORS.border,
+        backgroundColor: COLORS.surfaceVariant
     },
-    ownerItemSelected: { 
-        borderColor: COLORS.primary, 
+    ownerItemSelected: {
+        borderColor: COLORS.primary,
         backgroundColor: COLORS.primaryUltraLight,
         borderWidth: 2,
     },
-    ownerItemText: { 
-        fontSize: TYPOGRAPHY.body2.fontSize, 
-        color: COLORS.textPrimary 
+    ownerItemText: {
+        fontSize: TYPOGRAPHY.body2.fontSize,
+        color: COLORS.textPrimary
     },
-    ownerItemTextSelected: { 
-        color: COLORS.primary, 
-        fontWeight: 'bold' 
+    ownerItemTextSelected: {
+        color: COLORS.primary,
+        fontWeight: 'bold'
     },
 });
