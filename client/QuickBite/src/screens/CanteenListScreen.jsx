@@ -61,7 +61,7 @@ export default function CanteenListScreen({ navigation }) {
 }
 
 const styles = StyleSheet.create({
-    container: { flex: 1, backgroundColor: '#F8F9FA' },
+    container: { flex: 1, backgroundColor: '#FFF7F2' },
     card: {
         flexDirection: 'row', backgroundColor: '#fff', borderRadius: 14, padding: 12,
         marginBottom: 10, elevation: 2, alignItems: 'center', shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 5

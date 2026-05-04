@@ -1,20 +1,20 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
   View, Text, StyleSheet, FlatList, TouchableOpacity,
-  ActivityIndicator, TextInput, Image, RefreshControl, ScrollView, Dimensions
+  ActivityIndicator, Image, RefreshControl, ScrollView, Dimensions, Alert
 } from 'react-native';
 import API from '../services/api';
-import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
 import TopNavBar from '../components/TopNavBar';
+import { useBranding } from '../context/BrandingContext';
 import { getImageUrl } from '../utils/imageUtils';
-import { COLORS, SPACING, TYPOGRAPHY, BORDER_RADIUS, SHADOWS, SIZES } from '../styles/adminTheme';
+import { COLORS, SPACING, TYPOGRAPHY, BORDER_RADIUS, SHADOWS } from '../styles/adminTheme';
 
 const { width, height } = Dimensions.get('window');
 
 export default function HomeScreen({ navigation }) {
-  const { user } = useAuth();
-  const { itemCount } = useCart();
+  const { branding } = useBranding();
+  const { cartItems, addToCart, cartTotal, applyPromotion } = useCart();
   const [foodItems, setFoodItems] = useState([]);
   const [promotions, setPromotions] = useState([]);
   const [canteens, setCanteens] = useState([]);
@@ -102,8 +102,51 @@ export default function HomeScreen({ navigation }) {
     filteredItems.sort((a, b) => (b.averageRating || 0) - (a.averageRating || 0));
   }
 
+  const handlePromotionPress = async (promotion) => {
+    if (!promotion?._id || promotion._id.startsWith('sample_')) {
+      return Alert.alert('Promotion unavailable', 'This banner is a preview promotion and cannot be applied.');
+    }
+
+    const promotionItems = promotion.foodItems || [];
+    const appliesToSpecificItems = promotion.applicableTo === 'specific' && promotionItems.length > 0;
+    let nextCartItems = cartItems;
+    let nextCartTotal = cartTotal;
+
+    if (appliesToSpecificItems) {
+      const applicableIds = promotionItems.map(item => String(item._id || item.foodItemId));
+      const cartHasApplicableItem = cartItems.some(item => applicableIds.includes(String(item.foodItemId || item._id)));
+
+      if (!cartHasApplicableItem) {
+        const promoItem = promotionItems[0];
+        const itemToAdd = {
+          ...promoItem,
+          canteenId: promotion.canteenId?._id || promotion.canteenId || promoItem.canteenId,
+        };
+
+        addToCart(itemToAdd, 1);
+        nextCartItems = [...cartItems, { ...itemToAdd, quantity: 1 }];
+        nextCartTotal = nextCartItems.reduce((sum, item) => sum + (item.price || 0) * item.quantity, 0);
+      }
+    } else if (cartItems.length === 0) {
+      return Alert.alert('Cart is empty', 'Add food items to your cart before applying this promotion.');
+    }
+
+    try {
+      const res = await API.post('/promotions/apply', {
+        promotionId: promotion._id,
+        cartTotal: nextCartTotal,
+        cartItems: nextCartItems.map(i => ({ foodItemId: i.foodItemId || i._id })),
+      });
+
+      applyPromotion({ ...promotion, ...res.data.promotion, _id: promotion._id }, res.data.discountAmount);
+      navigation.navigate('Cart', { appliedPromotionId: promotion._id });
+    } catch (err) {
+      Alert.alert('Promotion not applied', err.response?.data?.message || 'This promotion cannot be applied to your cart.');
+    }
+  };
+
   const renderPromo = ({ item }) => (
-    <TouchableOpacity style={styles.promoBanner} activeOpacity={0.85}>
+    <TouchableOpacity style={styles.promoBanner} activeOpacity={0.85} onPress={() => handlePromotionPress(item)}>
       {item.bannerImage
         ? <Image source={{ uri: getImageUrl(item.bannerImage) }} style={styles.promoBannerImg} resizeMode="cover" />
         : <View style={styles.promoBannerPlaceholder} />}
@@ -133,14 +176,15 @@ export default function HomeScreen({ navigation }) {
   if (loading) {
     return (
       <View style={styles.center}>
-        {loading ? <ActivityIndicator size="large" color={COLORS.primary} /> : <Text style={styles.loadingText}>Loading QuickBite...</Text>}
+        <ActivityIndicator size="large" color={COLORS.primary} />
+        <Text style={styles.loadingText}>Loading {branding?.appName || 'UniEats'}...</Text>
       </View>
     );
   }
 
   return (
     <View style={styles.container}>
-        <TopNavBar navigation={navigation} search={search} setSearch={setSearch} hideBottomRow={true} isHome={true} />
+      <TopNavBar navigation={navigation} search={search} setSearch={setSearch} hideBottomRow={true} isHome={true} />
 
       <ScrollView
         showsVerticalScrollIndicator={false}
@@ -185,7 +229,7 @@ export default function HomeScreen({ navigation }) {
                 <Text style={styles.promoEmoji}>🎉</Text>
               </View>
               <View style={styles.promoOverlay}>
-                <Text style={styles.promoTitle}>Welcome to QuickBite!</Text>
+                <Text style={styles.promoTitle}>Welcome to {branding?.appName || 'UniEats'}!</Text>
                 <Text style={styles.promoDiscount}>Enjoy 10% OFF on your first purchase today</Text>
               </View>
             </TouchableOpacity>
@@ -262,26 +306,27 @@ export default function HomeScreen({ navigation }) {
         {/* Food Grid */}
         <View style={styles.sectionBot}>
           <Text style={styles.sectionTitle}>🔥 Popular Food Items</Text>
-          {filteredItems.length === 0
-            ? <Text style={styles.emptyText}>No items found</Text>
-            : (
-              <FlatList
-                data={filteredItems}
-                renderItem={renderFood}
-                keyExtractor={i => i._id || i.foodItemId || Math.random().toString()}
-                numColumns={2}
-                scrollEnabled={false}
-                contentContainerStyle={styles.foodGrid}
-              />
-            )}
+          {filteredItems.length === 0 ? (
+            <Text style={styles.emptyText}>No food items found matching your criteria.</Text>
+          ) : (
+            <FlatList
+              data={filteredItems}
+              renderItem={renderFood}
+              keyExtractor={item => item._id}
+              numColumns={2}
+              scrollEnabled={false}
+              contentContainerStyle={styles.foodGrid}
+            />
+          )}
         </View>
+
       </ScrollView>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: COLORS.background },
+  container: { flex: 1, backgroundColor: '#FFF7F2' },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'transparent' },
   loadingText: { 
     marginTop: SPACING.md, 
@@ -420,7 +465,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: SPACING.sm, 
     paddingVertical: SPACING.xs, 
     borderRadius: BORDER_RADIUS.sm, 
-    backgroundColor: COLORS.background, 
+    backgroundColor: '#FFF7F2',
     marginRight: SPACING.xs 
   },
   sortBtnActive: { backgroundColor: COLORS.primaryUltraLight },

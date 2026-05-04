@@ -13,7 +13,7 @@ const ORANGE = '#FF6B35';
 export default function CartScreen({ navigation }) {
     const {
         cartItems, removeFromCart, updateQty, updateItemNote, cartTotal, finalTotal,
-        itemCount, appliedPromotion, discountAmount, applyPromotion, removePromotion,
+        appliedPromotion, discountAmount, applyPromotion, removePromotion,
     } = useCart();
     const [promoCode, setPromoCode] = useState('');
     const [promoLoading, setPromoLoading] = useState(false);
@@ -28,9 +28,9 @@ export default function CartScreen({ navigation }) {
             const res = await API.post('/promotions/apply', {
                 promotionId: promoCode.trim(),
                 cartTotal,
-                cartItems: cartItems.map(i => ({ foodItemId: i._id })),
+                cartItems: cartItems.map(i => ({ foodItemId: i.foodItemId || i._id })),
             });
-            applyPromotion(res.data.promotion, res.data.discountAmount);
+            applyPromotion({ ...res.data.promotion, _id: promoCode.trim() }, res.data.discountAmount);
             Alert.alert('✅ Applied!', `${res.data.promotion.title} — LKR ${res.data.discountAmount.toFixed(2)} off`);
         } catch (err) {
             Alert.alert('Error', err.response?.data?.message || 'Invalid promotion');
@@ -89,6 +89,14 @@ export default function CartScreen({ navigation }) {
             </View>
         );
     }
+
+    const handleProceedToCheckout = () => {
+        if (!pickupTime) {
+            return Alert.alert('Pickup Time Required', 'Please choose a pickup time before checkout.');
+        }
+
+        navigation.navigate('Checkout', { pickupTime });
+    };
 
     return (
         <View style={styles.container}>
@@ -170,7 +178,7 @@ export default function CartScreen({ navigation }) {
             <View style={styles.checkoutBar}>
                 <TouchableOpacity
                     style={styles.checkoutBtn}
-                    onPress={() => navigation.navigate('Checkout', { pickupTime })}
+                    onPress={handleProceedToCheckout}
                 >
                     <Text style={styles.checkoutBtnText}>Proceed to Checkout  →</Text>
                 </TouchableOpacity>
@@ -180,7 +188,7 @@ export default function CartScreen({ navigation }) {
 }
 
 const styles = StyleSheet.create({
-    container: { flex: 1, backgroundColor: '#F8F9FA' },
+    container: { flex: 1, backgroundColor: '#FFF7F2' },
     list: { padding: 12 },
     cartItemWrapper: {
         backgroundColor: '#fff', borderRadius: 14, marginBottom: 12, elevation: 2,
@@ -194,7 +202,7 @@ const styles = StyleSheet.create({
         borderTopWidth: 1, borderTopColor: '#F0F0F0',
     },
     noteInput: {
-        backgroundColor: '#F8F9FA', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 6,
+        backgroundColor: '#FFF3EC', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 6,
         fontSize: 13, color: '#333',
     },
     itemImg: { width: 64, height: 64, borderRadius: 10 },
