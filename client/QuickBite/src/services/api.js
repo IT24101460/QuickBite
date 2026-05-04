@@ -10,6 +10,7 @@ export const LOCAL_API_URL =
   Platform.OS === 'android' ? 'http://10.0.2.2:3000' : 'http://localhost:3000';
 
 const HEALTH_PATH = '/health';
+const FEEDBACK_USER_PROBE_PATH = '/feedback/user/my-feedback';
 const HEALTH_TIMEOUT_MS = 5000;
 
 let activeBaseUrl = DEPLOYED_API_URL;
@@ -31,11 +32,25 @@ export async function initApiBaseUrl() {
 
   initPromise = (async () => {
     try {
+      // 1) Server is up
       await axios.get(`${DEPLOYED_API_URL}${HEALTH_PATH}`, {
         timeout: HEALTH_TIMEOUT_MS,
         validateStatus: (s) => s === 200,
       });
-      activeBaseUrl = DEPLOYED_API_URL;
+
+      // 2) Ensure deployed has the required feedback user route.
+      //    Without auth this should return 401 if the route exists; 404 means old backend.
+      const probe = await axios.get(`${DEPLOYED_API_URL}${FEEDBACK_USER_PROBE_PATH}`, {
+        timeout: HEALTH_TIMEOUT_MS,
+        validateStatus: () => true,
+      });
+
+      if (probe.status === 401 || probe.status === 403) {
+        activeBaseUrl = DEPLOYED_API_URL;
+      } else {
+        // Most importantly: 404 => route not deployed yet
+        activeBaseUrl = LOCAL_API_URL;
+      }
     } catch {
       activeBaseUrl = LOCAL_API_URL;
     }
