@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
     View, Text, StyleSheet, TouchableOpacity, ScrollView,
     TextInput, Alert, Image, ActivityIndicator, KeyboardAvoidingView, Platform
@@ -21,6 +21,7 @@ export default function CustomOrderScreen({ navigation, route }) {
     const [budget, setBudget] = useState('');
     const [quantity, setQuantity] = useState(1);
     const [pickupDate, setPickupDate] = useState('');
+    const [pickupDates, setPickupDates] = useState([]);
     const [referenceImages, setReferenceImages] = useState([]);
     const [loading, setLoading] = useState(false);
 
@@ -186,12 +187,54 @@ export default function CustomOrderScreen({ navigation, route }) {
         }
     };
 
+    const generatePickupDates = () => {
+        const dates = [];
+        const today = new Date();
+        
+        // Start from 3 days from now (minimum for custom orders)
+        const startDate = new Date(today);
+        startDate.setDate(today.getDate() + 2);
+        
+        // Generate dates for the next 30 days
+        for (let i = 0; i < 30; i++) {
+            const date = new Date(startDate);
+            date.setDate(startDate.getDate() + i);
+            
+            // Format date for display
+            const formattedDate = date.toLocaleDateString('en-US', { 
+                weekday: 'short', 
+                month: 'short', 
+                day: 'numeric' 
+            });
+            
+            // Format date for storage
+            const storageDate = date.toISOString().split('T')[0];
+            
+            dates.push({
+                display: formattedDate,
+                value: storageDate
+            });
+        }
+        
+        return dates;
+    };
+
     const getMinPickupDate = () => {
         const today = new Date();
         const minDate = new Date(today);
         minDate.setDate(today.getDate() + 3); // 3 days minimum for custom orders
-        return minDate.toISOString().split('T')[0];
+        return minDate.toLocaleDateString('en-US', { 
+            weekday: 'long', 
+            year: 'numeric', 
+            month: 'long', 
+            day: 'numeric' 
+        });
     };
+
+    useEffect(() => {
+        const dates = generatePickupDates();
+        setPickupDates(dates);
+    }, []);
 
     return (
         <View style={styles.container}>
@@ -308,14 +351,25 @@ export default function CustomOrderScreen({ navigation, route }) {
                     {/* Pickup Date */}
                     <View style={styles.section}>
                         <Text style={styles.sectionTitle}>📅 Pickup Date</Text>
-                        <TextInput
-                            style={styles.input}
-                            placeholder={getMinPickupDate()}
-                            placeholderTextColor="#999"
-                            value={pickupDate}
-                            onChangeText={setPickupDate}
-                            keyboardType="default"
-                        />
+                        <View style={styles.dateDropdownContainer}>
+                            <ScrollView 
+                                horizontal
+                                showsHorizontalScrollIndicator={false}
+                                contentContainerStyle={styles.dateScrollContainer}
+                            >
+                                {pickupDates.map((date) => (
+                                    <TouchableOpacity
+                                        key={date.value}
+                                        style={[styles.dateSlot, pickupDate === date.value && styles.dateSlotActive]}
+                                        onPress={() => setPickupDate(date.value)}
+                                    >
+                                        <Text style={[styles.dateSlotText, pickupDate === date.value && styles.dateSlotTextActive]}>
+                                            {date.display}
+                                        </Text>
+                                    </TouchableOpacity>
+                                ))}
+                            </ScrollView>
+                        </View>
                         <Text style={styles.helperText}>
                             Minimum 3 days advance notice required for custom orders
                         </Text>
@@ -463,6 +517,39 @@ const styles = StyleSheet.create({
         color: '#888',
         marginTop: 4,
         fontStyle: 'italic'
+    },
+    
+    // Date dropdown styles
+    dateDropdownContainer: {
+        marginTop: 8,
+        marginBottom: 8
+    },
+    dateScrollContainer: {
+        paddingHorizontal: 4
+    },
+    dateSlot: {
+        backgroundColor: '#F5F5F5',
+        paddingHorizontal: 16,
+        paddingVertical: 12,
+        borderRadius: 20,
+        marginRight: 8,
+        borderWidth: 1,
+        borderColor: '#E0E0E0',
+        minWidth: 100,
+        alignItems: 'center'
+    },
+    dateSlotActive: {
+        backgroundColor: ORANGE,
+        borderColor: ORANGE
+    },
+    dateSlotText: {
+        fontSize: 13,
+        color: '#666',
+        fontWeight: '500'
+    },
+    dateSlotTextActive: {
+        color: '#fff',
+        fontWeight: '600'
     },
     
     imageUploadBtn: {
