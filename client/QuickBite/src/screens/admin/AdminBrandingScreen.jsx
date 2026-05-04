@@ -12,20 +12,12 @@ const ORANGE = '#FF6B35';
 
 export default function AdminBrandingScreen({ navigation }) {
     const { branding, refreshBranding } = useBranding();
-<<<<<<< HEAD
-    const [appName, setAppName] = useState('QuickBite');
-=======
     const [appName, setAppName] = useState('UniEats');
->>>>>>> 08842c65816ab6e17a476811598680b26e2c990e
     const [image, setImage] = useState(null);
     const [saving, setSaving] = useState(false);
 
     useEffect(() => {
-<<<<<<< HEAD
-        setAppName(branding?.appName || 'QuickBite');
-=======
         setAppName(branding?.appName || 'UniEats');
->>>>>>> 08842c65816ab6e17a476811598680b26e2c990e
     }, [branding]);
 
     const pickLogo = () => {
@@ -40,11 +32,7 @@ export default function AdminBrandingScreen({ navigation }) {
         setSaving(true);
         try {
             const formData = new FormData();
-<<<<<<< HEAD
-            formData.append('appName', appName || 'QuickBite');
-=======
             formData.append('appName', appName || 'UniEats');
->>>>>>> 08842c65816ab6e17a476811598680b26e2c990e
 
             if (image) {
                 formData.append('logo', {
@@ -92,22 +80,14 @@ export default function AdminBrandingScreen({ navigation }) {
             <ScrollView contentContainerStyle={styles.content}>
                 <View style={styles.previewBox}>
                     <Image source={logoSource} style={styles.logoPreview} resizeMode="contain" />
-<<<<<<< HEAD
-                    <Text style={styles.previewName}>{appName || 'QuickBite'}</Text>
-=======
                     <Text style={styles.previewName}>{appName || 'UniEats'}</Text>
->>>>>>> 08842c65816ab6e17a476811598680b26e2c990e
                 </View>
 
                 <Text style={styles.label}>App Name</Text>
                 <TextInput
                     value={appName}
                     onChangeText={setAppName}
-<<<<<<< HEAD
-                    placeholder="QuickBite"
-=======
                     placeholder="UniEats"
->>>>>>> 08842c65816ab6e17a476811598680b26e2c990e
                     placeholderTextColor="#999"
                     style={styles.input}
                 />

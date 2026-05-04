@@ -156,11 +156,7 @@ export default function OwnerPromotionsScreen({ route, navigation }) {
         <View style={styles.container}>
             <View style={styles.header}>
                 <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}><Text style={styles.backArrow}>←</Text></TouchableOpacity>
-<<<<<<< HEAD
-                <Text style={styles.title}>QuickBite Promotions</Text>
-=======
                 <Text style={styles.title}>UniEats Promotions</Text>
->>>>>>> 08842c65816ab6e17a476811598680b26e2c990e
             </View>
 
             <View style={styles.actionRow}>
