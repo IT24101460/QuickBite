@@ -20,12 +20,38 @@ export default function SettingsScreen({ navigation }) {
     const [loading, setLoading] = useState(false);
 
     const handleSave = async () => {
+        // Basic presence check
         if (!firstName || !lastName || !phoneNumber || !email || (accountRole === 'student' && !registrationNumber)) {
             return Alert.alert('Validation Error', 'Please fill in all required fields.');
         }
 
+        // Name validations (letters and spaces only, min 2 chars)
+        const nameRegex = /^[A-Za-z\s]{2,}$/;
+        if (!nameRegex.test(firstName)) {
+            return Alert.alert('Validation Error', 'First name must be at least 2 characters and contain only letters.');
+        }
+        if (!nameRegex.test(lastName)) {
+            return Alert.alert('Validation Error', 'Last name must be at least 2 characters and contain only letters.');
+        }
+
+        // Email validation
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+            return Alert.alert('Validation Error', 'Please enter a valid email address.');
+        }
+
+        // Phone number validation (exactly 10 digits)
+        const phoneRegex = /^\d{10}$/;
+        if (!phoneRegex.test(phoneNumber)) {
+            return Alert.alert('Validation Error', 'Phone number must be exactly 10 digits.');
+        }
+
         if (newPassword.trim().length > 0 && !currentPassword.trim()) {
             return Alert.alert('Validation Error', 'You must enter your current password to change it.');
+        }
+
+        if (newPassword.trim().length > 0 && newPassword.length < 6) {
+            return Alert.alert('Validation Error', 'New password must be at least 6 characters.');
         }
 
         setLoading(true);
@@ -37,17 +63,17 @@ export default function SettingsScreen({ navigation }) {
                 phoneNumber,
                 email
             };
-            
+
             if (newPassword.trim().length > 0) {
                 updates.currentPassword = currentPassword;
                 updates.newPassword = newPassword;
             }
 
             const response = await API.put(`/users/${user._id}`, updates);
-            
+
             // Update the auth context so the rest of the app gets the new details
             await updateUserContext(token, { ...user, ...response.data.user });
-            
+
             Alert.alert('Success', 'Your settings have been updated successfully!', [
                 { text: 'OK', onPress: () => navigation.goBack() }
             ]);
@@ -108,23 +134,23 @@ export default function SettingsScreen({ navigation }) {
 
                 <View style={styles.inputGroup}>
                     <Text style={styles.label}>Current Password</Text>
-                    <TextInput 
-                        style={styles.input} 
-                        value={currentPassword} 
-                        onChangeText={setCurrentPassword} 
-                        secureTextEntry 
-                        placeholder="Required if changing password" 
+                    <TextInput
+                        style={styles.input}
+                        value={currentPassword}
+                        onChangeText={setCurrentPassword}
+                        secureTextEntry
+                        placeholder="Required if changing password"
                     />
                 </View>
 
                 <View style={styles.inputGroup}>
                     <Text style={styles.label}>New Password (Optional)</Text>
-                    <TextInput 
-                        style={styles.input} 
-                        value={newPassword} 
-                        onChangeText={setNewPassword} 
-                        secureTextEntry 
-                        placeholder="Enter new password" 
+                    <TextInput
+                        style={styles.input}
+                        value={newPassword}
+                        onChangeText={setNewPassword}
+                        secureTextEntry
+                        placeholder="Enter new password"
                     />
                     <Text style={styles.hint}>Leave blank if you don't want to change your password.</Text>
                 </View>
