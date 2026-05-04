@@ -16,6 +16,7 @@ import paymentRouter from "./routes/paymentRoutes.js"
 import reportRouter from "./routes/reportRoutes.js"
 import userPaymentRouter from "./routes/userPaymentRoutes.js"
 import appSettingsRouter from "./routes/appSettingsRoutes.js"
+import customOrderRouter from "./routes/customOrderRoutes.js"
 import authenticate from "./middleware/authenticate.js"
 
 
@@ -69,6 +70,7 @@ app.use("/payments", paymentRouter)
 app.use("/reports", reportRouter)
 app.use("/user-payments", userPaymentRouter)
 app.use("/settings", appSettingsRouter)
+app.use("/custom-orders", customOrderRouter)
 
 const PORT = process.env.PORT || 3000;
 app.listen(

@@ -9,6 +9,17 @@ export function CartProvider({ children }) {
 
     const addToCart = (foodItem, qty = 1) => {
         setCartItems(prev => {
+            // For custom orders, don't allow duplicates - each custom order is unique
+            if (foodItem.isCustomOrder) {
+                // Check if this custom order already exists
+                const existingCustom = prev.find(i => i.isCustomOrder && i.customOrderData?.description === foodItem.customOrderData?.description);
+                if (existingCustom) {
+                    return prev; // Don't add duplicate custom orders
+                }
+                return [...prev, { ...foodItem, quantity: qty }];
+            }
+            
+            // For regular food items, check for existing and update quantity
             const existing = prev.find(i => i._id === foodItem._id || i.foodItemId === foodItem.foodItemId);
             if (existing) {
                 return prev.map(i =>

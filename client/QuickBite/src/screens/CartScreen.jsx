@@ -196,43 +196,94 @@ export default function CartScreen({ navigation }) {
         }
     }, [canteen, pickupTime]);
 
-    const renderItem = ({ item }) => (
-        <View style={styles.cartItemWrapper}>
-            <View style={styles.cartItem}>
-                {item.image
-                    ? <Image source={{ uri: getImageUrl(item.image) }} style={styles.itemImg} resizeMode="cover" />
-                    : <View style={styles.itemImgPlaceholder}><Text style={styles.placeholderIcon}>🍽️</Text></View>}
-                <View style={styles.itemInfo}>
-                    <Text style={styles.itemName} numberOfLines={2}>{item.name}</Text>
-                    <Text style={styles.itemPrice}>LKR {item.price.toFixed(2)} each</Text>
+    const renderItem = ({ item }) => {
+        if (item.isCustomOrder) {
+            return (
+                <View style={[styles.cartItemWrapper, styles.customOrderWrapper]}>
+                    <View style={styles.cartItem}>
+                        <View style={styles.customOrderHeader}>
+                            <Text style={styles.customOrderIcon}>🎂</Text>
+                            <View style={styles.itemInfo}>
+                                <Text style={styles.itemName} numberOfLines={2}>{item.name}</Text>
+                                <Text style={styles.customOrderType}>Custom Order</Text>
+                                <Text style={styles.itemPrice}>Est. LKR {item.price.toFixed(2)} each</Text>
+                            </View>
+                        </View>
+                        <View style={styles.itemRight}>
+                            <View style={styles.qtyControl}>
+                                <TouchableOpacity style={styles.qtyBtn} onPress={() => updateQty(item._id, item.quantity - 1)}>
+                                    <Text style={styles.qtyBtnText}>−</Text>
+                                </TouchableOpacity>
+                                <Text style={styles.qtyNum}>{item.quantity}</Text>
+                                <TouchableOpacity style={styles.qtyBtn} onPress={() => updateQty(item._id, item.quantity + 1)}>
+                                    <Text style={styles.qtyBtnText}>+</Text>
+                                </TouchableOpacity>
+                            </View>
+                            <Text style={styles.lineTotal}>LKR {(item.price * item.quantity).toFixed(2)}</Text>
+                            <TouchableOpacity onPress={() => removeFromCart(item._id)}>
+                                <Text style={styles.removeBtn}>🗑</Text>
+                            </TouchableOpacity>
+                        </View>
+                    </View>
+                    <View style={styles.customOrderDetails}>
+                        <Text style={styles.customOrderDesc}>{item.description}</Text>
+                        <Text style={styles.customOrderInfo}>Pickup: {new Date(item.customOrderData?.pickupDate).toLocaleDateString()}</Text>
+                        <Text style={styles.customOrderInfo}>Budget: LKR {item.customOrderData?.budget}</Text>
+                        {item.customOrderData?.referenceImages?.length > 0 && (
+                            <Text style={styles.customOrderInfo}>📎 {item.customOrderData.referenceImages.length} reference image(s)</Text>
+                        )}
+                    </View>
+                    <View style={styles.noteContainer}>
+                        <TextInput
+                            style={styles.noteInput}
+                            placeholder="Add special instructions for this custom order..."
+                            placeholderTextColor="#999"
+                            value={item.note || ''}
+                            onChangeText={(text) => updateItemNote(item._id, text)}
+                        />
+                    </View>
                 </View>
-                <View style={styles.itemRight}>
-                    <View style={styles.qtyControl}>
-                        <TouchableOpacity style={styles.qtyBtn} onPress={() => updateQty(item._id || item.foodItemId, item.quantity - 1)}>
-                            <Text style={styles.qtyBtnText}>−</Text>
-                        </TouchableOpacity>
-                        <Text style={styles.qtyNum}>{item.quantity}</Text>
-                        <TouchableOpacity style={styles.qtyBtn} onPress={() => updateQty(item._id || item.foodItemId, item.quantity + 1)}>
-                            <Text style={styles.qtyBtnText}>+</Text>
+            );
+        }
+
+        return (
+            <View style={styles.cartItemWrapper}>
+                <View style={styles.cartItem}>
+                    {item.image
+                        ? <Image source={{ uri: getImageUrl(item.image) }} style={styles.itemImg} resizeMode="cover" />
+                        : <View style={styles.itemImgPlaceholder}><Text style={styles.placeholderIcon}>🍽️</Text></View>}
+                    <View style={styles.itemInfo}>
+                        <Text style={styles.itemName} numberOfLines={2}>{item.name}</Text>
+                        <Text style={styles.itemPrice}>LKR {item.price.toFixed(2)} each</Text>
+                    </View>
+                    <View style={styles.itemRight}>
+                        <View style={styles.qtyControl}>
+                            <TouchableOpacity style={styles.qtyBtn} onPress={() => updateQty(item._id || item.foodItemId, item.quantity - 1)}>
+                                <Text style={styles.qtyBtnText}>−</Text>
+                            </TouchableOpacity>
+                            <Text style={styles.qtyNum}>{item.quantity}</Text>
+                            <TouchableOpacity style={styles.qtyBtn} onPress={() => updateQty(item._id || item.foodItemId, item.quantity + 1)}>
+                                <Text style={styles.qtyBtnText}>+</Text>
+                            </TouchableOpacity>
+                        </View>
+                        <Text style={styles.lineTotal}>LKR {(item.price * item.quantity).toFixed(2)}</Text>
+                        <TouchableOpacity onPress={() => removeFromCart(item._id || item.foodItemId)}>
+                            <Text style={styles.removeBtn}>🗑</Text>
                         </TouchableOpacity>
                     </View>
-                    <Text style={styles.lineTotal}>LKR {(item.price * item.quantity).toFixed(2)}</Text>
-                    <TouchableOpacity onPress={() => removeFromCart(item._id || item.foodItemId)}>
-                        <Text style={styles.removeBtn}>🗑</Text>
-                    </TouchableOpacity>
+                </View>
+                <View style={styles.noteContainer}>
+                    <TextInput
+                        style={styles.noteInput}
+                        placeholder="Add note (e.g. extra cheese, less sugar)..."
+                        placeholderTextColor="#999"
+                        value={item.note || ''}
+                        onChangeText={(text) => updateItemNote(item._id || item.foodItemId, text)}
+                    />
                 </View>
             </View>
-            <View style={styles.noteContainer}>
-                <TextInput
-                    style={styles.noteInput}
-                    placeholder="Add note (e.g. extra cheese, less sugar)..."
-                    placeholderTextColor="#999"
-                    value={item.note || ''}
-                    onChangeText={(text) => updateItemNote(item._id || item.foodItemId, text)}
-                />
-            </View>
-        </View>
-    );
+        );
+    };
 
     if (cartItems.length === 0) {
         return (
@@ -420,6 +471,45 @@ const styles = StyleSheet.create({
         shadowColor: ORANGE, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.35, shadowRadius: 8, elevation: 5,
     },
     checkoutBtnText: { color: '#fff', fontSize: 16, fontWeight: 'bold' },
+    customOrderWrapper: {
+        borderWidth: 2,
+        borderColor: '#FFE0D6',
+        backgroundColor: '#FFFBF8'
+    },
+    customOrderHeader: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        flex: 1
+    },
+    customOrderIcon: {
+        fontSize: 24,
+        marginRight: 8
+    },
+    customOrderType: {
+        fontSize: 12,
+        color: ORANGE,
+        fontWeight: '600',
+        marginTop: 2
+    },
+    customOrderDetails: {
+        paddingHorizontal: 12,
+        paddingVertical: 8,
+        backgroundColor: '#FFF0E8',
+        marginHorizontal: 12,
+        marginBottom: 8,
+        borderRadius: 8
+    },
+    customOrderDesc: {
+        fontSize: 13,
+        color: '#555',
+        marginBottom: 4,
+        fontStyle: 'italic'
+    },
+    customOrderInfo: {
+        fontSize: 12,
+        color: '#666',
+        marginBottom: 2
+    },
     empty: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#fff', padding: 40 },
     emptyIcon: { fontSize: 64 },
     emptyTitle: { fontSize: 22, fontWeight: 'bold', color: '#333', marginTop: 16 },
