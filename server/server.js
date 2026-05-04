@@ -17,6 +17,7 @@ import reportRouter from "./routes/reportRoutes.js"
 import userPaymentRouter from "./routes/userPaymentRoutes.js"
 import appSettingsRouter from "./routes/appSettingsRoutes.js"
 import customOrderRouter from "./routes/customOrderRoutes.js"
+import uploadRouter from "./routes/uploadRoutes.js"
 import authenticate from "./middleware/authenticate.js"
 
 
@@ -55,6 +56,9 @@ app.use("/uploads", express.static(path.join(__dirname, "uploads")))
 app.get("/health", (req, res) => {
     res.status(200).json({ message: "Server is running" })
 })
+
+// Upload route (public - no authentication required)
+app.use("/upload", uploadRouter)
 
 // Apply Smart Authenticate to ALL routes
 // (It now allows public GETs but protects POST/PUT/DELETE)

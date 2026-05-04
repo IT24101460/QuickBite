@@ -15,6 +15,7 @@ export default function OwnerPromotionsScreen({ route, navigation }) {
 
     const [modalVisible, setModalVisible] = useState(false);
     const [saving, setSaving] = useState(false);
+    const [editingPromotion, setEditingPromotion] = useState(null);
 
     // Form fields
     const [title, setTitle] = useState('');
@@ -31,6 +32,11 @@ export default function OwnerPromotionsScreen({ route, navigation }) {
     const [showEndDatePicker, setShowEndDatePicker] = useState(false);
     const [tempStartDate, setTempStartDate] = useState(new Date());
     const [tempEndDate, setTempEndDate] = useState(new Date());
+    
+    // Image states
+    const [imageFile, setImageFile] = useState(null);
+    const [imagePreview, setImagePreview] = useState(null);
+    const [bannerImage, setBannerImage] = useState(null);
     
     // Generate date options
     const generateDateOptions = () => {
@@ -66,9 +72,6 @@ export default function OwnerPromotionsScreen({ route, navigation }) {
         setEndDate(tempEndDate);
         setShowEndDatePicker(false);
     };
-
-    const [imagePreview, setImagePreview] = useState(null);
-    const [imageFile, setImageFile] = useState(null);
 
     useEffect(() => {
         fetchData();
@@ -124,6 +127,44 @@ export default function OwnerPromotionsScreen({ route, navigation }) {
         setTempStartDate(today);
         setTempEndDate(defaultEnd);
         setImagePreview(null); setImageFile(null);
+        setBannerImage(null);
+        setEditingPromotion(null);
+        setModalVisible(true);
+    };
+
+    const editPromo = (promotion) => {
+        // Pre-fill the form with existing promotion data
+        setTitle(promotion.title);
+        setDescription(promotion.description);
+        setDiscountType(promotion.discountType || 'percentage');
+        setDiscountValue(String(promotion.discountValue || ''));
+        setApplicableTo(promotion.applicableTo || 'all');
+        
+        // Set food items if applicable to specific items
+        if (promotion.applicableTo === 'specific' && promotion.foodItems) {
+            setSelectedFoods(promotion.foodItems);
+        } else {
+            setSelectedFoods([]);
+        }
+        
+        // Set dates
+        setStartDate(new Date(promotion.startDate));
+        setEndDate(new Date(promotion.endDate));
+        setTempStartDate(new Date(promotion.startDate));
+        setTempEndDate(new Date(promotion.endDate));
+        
+        // Set banner image
+        if (promotion.bannerImage) {
+            setImagePreview(getImageUrl(promotion.bannerImage));
+            setBannerImage(promotion.bannerImage);
+        } else {
+            setImagePreview(null);
+            setBannerImage(null);
+        }
+        
+        // Set editing mode
+        setEditingPromotion(promotion);
+        setImageFile(null); // Reset image file for new uploads
         setModalVisible(true);
     };
 
@@ -147,37 +188,53 @@ export default function OwnerPromotionsScreen({ route, navigation }) {
         setSaving(true);
 
         try {
-            if (imageFile) {
-                const formData = new FormData();
-                formData.append('title', title);
-                formData.append('description', description);
-                formData.append('discountType', discountType);
-                formData.append('discountValue', discountValue);
-                formData.append('canteenId', myCanteenId);
-                formData.append('startDate', startDate.toISOString());
-                formData.append('endDate', endDate.toISOString());
-                formData.append('applicableTo', applicableTo);
-                formData.append('bannerImage', imageFile);
+            const payload = {
+                title, description, discountType, discountValue: Number(discountValue),
+                canteenId: myCanteenId, startDate: startDate.toISOString(), endDate: endDate.toISOString(),
+                applicableTo, foodItems: applicableTo === 'specific' ? selectedFoods : []
+            };
 
-                if (applicableTo === 'specific') {
-                    selectedFoods.forEach(id => formData.append('foodItems[]', id));
+            if (editingPromotion) {
+                // Update existing promotion
+                if (imageFile) {
+                    const formData = new FormData();
+                    Object.keys(payload).forEach(key => {
+                        if (Array.isArray(payload[key])) {
+                            payload[key].forEach(item => formData.append(`${key}[]`, item));
+                        } else {
+                            formData.append(key, payload[key]);
+                        }
+                    });
+                    formData.append('bannerImage', imageFile);
+                    await API.put(`/promotions/${editingPromotion._id}`, formData, { headers: { 'Content-Type': 'multipart/form-data' } });
+                } else {
+                    await API.put(`/promotions/${editingPromotion._id}`, payload);
                 }
-
-                await API.post('/promotions', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
+                Alert.alert("Success", "Promotion updated successfully!");
             } else {
-                const payload = {
-                    title, description, discountType, discountValue: Number(discountValue),
-                    canteenId: myCanteenId, startDate: startDate.toISOString(), endDate: endDate.toISOString(),
-                    applicableTo, foodItems: applicableTo === 'specific' ? selectedFoods : []
-                };
-                await API.post('/promotions', payload);
+                // Create new promotion
+                if (imageFile) {
+                    const formData = new FormData();
+                    Object.keys(payload).forEach(key => {
+                        if (Array.isArray(payload[key])) {
+                            payload[key].forEach(item => formData.append(`${key}[]`, item));
+                        } else {
+                            formData.append(key, payload[key]);
+                        }
+                    });
+                    formData.append('bannerImage', imageFile);
+                    await API.post('/promotions', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
+                } else {
+                    await API.post('/promotions', payload);
+                }
+                Alert.alert("Success", "Magnificent dynamically targeted Promotion launched successfully!");
             }
 
-            Alert.alert("Success", "Magnificent dynamically targeted Promotion launched successfully!");
             setModalVisible(false);
+            setEditingPromotion(null);
             fetchData();
         } catch (error) {
-            Alert.alert("Launch Failed", error.response?.data?.message || "There was an error communicating with the backend server!");
+            Alert.alert("Operation Failed", error.response?.data?.message || "There was an error communicating with the backend server!");
         } finally {
             setSaving(false);
         }
@@ -238,6 +295,9 @@ export default function OwnerPromotionsScreen({ route, navigation }) {
                                     <TouchableOpacity onPress={() => toggleStatus(item._id)} style={[styles.smBtn, item.isActive ? styles.btnDanger : styles.btnSuccess]}>
                                         <Text style={styles.smBtnText}>{item.isActive ? "Pause Campaign" : "Resume Campaign"}</Text>
                                     </TouchableOpacity>
+                                    <TouchableOpacity onPress={() => editPromo(item)} style={[styles.smBtn, styles.btnPrimary]}>
+                                        <Text style={styles.smBtnText}>Edit</Text>
+                                    </TouchableOpacity>
                                     <TouchableOpacity onPress={() => deletePromo(item._id)} style={[styles.smBtn, styles.btnOutline]}>
                                         <Text style={[styles.smBtnText, { color: '#e74c3c' }]}>Delete</Text>
                                     </TouchableOpacity>
@@ -253,7 +313,7 @@ export default function OwnerPromotionsScreen({ route, navigation }) {
                 <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={styles.modalBg}>
                     <View style={styles.modalContent}>
                         <ScrollView showsVerticalScrollIndicator={false}>
-                            <Text style={styles.modalTitle}>Launch Mega Sale</Text>
+                            <Text style={styles.modalTitle}>{editingPromotion ? 'Edit Promotion' : 'Launch Mega Sale'}</Text>
 
                             <TouchableOpacity style={styles.imgPicker} onPress={handlePickBanner}>
                                 {imagePreview ? <Image source={{ uri: imagePreview }} style={styles.imgPreview} /> : <Text style={{ color: '#888' }}>+ Add Gorgeous Sales Banner</Text>}
@@ -506,6 +566,7 @@ const styles = StyleSheet.create({
     smBtn: { paddingVertical: 8, flex: 1, borderRadius: 8, alignItems: 'center' },
     btnDanger: { backgroundColor: '#e74c3c' },
     btnSuccess: { backgroundColor: '#2ecc71' },
+    btnPrimary: { backgroundColor: ORANGE },
     btnOutline: { borderWidth: 1, borderColor: '#e74c3c' },
     smBtnText: { color: '#fff', fontWeight: 'bold', fontSize: 12 },
     empty: { textAlign: 'center', color: '#888', marginTop: 40 },

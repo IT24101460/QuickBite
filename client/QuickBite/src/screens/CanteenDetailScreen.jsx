@@ -13,7 +13,7 @@ const { width, height } = Dimensions.get('window');
 
 export default function CanteenDetailScreen({ navigation, route }) {
     const { canteen } = route.params;
-    const { addToCart, cartItems, cartTotal, applyPromotion, clearCart } = useCart();
+    const { addToCart, cartItems, cartTotal, applyPromotion } = useCart();
     const { user } = useAuth();
 
     const [foodItems, setFoodItems] = useState([]);
@@ -29,7 +29,7 @@ export default function CanteenDetailScreen({ navigation, route }) {
     const [category, setCategory] = useState('All');
     const [sortBy, setSortBy] = useState('none');
 
-    const categories = ['All', ...new Set(foodItems.map(f => f.category).filter(Boolean))];
+    const categories = ['All', 'Custom Order', ...new Set(foodItems.map(f => f.category).filter(Boolean))];
 
     const fetchData = useCallback(async () => {
         try {
@@ -162,32 +162,7 @@ export default function CanteenDetailScreen({ navigation, route }) {
                     canteenId: promotion.canteenId?._id || promotion.canteenId || canteen._id,
                 };
 
-                // Check canteen validation before adding
-                if (cartItems.length > 0) {
-                    const firstCanteenId = cartItems[0]?.canteenId;
-                    const itemCanteenId = itemToAdd.canteenId;
-                    
-                    if (firstCanteenId && itemCanteenId && firstCanteenId !== itemCanteenId) {
-                        Alert.alert(
-                            'Different Canteen Detected',
-                            `Your cart contains items from another canteen. Would you like to clear your cart and add items from ${canteen.canteenName}?`,
-                            [
-                                { text: 'Cancel', style: 'cancel' },
-                                { 
-                                    text: 'Clear Cart & Add', 
-                                    style: 'destructive',
-                                    onPress: () => {
-                                        clearCart();
-                                        addToCart(itemToAdd, 1, false);
-                                    }
-                                }
-                            ]
-                        );
-                        return;
-                    }
-                }
-
-                addToCart(itemToAdd, 1, false);
+                addToCart(itemToAdd, 1);
                 nextCartItems = [...cartItems, { ...itemToAdd, quantity: 1 }];
                 nextCartTotal = nextCartItems.reduce((sum, item) => sum + (item.price || 0) * item.quantity, 0);
             }
@@ -203,7 +178,7 @@ export default function CanteenDetailScreen({ navigation, route }) {
             });
 
             applyPromotion({ ...promotion, ...res.data.promotion, _id: promotion._id }, res.data.discountAmount);
-            navigation.navigate('Cart', { appliedPromotionId: promotion._id });
+            navigation.navigate('Checkout', { appliedPromotionId: promotion._id });
         } catch (err) {
             Alert.alert('Promotion not applied', err.response?.data?.message || 'This promotion cannot be applied to your cart.');
         }
@@ -280,28 +255,6 @@ export default function CanteenDetailScreen({ navigation, route }) {
                 <View style={{ marginTop: 15 }}>
                     <View style={styles.categoryHeader}>
                         <Text style={styles.sectionTitle}>📋 Categories</Text>
-                        <TouchableOpacity 
-                            style={styles.customOrderBtn}
-                            onPress={() => navigation.navigate('CustomOrder', { canteenId: canteen._id, canteenName: canteen.canteenName })}
-                        >
-                            <Text style={styles.customOrderIcon}>🎂</Text>
-                            <Text style={styles.customOrderText}>Custom Order</Text>
-                        </TouchableOpacity>
-                    </View>
-                    
-                    {/* Add a more visible custom order section */}
-                    <View style={styles.customOrderSection}>
-                        <TouchableOpacity 
-                            style={styles.customOrderLargeBtn}
-                            onPress={() => navigation.navigate('CustomOrder', { canteenId: canteen._id, canteenName: canteen.canteenName })}
-                        >
-                            <Text style={styles.customOrderLargeIcon}>🎂</Text>
-                            <View style={styles.customOrderContent}>
-                                <Text style={styles.customOrderTitle}>Create Custom Order</Text>
-                                <Text style={styles.customOrderSubtitle}>Birthday cakes, special desserts & more</Text>
-                            </View>
-                            <Text style={styles.customOrderArrow}>→</Text>
-                        </TouchableOpacity>
                     </View>
                     <FlatList
                         data={categories}
@@ -309,9 +262,17 @@ export default function CanteenDetailScreen({ navigation, route }) {
                         renderItem={({ item }) => (
                             <TouchableOpacity
                                 style={[styles.catChip, category === item && styles.catChipActive]}
-                                onPress={() => setCategory(item)}
+                                onPress={() => {
+                                    if (item === 'Custom Order') {
+                                        navigation.navigate('CustomOrder', { canteenId: canteen._id, canteenName: canteen.canteenName });
+                                    } else {
+                                        setCategory(item);
+                                    }
+                                }}
                             >
-                                <Text style={[styles.catChipText, category === item && styles.catChipTextActive]}>{item}</Text>
+                                <Text style={[styles.catChipText, category === item && styles.catChipTextActive]}>
+                                    {item === 'Custom Order' ? '🎂 Custom Order' : item}
+                                </Text>
                             </TouchableOpacity>
                         )}
                         keyExtractor={i => i}
@@ -356,7 +317,7 @@ export default function CanteenDetailScreen({ navigation, route }) {
                                 <View style={{ padding: 8 }}>
                                     <Text style={styles.foodName} numberOfLines={1}>{item.name}</Text>
                                     <Text style={styles.foodPrice}>LKR {item.price ? item.price.toFixed(2) : '0.00'}</Text>
-                                    <TouchableOpacity style={styles.addBtn} onPress={() => handleAddToCart(item)}>
+                                    <TouchableOpacity style={styles.addBtn} onPress={() => addToCart(item, 1)}>
                                         <Text style={styles.addBtnText}>+ Add to Cart</Text>
                                     </TouchableOpacity>
                                 </View>

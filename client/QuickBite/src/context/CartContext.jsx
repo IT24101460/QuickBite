@@ -7,23 +7,8 @@ export function CartProvider({ children }) {
     const [appliedPromotion, setAppliedPromotion] = useState(null);
     const [discountAmount, setDiscountAmount] = useState(0);
 
-    const addToCart = (foodItem, qty = 1, showAlert = true) => {
+    const addToCart = (foodItem, qty = 1) => {
         setCartItems(prev => {
-            // Check if cart is empty or item is from same canteen
-            if (prev.length > 0 && !foodItem.isCustomOrder) {
-                const firstCanteenId = prev[0]?.canteenId;
-                const itemCanteenId = foodItem.canteenId;
-                
-                if (firstCanteenId && itemCanteenId && firstCanteenId !== itemCanteenId) {
-                    if (showAlert) {
-                        // This would be handled by the component that calls addToCart
-                        // Return prev items to prevent adding
-                        return prev;
-                    }
-                    return prev;
-                }
-            }
-
             // For custom orders, don't allow duplicates - each custom order is unique
             if (foodItem.isCustomOrder) {
                 // Check if this custom order already exists
