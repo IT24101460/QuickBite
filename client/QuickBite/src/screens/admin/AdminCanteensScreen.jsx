@@ -18,6 +18,16 @@ export default function AdminCanteensScreen({ navigation }) {
     const [image, setImage] = useState(null);
     const [saving, setSaving] = useState(false);
     const [nameError, setNameError] = useState('');
+<<<<<<< HEAD
+
+    const set = k => v => {
+        setForm(f => ({ ...f, [k]: v }));
+        
+        // Real-time validation for canteen name
+        if (k === 'canteenName' && v) {
+            const duplicateName = canteens.find(c => 
+                c.canteenName.toLowerCase() === v.toLowerCase() && 
+=======
     const [phoneError, setPhoneError] = useState('');
 
     const set = k => v => {
@@ -41,6 +51,7 @@ export default function AdminCanteensScreen({ navigation }) {
         if (k === 'canteenName' && v) {
             const duplicateName = canteens.find(c =>
                 c.canteenName.toLowerCase() === v.toLowerCase() &&
+>>>>>>> 08842c65816ab6e17a476811598680b26e2c990e
                 c._id !== editing?._id
             );
             setNameError(duplicateName ? 'A canteen with this name already exists' : '');
@@ -51,20 +62,35 @@ export default function AdminCanteensScreen({ navigation }) {
         }
     };
 
+<<<<<<< HEAD
+=======
     // ✨ CRUD: READ - Fetching the list of canteens from backend API
+>>>>>>> 08842c65816ab6e17a476811598680b26e2c990e
     const fetch = async () => {
         try {
             const r = await API.get('/canteens');
             setCanteens(r.data?.canteens || []);
         } catch (e) { } finally { setLoading(false); setRefreshing(false); }
     };
+<<<<<<< HEAD
+=======
 
+>>>>>>> 08842c65816ab6e17a476811598680b26e2c990e
     const fetchOwners = async () => {
         try {
             const r = await API.get('/users/owners');
             setOwners(r.data || []);
         } catch (e) { }
     };
+<<<<<<< HEAD
+    useEffect(() => { fetch(); fetchOwners(); }, []);
+
+    const openAdd = () => { setEditing(null); setForm({ canteenName: '', location: '', contactDetails: '', ownerDetails: '', openingTime: '08:00 AM', closingTime: '05:00 PM', createdBy: '' }); setImage(null); setModal(true); };
+    const openEdit = (c) => { setEditing(c); setForm({ canteenName: c.canteenName, location: c.location, contactDetails: c.contactDetails, ownerDetails: c.ownerDetails, openingTime: c.openingTime, closingTime: c.closingTime, createdBy: c.createdBy }); setImage(null); setModal(true); };
+
+    const pickImg = () => launchImageLibrary({ 
+        mediaType: 'photo', 
+=======
 
     useEffect(() => { fetch(); fetchOwners(); }, []);
 
@@ -88,12 +114,17 @@ export default function AdminCanteensScreen({ navigation }) {
 
     const pickImg = () => launchImageLibrary({
         mediaType: 'photo',
+>>>>>>> 08842c65816ab6e17a476811598680b26e2c990e
         quality: 0.7,
         includeBase64: false,
         maxHeight: 1024,
         maxWidth: 1024,
         selectionLimit: 1
+<<<<<<< HEAD
+    }, r => { 
+=======
     }, r => {
+>>>>>>> 08842c65816ab6e17a476811598680b26e2c990e
         if (!r.didCancel && r.assets?.length) {
             // Check file type
             const asset = r.assets[0];
@@ -106,13 +137,25 @@ export default function AdminCanteensScreen({ navigation }) {
         }
     });
 
+<<<<<<< HEAD
+    const save = async () => {
+=======
     // ✨ CRUD: CREATE & UPDATE - Determines whether to CREATE (add new) or UPDATE (edit existing) based on 'editing' state
     const save = async () => {
         // 🛡️ VALIDATION: Ensure all required fields are filled before saving
+>>>>>>> 08842c65816ab6e17a476811598680b26e2c990e
         if (!form.canteenName || !form.location || !form.contactDetails || !form.ownerDetails || !form.createdBy) {
             return Alert.alert('Error', 'Fill all required fields including assigning an owner');
         }
 
+<<<<<<< HEAD
+        // Check for duplicate name in frontend (optimistic validation)
+        const duplicateName = canteens.find(c => 
+            c.canteenName.toLowerCase() === form.canteenName.toLowerCase() && 
+            c._id !== editing?._id
+        );
+        
+=======
         // 🛡️ VALIDATION: Ensure phone number is exactly 10 digits before sending to server
         if (!/^[0-9]{10}$/.test(form.contactDetails)) {
             setPhoneError('Phone number must be exactly 10 digits');
@@ -124,6 +167,7 @@ export default function AdminCanteensScreen({ navigation }) {
             c.canteenName.toLowerCase() === form.canteenName.toLowerCase() &&
             c._id !== editing?._id
         );
+>>>>>>> 08842c65816ab6e17a476811598680b26e2c990e
         if (duplicateName) {
             return Alert.alert('Duplicate Name', 'A canteen with this name already exists. Please choose a different name.');
         }
@@ -133,6 +177,16 @@ export default function AdminCanteensScreen({ navigation }) {
             const fd = new FormData();
             Object.entries(form).forEach(([k, v]) => fd.append(k, v));
             if (image) fd.append('canteenImage', { uri: image.uri, name: image.fileName || 'img.jpg', type: image.type || 'image/jpeg' });
+<<<<<<< HEAD
+            
+            let response;
+            if (editing) {
+                response = await API.put(`/canteens/${editing._id}`, fd, { headers: { 'Content-Type': 'multipart/form-data' } });
+            } else {
+                response = await API.post('/canteens', fd, { headers: { 'Content-Type': 'multipart/form-data' } });
+            }
+            
+=======
 
             if (editing) {
                 await API.put(`/canteens/${editing._id}`, fd, { headers: { 'Content-Type': 'multipart/form-data' } });
@@ -140,6 +194,7 @@ export default function AdminCanteensScreen({ navigation }) {
                 await API.post('/canteens', fd, { headers: { 'Content-Type': 'multipart/form-data' } });
             }
 
+>>>>>>> 08842c65816ab6e17a476811598680b26e2c990e
             setModal(false);
             fetch();
             Alert.alert('Success', editing ? 'Canteen updated successfully!' : 'Canteen created successfully!');
@@ -147,7 +202,11 @@ export default function AdminCanteensScreen({ navigation }) {
             console.error('Save error:', e);
             const errorMessage = e.response?.data?.message || 'Failed to save canteen';
             const errorDetails = e.response?.data?.details;
+<<<<<<< HEAD
+            
+=======
 
+>>>>>>> 08842c65816ab6e17a476811598680b26e2c990e
             if (errorDetails && Array.isArray(errorDetails)) {
                 Alert.alert('Validation Error', errorDetails.join('\n'));
             } else if (errorMessage.includes('already exists')) {
@@ -157,12 +216,20 @@ export default function AdminCanteensScreen({ navigation }) {
             } else {
                 Alert.alert('Error', errorMessage);
             }
+<<<<<<< HEAD
+        } finally { 
+            setSaving(false); 
+        }
+    };
+
+=======
         } finally {
             setSaving(false);
         }
     };
 
     // ✨ CRUD: DELETE - Sends delete request to backend and re-fetches the list
+>>>>>>> 08842c65816ab6e17a476811598680b26e2c990e
     const deleteCanteen = (id) => Alert.alert('Delete', 'Are you sure?', [
         { text: 'Cancel', style: 'cancel' },
         { text: 'Delete', style: 'destructive', onPress: async () => { await API.delete(`/canteens/${id}`); fetch(); } },
@@ -216,6 +283,23 @@ export default function AdminCanteensScreen({ navigation }) {
                     </View>
                     <ScrollView contentContainerStyle={styles.modalScroll}>
                         {[
+<<<<<<< HEAD
+    ['Canteen Name *', 'canteenName'], 
+    ['Location *', 'location'], 
+    ['Contact Details *', 'contactDetails'], 
+    ['Owner Details (Text) *', 'ownerDetails'], 
+    ['Opening Time', 'openingTime'], 
+    ['Closing Time', 'closingTime']
+].map(([label, k]) => (
+                            <View key={k} style={{ marginBottom: 12 }}>
+                                <Text style={styles.label}>{label}</Text>
+                                <TextInput 
+                                    style={[styles.input, nameError && k === 'canteenName' && styles.inputError]} 
+                                    value={form[k]} 
+                                    onChangeText={set(k)} 
+                                    placeholder={label} 
+                                    placeholderTextColor="#aaa" 
+=======
                             ['Canteen Name *', 'canteenName'],
                             ['Location *', 'location'],
                             ['Contact Number * (10 digits)', 'contactDetails'],
@@ -236,10 +320,21 @@ export default function AdminCanteensScreen({ navigation }) {
                                     maxLength={k === 'contactDetails' ? 10 : undefined}
                                     placeholder={k === 'contactDetails' ? 'e.g. 0712345678' : label}
                                     placeholderTextColor="#aaa"
+>>>>>>> 08842c65816ab6e17a476811598680b26e2c990e
                                 />
                                 {nameError && k === 'canteenName' && (
                                     <Text style={styles.errorText}>{nameError}</Text>
                                 )}
+<<<<<<< HEAD
+                            </View>
+                        ))}
+                        
+                        <Text style={styles.label}>Assign Owner Account *</Text>
+                        <View style={styles.ownersList}>
+                            {owners.map(o => (
+                                <TouchableOpacity 
+                                    key={o._id} 
+=======
                                 {phoneError && k === 'contactDetails' && (
                                     <Text style={styles.errorText}>{phoneError}</Text>
                                 )}
@@ -251,6 +346,7 @@ export default function AdminCanteensScreen({ navigation }) {
                             {owners.map(o => (
                                 <TouchableOpacity
                                     key={o._id}
+>>>>>>> 08842c65816ab6e17a476811598680b26e2c990e
                                     style={[styles.ownerItem, form.createdBy === o._id && styles.ownerItemSelected]}
                                     onPress={() => set('createdBy')(o._id)}
                                 >
@@ -265,8 +361,13 @@ export default function AdminCanteensScreen({ navigation }) {
                             {image ? (
                                 <View>
                                     <Image source={{ uri: image.uri }} style={styles.imgPreview} resizeMode="cover" />
+<<<<<<< HEAD
+                                    <TouchableOpacity 
+                                        style={styles.cancelImgBtn} 
+=======
                                     <TouchableOpacity
                                         style={styles.cancelImgBtn}
+>>>>>>> 08842c65816ab6e17a476811598680b26e2c990e
                                         onPress={() => setImage(null)}
                                     >
                                         <Text style={styles.cancelImgBtnText}>✕</Text>
@@ -297,13 +398,42 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         ...SHADOWS.md,
     },
+<<<<<<< HEAD
+    backBtn: { 
+=======
     backBtn: {
+>>>>>>> 08842c65816ab6e17a476811598680b26e2c990e
         marginRight: SPACING.sm,
         padding: SPACING.xs,
         borderRadius: BORDER_RADIUS.round,
         backgroundColor: 'rgba(255,255,255,0.1)'
     },
     back: { color: COLORS.textWhite, fontSize: 22, fontWeight: '700' },
+<<<<<<< HEAD
+    headerTitle: { 
+        flex: 1, 
+        color: COLORS.textWhite, 
+        fontSize: TYPOGRAPHY.h3.fontSize, 
+        fontWeight: TYPOGRAPHY.h3.fontWeight 
+    },
+    addBtn: { 
+        backgroundColor: 'rgba(255,255,255,0.2)', 
+        borderRadius: BORDER_RADIUS.md, 
+        paddingHorizontal: SPACING.md, 
+        paddingVertical: SPACING.sm 
+    },
+    addBtnText: { 
+        color: COLORS.textWhite, 
+        fontWeight: TYPOGRAPHY.button.fontWeight, 
+        fontSize: TYPOGRAPHY.button.fontSize 
+    },
+    card: { 
+        flexDirection: 'row', 
+        backgroundColor: COLORS.surface, 
+        borderRadius: BORDER_RADIUS.lg, 
+        padding: SPACING.lg, 
+        marginBottom: SPACING.md, 
+=======
     headerTitle: {
         flex: 1,
         color: COLORS.textWhite,
@@ -327,32 +457,93 @@ const styles = StyleSheet.create({
         borderRadius: BORDER_RADIUS.lg,
         padding: SPACING.lg,
         marginBottom: SPACING.md,
+>>>>>>> 08842c65816ab6e17a476811598680b26e2c990e
         ...SHADOWS.md,
         alignItems: 'center',
         borderWidth: 1,
         borderColor: COLORS.borderLight,
     },
     cardImageContainer: { marginRight: SPACING.md },
+<<<<<<< HEAD
+    cardImage: { 
+        width: 70, 
+        height: 70, 
+        borderRadius: BORDER_RADIUS.md, 
+=======
     cardImage: {
         width: 70,
         height: 70,
         borderRadius: BORDER_RADIUS.md,
+>>>>>>> 08842c65816ab6e17a476811598680b26e2c990e
         backgroundColor: COLORS.surfaceVariant,
         borderWidth: 1,
         borderColor: COLORS.borderLight,
     },
+<<<<<<< HEAD
+    cardImagePlaceholder: { 
+        width: 70, 
+        height: 70, 
+        borderRadius: BORDER_RADIUS.md, 
+        backgroundColor: COLORS.primaryUltraLight,
+        justifyContent: 'center', 
+=======
     cardImagePlaceholder: {
         width: 70,
         height: 70,
         borderRadius: BORDER_RADIUS.md,
         backgroundColor: COLORS.primaryUltraLight,
         justifyContent: 'center',
+>>>>>>> 08842c65816ab6e17a476811598680b26e2c990e
         alignItems: 'center',
         borderWidth: 1,
         borderColor: COLORS.primaryLight,
     },
     cardImagePlaceholderText: { fontSize: 28, color: COLORS.primary },
     cardInfo: { flex: 1 },
+<<<<<<< HEAD
+    cardName: { 
+        fontSize: TYPOGRAPHY.body1.fontSize,
+        fontWeight: '600', 
+        color: COLORS.textPrimary, 
+        marginBottom: SPACING.xs 
+    },
+    cardSub: { 
+        fontSize: TYPOGRAPHY.caption.fontSize, 
+        color: COLORS.textSecondary, 
+        marginBottom: 2 
+    },
+    cardActions: { justifyContent: 'center', gap: SPACING.sm },
+    editBtn: { 
+        backgroundColor: COLORS.info, 
+        borderRadius: BORDER_RADIUS.md, 
+        paddingHorizontal: SPACING.md, 
+        paddingVertical: SPACING.sm 
+    },
+    editBtnText: { 
+        color: COLORS.textWhite, 
+        fontWeight: '600', 
+        fontSize: TYPOGRAPHY.caption.fontSize 
+    },
+    delBtn: { 
+        backgroundColor: COLORS.danger, 
+        borderRadius: BORDER_RADIUS.md, 
+        paddingHorizontal: SPACING.md, 
+        paddingVertical: SPACING.sm 
+    },
+    delBtnText: { 
+        color: COLORS.textWhite, 
+        fontWeight: '600', 
+        fontSize: TYPOGRAPHY.caption.fontSize 
+    },
+    empty: { 
+        textAlign: 'center', 
+        color: COLORS.textTertiary, 
+        paddingVertical: SPACING.xxxl,
+        fontSize: TYPOGRAPHY.body2.fontSize 
+    },
+    modalContainer: { flex: 1, backgroundColor: COLORS.surface },
+    modalHeader: { 
+=======
     cardName: {
         fontSize: TYPOGRAPHY.body1.fontSize,
         fontWeight: '600',
@@ -395,6 +586,7 @@ const styles = StyleSheet.create({
     },
     modalContainer: { flex: 1, backgroundColor: COLORS.surface },
     modalHeader: {
+>>>>>>> 08842c65816ab6e17a476811598680b26e2c990e
         backgroundColor: COLORS.primary,
         paddingTop: 52,
         paddingBottom: SPACING.lg,
@@ -404,6 +596,27 @@ const styles = StyleSheet.create({
         gap: SPACING.md,
         ...SHADOWS.md,
     },
+<<<<<<< HEAD
+    modalTitle: { 
+        color: COLORS.textWhite, 
+        fontSize: TYPOGRAPHY.h3.fontSize, 
+        fontWeight: TYPOGRAPHY.h3.fontWeight 
+    },
+    modalScroll: { padding: SPACING.lg },
+    label: { 
+        fontSize: TYPOGRAPHY.label.fontSize, 
+        fontWeight: TYPOGRAPHY.label.fontWeight, 
+        color: COLORS.textSecondary, 
+        marginBottom: SPACING.sm 
+    },
+    input: { 
+        borderWidth: 1.5, 
+        borderColor: COLORS.border, 
+        borderRadius: BORDER_RADIUS.md, 
+        padding: SPACING.md, 
+        fontSize: TYPOGRAPHY.body2.fontSize, 
+        color: COLORS.textPrimary, 
+=======
     modalTitle: {
         color: COLORS.textWhite,
         fontSize: TYPOGRAPHY.h3.fontSize,
@@ -423,10 +636,31 @@ const styles = StyleSheet.create({
         padding: SPACING.md,
         fontSize: TYPOGRAPHY.body2.fontSize,
         color: COLORS.textPrimary,
+>>>>>>> 08842c65816ab6e17a476811598680b26e2c990e
         marginBottom: SPACING.xs,
         backgroundColor: COLORS.surface,
         height: SIZES.inputHeight,
     },
+<<<<<<< HEAD
+    inputError: { 
+        borderColor: COLORS.danger,
+        borderWidth: 2,
+    },
+    errorText: { 
+        color: COLORS.danger, 
+        fontSize: TYPOGRAPHY.caption.fontSize, 
+        marginTop: SPACING.xs 
+    },
+    imgPicker: { 
+        borderWidth: 2, 
+        borderColor: COLORS.primary, 
+        borderStyle: 'dashed', 
+        borderRadius: BORDER_RADIUS.lg, 
+        height: 120, 
+        justifyContent: 'center', 
+        alignItems: 'center', 
+        marginBottom: SPACING.lg, 
+=======
     inputError: {
         borderColor: COLORS.danger,
         borderWidth: 2,
@@ -445,10 +679,39 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
         marginBottom: SPACING.lg,
+>>>>>>> 08842c65816ab6e17a476811598680b26e2c990e
         overflow: 'hidden',
         backgroundColor: COLORS.primaryUltraLight,
     },
     imgPreview: { width: '100%', height: '100%' },
+<<<<<<< HEAD
+    imgPickerText: { 
+        color: COLORS.primary, 
+        fontWeight: '600', 
+        fontSize: TYPOGRAPHY.body2.fontSize 
+    },
+    cancelImgBtn: { 
+        position: 'absolute', 
+        top: SPACING.xs, 
+        right: SPACING.xs, 
+        backgroundColor: 'rgba(0,0,0,0.7)', 
+        borderRadius: BORDER_RADIUS.round, 
+        width: 28, 
+        height: 28, 
+        justifyContent: 'center', 
+        alignItems: 'center' 
+    },
+    cancelImgBtnText: { 
+        color: COLORS.textWhite, 
+        fontSize: 14, 
+        fontWeight: 'bold' 
+    },
+    saveBtn: { 
+        backgroundColor: COLORS.primary,
+        borderRadius: BORDER_RADIUS.lg, 
+        paddingVertical: SPACING.md, 
+        alignItems: 'center', 
+=======
     imgPickerText: {
         color: COLORS.primary,
         fontWeight: '600',
@@ -475,11 +738,39 @@ const styles = StyleSheet.create({
         borderRadius: BORDER_RADIUS.lg,
         paddingVertical: SPACING.md,
         alignItems: 'center',
+>>>>>>> 08842c65816ab6e17a476811598680b26e2c990e
         marginTop: SPACING.md,
         height: SIZES.buttonHeight,
         justifyContent: 'center',
         ...SHADOWS.sm,
     },
+<<<<<<< HEAD
+    saveBtnText: { 
+        color: COLORS.textWhite, 
+        fontWeight: 'bold', 
+        fontSize: TYPOGRAPHY.button.fontSize 
+    },
+    ownersList: { marginBottom: SPACING.lg, gap: SPACING.sm },
+    ownerItem: { 
+        padding: SPACING.md, 
+        borderRadius: BORDER_RADIUS.md, 
+        borderWidth: 1, 
+        borderColor: COLORS.border, 
+        backgroundColor: COLORS.surfaceVariant 
+    },
+    ownerItemSelected: { 
+        borderColor: COLORS.primary, 
+        backgroundColor: COLORS.primaryUltraLight,
+        borderWidth: 2,
+    },
+    ownerItemText: { 
+        fontSize: TYPOGRAPHY.body2.fontSize, 
+        color: COLORS.textPrimary 
+    },
+    ownerItemTextSelected: { 
+        color: COLORS.primary, 
+        fontWeight: 'bold' 
+=======
     saveBtnText: {
         color: COLORS.textWhite,
         fontWeight: 'bold',
@@ -505,5 +796,6 @@ const styles = StyleSheet.create({
     ownerItemTextSelected: {
         color: COLORS.primary,
         fontWeight: 'bold'
+>>>>>>> 08842c65816ab6e17a476811598680b26e2c990e
     },
 });

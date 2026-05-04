@@ -14,13 +14,21 @@ const { width, height } = Dimensions.get('window');
 
 // Real food images shown in the animated background
 const FOOD_ITEMS = [
+<<<<<<< HEAD
+  'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=200&q=80', // burger
+=======
   'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=200&q=80',// burger
+>>>>>>> 08842c65816ab6e17a476811598680b26e2c990e
   'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=200&q=80', // pizza
   'https://images.unsplash.com/photo-1569718212165-3a8278d5f624?w=200&q=80', // noodles
   'https://images.unsplash.com/photo-1553621042-f6e147245754?w=200&q=80', // sushi
   'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=200&q=80', // salad
   'https://images.unsplash.com/photo-1563245372-f21724e3856d?w=200&q=80', // fried rice
+<<<<<<< HEAD
+  'https://images.unsplash.com/photo-1576107232684-1279f8e-7b09?w=200&q=80', // sandwich
+=======
   'https://images.unsplash.com/photo-1553909489-cd47e0ef937f?w=200&q=80', // sandwich
+>>>>>>> 08842c65816ab6e17a476811598680b26e2c990e
   'https://images.unsplash.com/photo-1551024601-bec78aea704b?w=200&q=80', // dessert
   'https://images.unsplash.com/photo-1585937421612-70a008356fbe?w=200&q=80', // curry
   'https://images.unsplash.com/photo-1600891964092-4316c288032e?w=200&q=80', // steak
@@ -56,6 +64,31 @@ function buildGrid() {
   return tiles;
 }
 
+<<<<<<< HEAD
+// One row of tiles that slides continuously to the left
+function AnimatedRow({ rowIndex, tiles }) {
+  const translateX = useRef(new Animated.Value(0)).current;
+  const rowWidth = COLS * (TILE_SIZE + 10);
+  const direction = rowIndex % 2 === 0 ? -1 : 1; // alternate row directions
+  const duration = 18000 + rowIndex * 2000;
+
+  useEffect(() => {
+    const start = direction === -1 ? 0 : -(rowWidth / 2);
+    const end = direction === -1 ? -(rowWidth / 2) : 0;
+    translateX.setValue(start);
+
+    Animated.loop(
+      Animated.timing(translateX, {
+        toValue: end,
+        duration,
+        useNativeDriver: true,
+      })
+    ).start();
+  }, []);
+
+  // Duplicate tiles for seamless looping
+  const doubled = [...tiles, ...tiles];
+=======
 // One row of tiles that slides endlessly — uses recursive timing for true infinite loop
 function AnimatedRow({ rowIndex, tiles }) {
   const translateX = useRef(new Animated.Value(0)).current;
@@ -95,6 +128,7 @@ function AnimatedRow({ rowIndex, tiles }) {
       if (animRef.current) animRef.current.stop();
     };
   }, []);
+>>>>>>> 08842c65816ab6e17a476811598680b26e2c990e
 
   return (
     <Animated.View
@@ -106,7 +140,11 @@ function AnimatedRow({ rowIndex, tiles }) {
         },
       ]}
     >
+<<<<<<< HEAD
+      {doubled.map((tile, i) => (
+=======
       {tripled.map((tile, i) => (
+>>>>>>> 08842c65816ab6e17a476811598680b26e2c990e
         <View key={i} style={styles.tile}>
           <Image
             source={{ uri: tile.emoji }}
@@ -163,9 +201,12 @@ export default function LoginScreen({ navigation }) {
     if (touched[field]) validate(field, value);
   };
 
+<<<<<<< HEAD
+=======
   const grid = buildGrid();
   const rows = Array.from({ length: ROWS }, (_, i) => grid.filter(t => t.row === i));
 
+>>>>>>> 08842c65816ab6e17a476811598680b26e2c990e
   const handleLogin = async () => {
     // Mark all fields touched and run full validation
     setTouched({ email: true, password: true });
