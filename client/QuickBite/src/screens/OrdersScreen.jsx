@@ -114,6 +114,20 @@ export default function OrdersScreen({ navigation }) {
                         </View>
                     )}
                     
+                    {isCustomOrder && item.pickupDate && (
+                        <View style={styles.summaryRow}>
+                            <Text style={styles.summaryLabel}>📅 Pickup Date:</Text>
+                            <Text style={styles.summaryValue}>
+                                {new Date(item.pickupDate).toLocaleDateString('en-US', { 
+                                    weekday: 'short', 
+                                    year: 'numeric', 
+                                    month: 'short', 
+                                    day: 'numeric' 
+                                })}
+                            </Text>
+                        </View>
+                    )}
+                    
                     <View style={styles.summaryRow}>
                         <Text style={styles.summaryLabel}>📍 Canteen:</Text>
                         <Text style={styles.summaryValue}>{item.canteenName || 'Campus Canteen'}</Text>

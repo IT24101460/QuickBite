@@ -16,6 +16,7 @@ import CartScreen from '../screens/CartScreen';
 import OrdersScreen from '../screens/OrdersScreen';
 import ProfileScreen from '../screens/ProfileScreen';
 import SettingsScreen from '../screens/SettingsScreen';
+import MyReviewsScreen from '../screens/MyReviewsScreen';
 
 // Stack screens
 import FoodDetailScreen from '../screens/FoodDetailScreen';
@@ -68,7 +69,16 @@ function UserDrawerFlow() {
       screenOptions={{
         drawerPosition: 'left',
         headerShown: false,
-        drawerType: 'front'
+        drawerType: 'front',
+        drawerStyle: {
+          borderRightWidth: 1,
+          borderRightColor: '#e0e0e0',
+          shadowColor: '#000',
+          shadowOffset: { width: 2, height: 0 },
+          shadowOpacity: 0.1,
+          shadowRadius: 4,
+          elevation: 3,
+        }
       }}
     >
       <Drawer.Screen name="HomeContainer">
@@ -79,6 +89,7 @@ function UserDrawerFlow() {
             <Stack.Screen name="Orders" component={OrdersScreen} />
             <Stack.Screen name="Profile" component={ProfileScreen} />
             <Stack.Screen name="Settings" component={SettingsScreen} />
+            <Stack.Screen name="MyReviews" component={MyReviewsScreen} />
             <Stack.Screen name="FoodDetail" component={FoodDetailScreen} />
             <Stack.Screen name="Checkout" component={CheckoutScreen} />
             <Stack.Screen name="OrderDetail" component={OrderDetailScreen} />

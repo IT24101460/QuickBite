@@ -337,7 +337,15 @@ export default function ProfileScreen({ navigation }) {
                             )}
                         </>
                     ) : (
-                        <Text style={styles.noPaymentText}>No payment options saved yet.</Text>
+                        <View style={styles.noPaymentContainer}>
+                            <Text style={styles.noPaymentText}>No payment options saved yet.</Text>
+                            <TouchableOpacity 
+                                style={styles.addPaymentBtn}
+                                onPress={() => navigation.navigate('PaymentOptions')}
+                            >
+                                <Text style={styles.addPaymentBtnText}>+ Add Payment Option</Text>
+                            </TouchableOpacity>
+                        </View>
                     )}
                 </View>
 
@@ -576,7 +584,20 @@ const styles = StyleSheet.create({
     saveBtn: { backgroundColor: ORANGE },
     modalBtnText: { fontSize: 14, fontWeight: '600', color: '#333' },
     viewMoreText: { color: ORANGE, fontSize: 12, fontWeight: '600', marginTop: 8 },
-    noPaymentText: { color: '#888', fontSize: 13, fontStyle: 'italic', marginTop: 5, marginBottom: 5 },
+    noPaymentContainer: { alignItems: 'center', paddingVertical: 15 },
+    noPaymentText: { color: '#888', fontSize: 13, fontStyle: 'italic', marginTop: 5, marginBottom: 15 },
+    addPaymentBtn: { 
+        backgroundColor: ORANGE, 
+        paddingHorizontal: 20, 
+        paddingVertical: 12, 
+        borderRadius: 8,
+        shadowColor: ORANGE,
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.2,
+        shadowRadius: 4,
+        elevation: 3
+    },
+    addPaymentBtnText: { color: '#fff', fontSize: 14, fontWeight: 'bold' },
 
     // Feedback modal styles
     star: { fontSize: 28, color: '#ddd' },

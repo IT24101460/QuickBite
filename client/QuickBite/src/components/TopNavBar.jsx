@@ -8,7 +8,7 @@ import { getImageUrl } from '../utils/imageUtils';
 const ORANGE = '#FF6B35';
 const ORANGE_DARK = '#C94D21';
 
-export default function TopNavBar({ navigation, search, setSearch, placeholder = "🔍 Search amazing food...", hideBottomRow = false, isHome = false }) {
+export default function TopNavBar({ navigation, search, setSearch, placeholder = "🔍 Search amazing food...", hideBottomRow = false, isHome = false, transparent = false }) {
     const { user } = useAuth();
     const { itemCount, finalTotal } = useCart();
     const { branding } = useBranding();
@@ -16,18 +16,18 @@ export default function TopNavBar({ navigation, search, setSearch, placeholder =
     const canGoBack = !isHome && navigation.canGoBack ? navigation.canGoBack() : false;
 
     return (
-        <View style={styles.navBar}>
+        <View style={[styles.navBar, transparent && styles.navBarTransparent]}>
             {/* Top Row: Profile/Back and Cart Pill */}
             <View style={[styles.topRow, setSearch && { marginBottom: 0 }]}>
                 <View style={styles.leftSection}>
                     {canGoBack && (
                         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtnNav}>
-                            <Text style={styles.backArrowNav}>←</Text>
+                            <Text style={styles.backArrowNav}>◀</Text>
                         </TouchableOpacity>
                     )}
                     <View style={styles.uberGroup}>
                         <TouchableOpacity style={styles.hamburgerBtn} onPress={() => navigation.toggleDrawer?.()}>
-                            <Text style={styles.hamburgerIcon}>≡</Text>
+                            <Text style={styles.hamburgerIcon}>☰</Text>
                         </TouchableOpacity>
                         {branding?.logoUrl ? (
                             <Image source={{ uri: getImageUrl(branding.logoUrl) }} style={styles.brandLogo} resizeMode="contain" />
@@ -39,7 +39,7 @@ export default function TopNavBar({ navigation, search, setSearch, placeholder =
 
                 {setSearch && (
                     <View style={styles.centerSearchWrapper}>
-                        <Text style={styles.searchIcon}>🔍</Text>
+                        <Text style={[styles.searchIcon, { fontSize: 18 }]}>🔍</Text>
                         <TextInput
                             style={styles.centerSearchInput}
                             placeholder="Search..."
@@ -56,7 +56,7 @@ export default function TopNavBar({ navigation, search, setSearch, placeholder =
                             style={styles.cartPill}
                             onPress={() => navigation.navigate?.('Cart')}
                         >
-                            <Text style={styles.cartPillIcon}>🛒</Text>
+                            <Text style={styles.cartPillIcon}>🛍️</Text>
                             <Text style={styles.cartPillText}>
                                 {itemCount > 0 ? `LKR ${finalTotal.toFixed(2)}` : 'LKR 0.00'}
                             </Text>
@@ -115,6 +115,12 @@ const styles = StyleSheet.create({
         shadowRadius: 16,
         elevation: 8,
         zIndex: 100,
+    },
+    navBarTransparent: {
+        backgroundColor: 'transparent',
+        borderBottomWidth: 0,
+        shadowOpacity: 0,
+        elevation: 0,
     },
     topRow: {
         flexDirection: 'row',

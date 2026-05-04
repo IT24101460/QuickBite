@@ -162,7 +162,7 @@ export default function OwnerSettingsScreen({ route, navigation }) {
                 </View>
 
                 <View style={[styles.formGroup, { marginBottom: 30 }]}>
-                    <Text style={styles.label}>Connected Bank Account (For Student Transfer Payments)</Text>
+                    <Text style={styles.label}>Connected Bank Account (For Customer Transfer Payments)</Text>
                     <TextInput style={[styles.input, { height: 80, textAlignVertical: 'top' }]} value={bankLabel} onChangeText={setBankLabel} multiline placeholder="BOC Colombo Branch&#10;Acc: 123456789&#10;Name: John Doe" />
                 </View>
 

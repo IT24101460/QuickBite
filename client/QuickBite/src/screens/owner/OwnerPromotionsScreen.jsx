@@ -554,7 +554,7 @@ const styles = StyleSheet.create({
     addBtnText: { color: '#fff', fontWeight: 'bold', fontSize: 13 },
 
     card: { backgroundColor: '#fff', borderRadius: 12, marginBottom: 20, elevation: 3, overflow: 'hidden' },
-    cardImage: { width: '100%', height: 120 },
+    cardImage: { width: '100%', height: 170 },
     cardContent: { padding: 15 },
     cardTitle: { fontSize: 18, fontWeight: 'bold', color: '#222' },
     cardDesc: { fontSize: 13, color: '#666', marginVertical: 6 },

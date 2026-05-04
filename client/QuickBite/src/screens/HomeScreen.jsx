@@ -27,8 +27,7 @@ export default function HomeScreen({ navigation }) {
   const bannerRef = useRef(null);
   const [currentPromoIndex, setCurrentPromoIndex] = useState(0);
 
-  const categories = ['All', 'Rice', 'Noodles', 'Snacks', 'Drinks', 'Desserts', 'Other'];
-  const CAKE_CHIP = 'Order a Cake';
+  const categories = ['All', 'Custom Order', 'Rice', 'Noodles', 'Snacks', 'Beverages', 'Desserts', 'Other'];
 
   const fetchData = useCallback(async () => {
     try {
@@ -190,7 +189,7 @@ export default function HomeScreen({ navigation }) {
       <ScrollView
         showsVerticalScrollIndicator={false}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[COLORS.primary]} />}
-        contentContainerStyle={{ paddingTop: 85, paddingBottom: 20 }}
+        contentContainerStyle={{ paddingTop: 100, paddingBottom: 20 }}
       >
 
         {/* Promotions Banner - Daraz Style */}
@@ -267,34 +266,35 @@ export default function HomeScreen({ navigation }) {
           </View>
         )}
 
-        {/* Category Filter + Cake Order Button */}
+        {/* Category Filter + Custom Order Button */}
         <View style={{ marginTop: 15 }}>
           <FlatList
-            data={[CAKE_CHIP, ...categories]}
+            data={categories}
             horizontal
-            renderItem={({ item }) => {
-              const isCake = item === CAKE_CHIP;
-              return (
-                <TouchableOpacity
-                  style={[
-                    styles.catChip,
-                    category === item && styles.catChipActive
-                  ]}
-                  onPress={() => {
-                    if (isCake) {
-                      navigation.navigate('CakeOrder');
-                    } else {
-                      setCategory(item);
-                    }
-                  }}
-                >
-                  <Text style={[
-                    styles.catChipText,
-                    category === item && styles.catChipTextActive
-                  ]}>{item}</Text>
-                </TouchableOpacity>
-              );
-            }}
+            renderItem={({ item }) => (
+              <TouchableOpacity
+                style={[styles.catChip, category === item && styles.catChipActive]}
+                onPress={() => {
+                  if (item === 'Custom Order') {
+                    // Navigate to canteen selection for custom order
+                    Alert.alert(
+                      'Select Canteen',
+                      'Please select a canteen first to place a custom order.',
+                      [
+                        { text: 'Choose Canteen', onPress: () => navigation.navigate('CanteenList', { goToCustomOrder: true }) },
+                        { text: 'Cancel', style: 'cancel' }
+                      ]
+                    );
+                  } else {
+                    setCategory(item);
+                  }
+                }}
+              >
+                <Text style={[styles.catChipText, category === item && styles.catChipTextActive]}>
+                  {item === 'Custom Order' ? '🎂 Custom Order' : item}
+                </Text>
+              </TouchableOpacity>
+            )}
             keyExtractor={i => i}
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 8 }}
@@ -505,10 +505,10 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: COLORS.borderLight,
   },
-  foodImg: { width: '100%', height: 120 },
+  foodImg: { width: '100%', height: 165 },
   foodImgPlaceholder: {
     width: '100%',
-    height: 120,
+    height: 160,
     backgroundColor: COLORS.primaryUltraLight,
     justifyContent: 'center',
     alignItems: 'center'

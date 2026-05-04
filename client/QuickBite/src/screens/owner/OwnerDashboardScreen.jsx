@@ -215,7 +215,7 @@ export default function OwnerDashboardScreen({ navigation }) {
                                 "{feedbacks[0].comment || 'Great service!'}" -{" "}
                                 {feedbacks[0].userId?.firstName
                                     ? `${feedbacks[0].userId.firstName}${feedbacks[0].userId.lastName ? ` ${feedbacks[0].userId.lastName}` : ""}`
-                                    : "Student"}
+                                    : "Customer"}
                             </Text>
                             <Text style={styles.ratingText}>⭐ {feedbacks[0].rating || '5.0'}/5.0</Text>
                         </View>

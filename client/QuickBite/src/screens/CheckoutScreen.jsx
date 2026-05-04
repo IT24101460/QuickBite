@@ -241,7 +241,7 @@ export default function CheckoutScreen({ route, navigation }) {
         <View style={styles.container}>
             <TopNavBar navigation={navigation} hideBottomRow={true} />
 
-            <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ padding: 16, paddingTop: 85 }}>
+            <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ padding: 16, paddingTop: 150 }}>
 
                 {/* Pickup Time - Only show for regular orders */}
                 {!isCustomOrder && (

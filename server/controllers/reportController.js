@@ -32,6 +32,7 @@ export async function getOwnerStats(req, res) {
         });
 
         const ordersCount = todayOrders.length;
+        const completedToday = todayOrders.filter(order => order.status === 'completed').length;
         const revenueToday = todayOrders.reduce((sum, order) => sum + (order.finalAmount || 0), 0);
 
         // 2. Average Rating
@@ -45,6 +46,7 @@ export async function getOwnerStats(req, res) {
         res.status(200).json({
             stats: {
                 ordersToday: ordersCount,
+                completedToday: completedToday,
                 revenueToday: revenueToday,
                 rating: avgRating
             }

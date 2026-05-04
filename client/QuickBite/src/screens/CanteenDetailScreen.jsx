@@ -194,12 +194,11 @@ export default function CanteenDetailScreen({ navigation, route }) {
 
     return (
         <View style={styles.container}>
-            <TopNavBar navigation={navigation} search={search} setSearch={setSearch} placeholder={`🔍 Search in ${canteen.canteenName}...`} />
+            <TopNavBar navigation={navigation} search={search} setSearch={setSearch} placeholder={`🔍 Search in ${canteen.canteenName}...`} hideBottomRow={true} />
 
             <ScrollView 
                 showsVerticalScrollIndicator={false} 
-                contentContainerStyle={{ paddingBottom: 20 }}
-                style={{ marginTop: 130 }}
+                contentContainerStyle={{ paddingTop: 100, paddingBottom: 20 }}
                 refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[ORANGE]} />}
             >
                 {/* Hero Banner */}
@@ -388,8 +387,8 @@ export default function CanteenDetailScreen({ navigation, route }) {
 
 const styles = StyleSheet.create({
     container: { flex: 1, backgroundColor: '#FFF7F2' },
-    heroImg: { width: '100%', height: 180 },
-    heroPlaceholder: { width: '100%', height: 180, backgroundColor: '#FFF0E8', justifyContent: 'center', alignItems: 'center' },
+    heroImg: { width: '100%', height: 230 },
+    heroPlaceholder: { width: '100%', height: 220, backgroundColor: '#FFF0E8', justifyContent: 'center', alignItems: 'center' },
     heroPlaceholderIcon: { fontSize: 60 },
     infoCard: { backgroundColor: '#fff', marginHorizontal: 16, marginTop: -50, borderRadius: 16, padding: 15, elevation: 6, shadowColor: '#000', shadowOpacity: 0.1, shadowRadius: 10 },
     canteenName: { fontSize: 22, fontWeight: 'bold', color: '#222' },
@@ -446,8 +445,8 @@ const styles = StyleSheet.create({
     sortBtnText: { fontSize: 12, color: '#666', fontWeight: '600' },
     sortBtnTextActive: { color: ORANGE, fontWeight: 'bold' },
     foodCard: { flex: 1, margin: 6, backgroundColor: '#fff', borderRadius: 14, overflow: 'hidden', elevation: 3, shadowColor: '#000', shadowOpacity: 0.1, shadowRadius: 5 },
-    foodImg: { width: '100%', height: 110 },
-    foodImgPlaceholder: { width: '100%', height: 110, backgroundColor: '#FFF0E8', justifyContent: 'center', alignItems: 'center' },
+    foodImg: { width: '100%', height: 150 },
+    foodImgPlaceholder: { width: '100%', height: 140, backgroundColor: '#FFF0E8', justifyContent: 'center', alignItems: 'center' },
     placeholderIcon: { fontSize: 32 },
     foodName: { fontSize: 14, fontWeight: 'bold', color: '#222', marginBottom: 2 },
     foodPrice: { fontSize: 13, fontWeight: 'bold', color: ORANGE, marginBottom: 8 },
