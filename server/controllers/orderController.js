@@ -146,7 +146,21 @@ export async function getMyOrders(req, res) {
         const orders = await Order.find({ userId: req.user._id || req.user.id })
             .sort({ createdAt: -1 });
 
-        res.status(200).json({ orders: await attachItemCategories(orders) });
+        // Populate canteen information
+        const canteenIds = [...new Set(orders.map(order => order.canteenId).filter(Boolean))];
+        const canteens = await Canteen.find({ _id: { $in: canteenIds } }).select('canteenName').lean();
+        const canteenMap = new Map(canteens.map(c => [c._id.toString(), c.canteenName]));
+
+        // Attach canteen names to orders
+        const ordersWithCanteen = orders.map(order => {
+            const plainOrder = order.toObject ? order.toObject() : order;
+            return {
+                ...plainOrder,
+                canteenName: canteenMap.get(order.canteenId?.toString()) || 'Unknown Canteen'
+            };
+        });
+
+        res.status(200).json({ orders: await attachItemCategories(ordersWithCanteen) });
     } catch (error) {
         res.status(500).json({ message: "Error fetching orders", error: error.message });
     }
@@ -166,7 +180,16 @@ export async function getOrderById(req, res) {
             return res.status(403).json({ message: "Access denied" });
         }
 
-        res.status(200).json({ order: await attachItemCategories(order) });
+        // Populate canteen information
+        let orderWithCanteen = order.toObject ? order.toObject() : order;
+        if (order.canteenId) {
+            const canteen = await Canteen.findById(order.canteenId).select('canteenName').lean();
+            orderWithCanteen.canteenName = canteen?.canteenName || 'Unknown Canteen';
+        } else {
+            orderWithCanteen.canteenName = 'Unknown Canteen';
+        }
+
+        res.status(200).json({ order: await attachItemCategories(orderWithCanteen) });
     } catch (error) {
         res.status(500).json({ message: "Error fetching order", error: error.message });
     }
