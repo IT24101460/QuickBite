@@ -6,4 +6,5 @@ server/node_modules/
 dist/
 build/server/env
 .idea/
-
+server/.env
+client/.env
