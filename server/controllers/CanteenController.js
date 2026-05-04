@@ -10,6 +10,7 @@ export async function createCanteen(req, res) {
 
     const { canteenName, location, contactDetails, ownerDetails, openingTime, closingTime } = req.body;
 
+<<<<<<< HEAD
     // Check for duplicate canteen name
     const existingCanteen = await Canteen.findOne({ 
       canteenName: { $regex: new RegExp(`^${canteenName}$`, 'i') } 
@@ -18,6 +19,21 @@ export async function createCanteen(req, res) {
     if (existingCanteen) {
       return res.status(409).json({ 
         message: "A canteen with this name already exists. Please choose a different name." 
+=======
+    // 🛡️ VALIDATION: Server-side check - contactDetails must be exactly 10 digits
+    if (contactDetails && !/^[0-9]{10}$/.test(contactDetails.trim())) {
+      return res.status(400).json({ message: 'Contact number must be exactly 10 digits.' });
+    }
+
+    // Check for duplicate canteen name
+    const existingCanteen = await Canteen.findOne({
+      canteenName: { $regex: new RegExp(`^${canteenName}$`, 'i') }
+    });
+
+    if (existingCanteen) {
+      return res.status(409).json({
+        message: "A canteen with this name already exists. Please choose a different name."
+>>>>>>> 08842c65816ab6e17a476811598680b26e2c990e
       });
     }
 
@@ -25,6 +41,7 @@ export async function createCanteen(req, res) {
     if (req.file) {
       try {
         const fileName = `canteen_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+<<<<<<< HEAD
         
         const { data, error } = await supabase.storage
           .from('quickbite-images')
@@ -38,12 +55,28 @@ export async function createCanteen(req, res) {
           return res.status(500).json({ 
             message: "Failed to upload image. Please try again or contact support.",
             details: error.message 
+=======
+
+        const { data, error } = await supabase.storage
+          .from('quickbite-images')
+          .upload(fileName, req.file.buffer, {
+            contentType: req.file.mimetype,
+            upsert: false
+          });
+
+        if (error) {
+          console.error('Supabase upload error:', error);
+          return res.status(500).json({
+            message: "Failed to upload image. Please try again or contact support.",
+            details: error.message
+>>>>>>> 08842c65816ab6e17a476811598680b26e2c990e
           });
         }
 
         const { data: publicUrlData } = supabase.storage
           .from('quickbite-images')
           .getPublicUrl(fileName);
+<<<<<<< HEAD
           
         canteenImage = publicUrlData.publicUrl;
       } catch (uploadError) {
@@ -51,6 +84,15 @@ export async function createCanteen(req, res) {
         return res.status(500).json({ 
           message: "Image upload failed. The canteen will be created without an image.",
           error: uploadError.message 
+=======
+
+        canteenImage = publicUrlData.publicUrl;
+      } catch (uploadError) {
+        console.error('Image upload error:', uploadError);
+        return res.status(500).json({
+          message: "Image upload failed. The canteen will be created without an image.",
+          error: uploadError.message
+>>>>>>> 08842c65816ab6e17a476811598680b26e2c990e
         });
       }
     }
@@ -70,6 +112,7 @@ export async function createCanteen(req, res) {
     res.status(201).json({ message: "Canteen created successfully", canteen });
   } catch (error) {
     console.error('Canteen creation error:', error);
+<<<<<<< HEAD
     
     if (error.name === 'ValidationError') {
       const validationErrors = Object.values(error.errors).map(err => err.message);
@@ -80,6 +123,18 @@ export async function createCanteen(req, res) {
     }
     
     res.status(500).json({ 
+=======
+
+    if (error.name === 'ValidationError') {
+      const validationErrors = Object.values(error.errors).map(err => err.message);
+      return res.status(400).json({
+        message: "Validation failed",
+        details: validationErrors
+      });
+    }
+
+    res.status(500).json({
+>>>>>>> 08842c65816ab6e17a476811598680b26e2c990e
       message: "Failed to create canteen. Please try again later.",
       error: process.env.NODE_ENV === 'development' ? error.message : undefined
     });
@@ -160,6 +215,7 @@ export async function updateCanteen(req, res) {
     }
 
     const updateData = { ...req.body };
+<<<<<<< HEAD
     
     // Check for duplicate canteen name (if name is being updated)
     if (updateData.canteenName && updateData.canteenName !== canteen.canteenName) {
@@ -171,6 +227,19 @@ export async function updateCanteen(req, res) {
       if (existingCanteen) {
         return res.status(409).json({ 
           message: "A canteen with this name already exists. Please choose a different name." 
+=======
+
+    // Check for duplicate canteen name (if name is being updated)
+    if (updateData.canteenName && updateData.canteenName !== canteen.canteenName) {
+      const existingCanteen = await Canteen.findOne({
+        canteenName: { $regex: new RegExp(`^${updateData.canteenName}$`, 'i') },
+        _id: { $ne: req.params.id } // Exclude current canteen
+      });
+
+      if (existingCanteen) {
+        return res.status(409).json({
+          message: "A canteen with this name already exists. Please choose a different name."
+>>>>>>> 08842c65816ab6e17a476811598680b26e2c990e
         });
       }
     }
@@ -178,6 +247,7 @@ export async function updateCanteen(req, res) {
     if (req.file) {
       try {
         const fileName = `canteen_${req.params.id}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+<<<<<<< HEAD
         
         const { data, error } = await supabase.storage
           .from('quickbite-images')
@@ -191,12 +261,28 @@ export async function updateCanteen(req, res) {
           return res.status(500).json({ 
             message: "Failed to upload image. Please try again or contact support.",
             details: error.message 
+=======
+
+        const { data, error } = await supabase.storage
+          .from('quickbite-images')
+          .upload(fileName, req.file.buffer, {
+            contentType: req.file.mimetype,
+            upsert: false
+          });
+
+        if (error) {
+          console.error('Supabase upload error:', error);
+          return res.status(500).json({
+            message: "Failed to upload image. Please try again or contact support.",
+            details: error.message
+>>>>>>> 08842c65816ab6e17a476811598680b26e2c990e
           });
         }
 
         const { data: publicUrlData } = supabase.storage
           .from('quickbite-images')
           .getPublicUrl(fileName);
+<<<<<<< HEAD
           
         updateData.canteenImage = publicUrlData.publicUrl;
       } catch (uploadError) {
@@ -204,6 +290,15 @@ export async function updateCanteen(req, res) {
         return res.status(500).json({ 
           message: "Image upload failed. The canteen will be updated without an image.",
           error: uploadError.message 
+=======
+
+        updateData.canteenImage = publicUrlData.publicUrl;
+      } catch (uploadError) {
+        console.error('Image upload error:', uploadError);
+        return res.status(500).json({
+          message: "Image upload failed. The canteen will be updated without an image.",
+          error: uploadError.message
+>>>>>>> 08842c65816ab6e17a476811598680b26e2c990e
         });
       }
     }
@@ -222,6 +317,7 @@ export async function updateCanteen(req, res) {
       new: true,
       runValidators: true
     });
+<<<<<<< HEAD
     
     res.status(200).json({ message: "Canteen updated successfully", canteen: updated });
   } catch (error) {
@@ -236,6 +332,22 @@ export async function updateCanteen(req, res) {
     }
     
     res.status(500).json({ 
+=======
+
+    res.status(200).json({ message: "Canteen updated successfully", canteen: updated });
+  } catch (error) {
+    console.error('Canteen update error:', error);
+
+    if (error.name === 'ValidationError') {
+      const validationErrors = Object.values(error.errors).map(err => err.message);
+      return res.status(400).json({
+        message: "Validation failed",
+        details: validationErrors
+      });
+    }
+
+    res.status(500).json({
+>>>>>>> 08842c65816ab6e17a476811598680b26e2c990e
       message: "Failed to update canteen. Please try again later.",
       error: process.env.NODE_ENV === 'development' ? error.message : undefined
     });

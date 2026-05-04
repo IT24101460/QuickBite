@@ -21,6 +21,7 @@ export default function ProfileScreen({ navigation }) {
     const [editingOption, setEditingOption] = useState(null);
     const [cardholderName, setCardholderName] = useState('');
 
+    // User feedback states
     const [userFeedback, setUserFeedback] = useState([]);
     const [loadingUserFeedback, setLoadingUserFeedback] = useState(false);
     const [editFeedbackModal, setEditFeedbackModal] = useState(false);
@@ -28,21 +29,6 @@ export default function ProfileScreen({ navigation }) {
     const [editingRating, setEditingRating] = useState(0);
     const [editingComment, setEditingComment] = useState('');
     const [editingType, setEditingType] = useState('general');
-
-    const loadUserFeedback = async () => {
-        if (!token) return;
-        try {
-            setLoadingUserFeedback(true);
-            const res = await API.get('/feedback/user/my-feedback', {
-                headers: { Authorization: `Bearer ${token}` },
-            });
-            setUserFeedback(res.data.feedback || []);
-        } catch (err) {
-            console.error('Error loading user feedback:', err);
-        } finally {
-            setLoadingUserFeedback(false);
-        }
-    };
 
     useFocusEffect(
         useCallback(() => {
@@ -59,7 +45,7 @@ export default function ProfileScreen({ navigation }) {
             loadCards();
             loadPaymentOptions();
             loadUserFeedback();
-        }, [token])
+        }, [])
     );
 
     const loadPaymentOptions = async () => {
@@ -73,6 +59,18 @@ export default function ProfileScreen({ navigation }) {
             console.error('Error loading payment options:', error);
         } finally {
             setLoading(false);
+        }
+    };
+
+    const loadUserFeedback = async () => {
+        try {
+            setLoadingUserFeedback(true);
+            const res = await API.get('/feedback/user/my-feedback', { headers: { Authorization: `Bearer ${token}` } });
+            setUserFeedback(res.data.feedback || []);
+        } catch (err) {
+            console.error('Error loading user feedback:', err);
+        } finally {
+            setLoadingUserFeedback(false);
         }
     };
 
@@ -154,20 +152,14 @@ export default function ProfileScreen({ navigation }) {
 
     const handleSaveEditedFeedback = async () => {
         if (!editingFeedback) return;
-        if (!token) return Alert.alert('Error', 'Please login again');
-        if (!editingRating || editingRating < 1) return Alert.alert('Error', 'Please select a rating');
-        if (!editingComment.trim()) return Alert.alert('Error', 'Comment cannot be empty');
         try {
             setLoading(true);
-            await API.put(
-                `/feedback/user/${editingFeedback._id}`,
-                {
-                    rating: editingRating,
-                    comment: editingComment.trim(),
-                    complaintType: editingType,
-                },
-                { headers: { Authorization: `Bearer ${token}` } }
-            );
+            const body = {
+                rating: editingRating,
+                comment: editingComment.trim(),
+                complaintType: editingType,
+            };
+            await API.put(`/feedback/user/${editingFeedback._id}`, body, { headers: { Authorization: `Bearer ${token}` } });
             Alert.alert('Success', 'Feedback updated');
             setEditFeedbackModal(false);
             loadUserFeedback();
@@ -179,24 +171,19 @@ export default function ProfileScreen({ navigation }) {
     };
 
     const handleDeleteFeedback = (id) => {
-        if (!token) return Alert.alert('Error', 'Please login again');
         Alert.alert('Delete Review', 'Are you sure you want to delete this review?', [
             { text: 'Cancel', style: 'cancel' },
             {
-                text: 'Delete',
-                style: 'destructive',
-                onPress: async () => {
+                text: 'Delete', style: 'destructive', onPress: async () => {
                     try {
-                        await API.delete(`/feedback/user/${id}`, {
-                            headers: { Authorization: `Bearer ${token}` },
-                        });
+                        await API.delete(`/feedback/user/${id}`, { headers: { Authorization: `Bearer ${token}` } });
                         Alert.alert('Deleted', 'Your review has been deleted');
                         loadUserFeedback();
                     } catch (err) {
                         Alert.alert('Error', err.response?.data?.message || 'Failed to delete review');
                     }
-                },
-            },
+                }
+            }
         ]);
     };
 
@@ -361,41 +348,24 @@ export default function ProfileScreen({ navigation }) {
                             <ActivityIndicator size="small" color={ORANGE} />
                         </View>
                     ) : userFeedback.length > 0 ? (
-                        userFeedback.map((fb) => (
+                        userFeedback.map(fb => (
                             <View key={fb._id} style={{ marginBottom: 12 }}>
                                 <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                                    <Text style={{ fontWeight: '700' }}>
-                                        {['', 'Poor', 'Fair', 'Good', 'Great', 'Excellent'][fb.rating]}
-                                    </Text>
-                                    <View style={{ flexDirection: 'row', gap: 8 }}>
-                                        <TouchableOpacity
-                                            style={[styles.miniBtn, styles.editMiniBtn]}
-                                            onPress={() => handleOpenEditFeedback(fb)}
-                                        >
+                                    <Text style={{ fontWeight: '700' }}>{['', 'Poor', 'Fair', 'Good', 'Great', 'Excellent'][fb.rating]}</Text>
+                                    <View style={{ flexDirection: 'row' }}>
+                                        <TouchableOpacity style={[styles.miniBtn, styles.editMiniBtn]} onPress={() => handleOpenEditFeedback(fb)}>
                                             <Text style={styles.miniBtnText}>✏️</Text>
                                         </TouchableOpacity>
-                                        <TouchableOpacity
-                                            style={[styles.miniBtn, styles.deleteMiniBtn]}
-                                            onPress={() => handleDeleteFeedback(fb._id)}
-                                        >
+                                        <TouchableOpacity style={[styles.miniBtn, styles.deleteMiniBtn]} onPress={() => handleDeleteFeedback(fb._id)}>
                                             <Text style={styles.miniBtnText}>🗑️</Text>
                                         </TouchableOpacity>
                                     </View>
                                 </View>
                                 <Text style={{ color: '#666', marginTop: 6 }}>{fb.comment}</Text>
-                                {fb.foodItemId?.name ? (
-                                    <Text style={{ fontSize: 12, color: '#999', marginTop: 4 }}>🍽 {fb.foodItemId.name}</Text>
-                                ) : null}
                                 {fb.complaintImage ? (
-                                    <Image
-                                        source={{ uri: fb.complaintImage }}
-                                        style={{ width: '100%', height: 120, borderRadius: 12, marginTop: 8 }}
-                                        resizeMode="cover"
-                                    />
+                                    <Image source={{ uri: fb.complaintImage }} style={{ width: '100%', height: 120, borderRadius: 12, marginTop: 8 }} resizeMode='cover' />
                                 ) : null}
-                                <Text style={{ fontSize: 12, color: '#999', marginTop: 6 }}>
-                                    {(fb.complaintType || 'general').replace('_', ' ')}
-                                </Text>
+                                <Text style={{ fontSize: 12, color: '#999', marginTop: 6 }}>{fb.complaintType?.replace('_',' ') || 'general'}</Text>
                             </View>
                         ))
                     ) : (
@@ -438,6 +408,7 @@ export default function ProfileScreen({ navigation }) {
                 </TouchableOpacity>
             </ScrollView>
 
+            {/* Edit Feedback Modal */}
             <Modal
                 visible={editFeedbackModal}
                 transparent
@@ -450,9 +421,9 @@ export default function ProfileScreen({ navigation }) {
                         <View style={styles.modalForm}>
                             <Text style={styles.modalLabel}>Rating</Text>
                             <View style={{ flexDirection: 'row', marginBottom: 8 }}>
-                                {[1, 2, 3, 4, 5].map((s) => (
+                                {[1,2,3,4,5].map(s => (
                                     <TouchableOpacity key={s} onPress={() => setEditingRating(s)} style={{ marginRight: 8 }}>
-                                        <Text style={[styles.star, s <= editingRating && styles.starActive]}>★</Text>
+                                        <Text style={[styles.star, s <= editingRating && styles.starActive]}>{'★'}</Text>
                                     </TouchableOpacity>
                                 ))}
                             </View>
@@ -466,32 +437,20 @@ export default function ProfileScreen({ navigation }) {
                                 multiline
                             />
                             <Text style={[styles.modalLabel, { marginTop: 8 }]}>Category</Text>
-                            <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
-                                {['general', 'food_quality', 'service', 'hygiene', 'other'].map((t) => (
-                                    <TouchableOpacity
-                                        key={t}
-                                        onPress={() => setEditingType(t)}
-                                        style={[styles.typeChip, editingType === t && styles.typeChipActive]}
-                                    >
-                                        <Text style={[styles.typeText, editingType === t && styles.typeTextActive]}>
-                                            {t.replace('_', ' ')}
-                                        </Text>
+                            <View style={{ flexDirection:'row', flexWrap:'wrap' }}>
+                                {['general','food_quality','service','hygiene','other'].map(t => (
+                                    <TouchableOpacity key={t} onPress={() => setEditingType(t)} style={[styles.typeChip, editingType===t && styles.typeChipActive]}>
+                                        <Text style={[styles.typeText, editingType===t && styles.typeTextActive]}>{t.replace('_',' ')}</Text>
                                     </TouchableOpacity>
                                 ))}
                             </View>
                         </View>
                         <View style={styles.modalButtons}>
-                            <TouchableOpacity
-                                style={[styles.modalBtn, styles.cancelBtn]}
-                                onPress={() => setEditFeedbackModal(false)}
-                            >
+                            <TouchableOpacity style={[styles.modalBtn, styles.cancelBtn]} onPress={() => setEditFeedbackModal(false)}>
                                 <Text style={styles.modalBtnText}>Cancel</Text>
                             </TouchableOpacity>
-                            <TouchableOpacity
-                                style={[styles.modalBtn, styles.saveBtn]}
-                                onPress={handleSaveEditedFeedback}
-                            >
-                                <Text style={[styles.modalBtnText, { color: '#fff' }]}>Save</Text>
+                            <TouchableOpacity style={[styles.modalBtn, styles.saveBtn]} onPress={handleSaveEditedFeedback}>
+                                <Text style={[styles.modalBtnText, { color:'#fff' }]}>Save</Text>
                             </TouchableOpacity>
                         </View>
                     </View>
@@ -619,17 +578,10 @@ const styles = StyleSheet.create({
     viewMoreText: { color: ORANGE, fontSize: 12, fontWeight: '600', marginTop: 8 },
     noPaymentText: { color: '#888', fontSize: 13, fontStyle: 'italic', marginTop: 5, marginBottom: 5 },
 
+    // Feedback modal styles
     star: { fontSize: 28, color: '#ddd' },
     starActive: { color: '#FFB800' },
-    typeChip: {
-        borderWidth: 1.5,
-        borderColor: '#E8E8E8',
-        borderRadius: 20,
-        paddingHorizontal: 12,
-        paddingVertical: 6,
-        marginRight: 8,
-        marginTop: 4,
-    },
+    typeChip: { borderWidth: 1.5, borderColor: '#E8E8E8', borderRadius: 20, paddingHorizontal: 12, paddingVertical: 6, marginRight: 8, marginTop: 4 },
     typeChipActive: { backgroundColor: ORANGE, borderColor: ORANGE },
     typeText: { fontSize: 12, color: '#666', fontWeight: '600' },
     typeTextActive: { color: '#fff' },
