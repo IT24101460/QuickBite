@@ -163,6 +163,9 @@ export default function LoginScreen({ navigation }) {
     if (touched[field]) validate(field, value);
   };
 
+  const grid = buildGrid();
+  const rows = Array.from({ length: ROWS }, (_, i) => grid.filter(t => t.row === i));
+
   const handleLogin = async () => {
     // Mark all fields touched and run full validation
     setTouched({ email: true, password: true });

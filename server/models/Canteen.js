@@ -1,6 +1,7 @@
 import mongoose from 'mongoose';
 
 const canteenSchema = new mongoose.Schema({
+  // 🛡️ VALIDATION: Mongoose schema enforces structure and required validation at the database model level
   canteenName: {
     type: String,
     required: [true, 'Canteen name is required'],
