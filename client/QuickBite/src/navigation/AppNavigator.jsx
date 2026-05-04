@@ -28,6 +28,7 @@ import CustomOrderScreen from '../screens/CustomOrderScreen';
 import AddCardScreen from '../screens/AddCardScreen';
 import OTPScreen from '../screens/OTPScreen';
 import PaymentOptionsScreen from '../screens/PaymentOptionsScreen';
+import CakeOrderScreen from '../screens/CakeOrderScreen';
 import { BrandingProvider } from '../context/BrandingContext';
 
 // Admin screens
@@ -87,6 +88,7 @@ function UserDrawerFlow() {
             <Stack.Screen name="AddCard" component={AddCardScreen} />
             <Stack.Screen name="PaymentOptions" component={PaymentOptionsScreen} />
             <Stack.Screen name="OTPVerification" component={OTPScreen} />
+            <Stack.Screen name="CakeOrder" component={CakeOrderScreen} />
           </Stack.Navigator>
         )}
       </Drawer.Screen>
@@ -142,16 +144,16 @@ export default function AppNavigator() {
         <OrderStatusNotifier />
         <GlobalStack.Navigator screenOptions={{ headerShown: false }}>
           {user?.role === 'admin' ? (
-              <GlobalStack.Screen name="Admin" component={AdminFlow} />
+            <GlobalStack.Screen name="Admin" component={AdminFlow} />
           ) : user?.role === 'owner' ? (
-              <GlobalStack.Screen name="Owner" component={OwnerFlow} />
+            <GlobalStack.Screen name="Owner" component={OwnerFlow} />
           ) : user ? (
-              <GlobalStack.Screen name="User" component={UserDrawerFlow} />
+            <GlobalStack.Screen name="User" component={UserDrawerFlow} />
           ) : (
-              <>
-                <GlobalStack.Screen name="Login" component={LoginScreen} />
-                <GlobalStack.Screen name="SignUp" component={SignUpScreen} />
-              </>
+            <>
+              <GlobalStack.Screen name="Login" component={LoginScreen} />
+              <GlobalStack.Screen name="SignUp" component={SignUpScreen} />
+            </>
           )}
         </GlobalStack.Navigator>
       </NavigationContainer>
