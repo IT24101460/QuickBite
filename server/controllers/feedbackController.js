@@ -2,11 +2,10 @@ import Feedback from "../models/feedback.js";
 import Canteen from "../models/Canteen.js";
 import { supabase } from "../config/supabase.js";
 
-/** JWT payload uses `_id` from login; support other shapes for safety */
 function getAuthenticatedUserId(user) {
     if (!user) return null;
-    const rawId = user._id ?? user.id ?? user.userId;
-    if (rawId == null || rawId === "") return null;
+    const rawId = user._id || user.id || user.userId;
+    if (!rawId) return null;
     return rawId.toString();
 }
 
@@ -43,14 +42,17 @@ export async function createFeedback(req, res) {
                 throw error;
             }
 
-            const { data: publicUrlData } = supabase.storage.from("quickbite-images").getPublicUrl(fileName);
+            const { data: publicUrlData } = supabase.storage
+                .from('quickbite-images')
+                .getPublicUrl(fileName);
+
             complaintImage = publicUrlData.publicUrl;
         }
 
         const feedback = new Feedback({
             userId: currentUserId,
-            rating: numericRating,
-            comment: String(comment).trim(),
+            rating,
+            comment,
             canteenId: canteenId || null,
             foodItemId: foodItemId || null,
             orderId: orderId || null,
@@ -127,7 +129,7 @@ export async function getUserFeedback(req, res) {
     }
 }
 
-// Update own feedback (same user only)
+// Update own feedback (user)
 export async function updateOwnFeedback(req, res) {
     try {
         if (!req.user) return res.status(401).json({ message: "Please login to update feedback" });
@@ -142,21 +144,9 @@ export async function updateOwnFeedback(req, res) {
         }
 
         const { rating, comment, complaintType } = req.body;
-        if (rating !== undefined) {
-            const n = Number(rating);
-            if (!Number.isFinite(n) || n < 1 || n > 5) {
-                return res.status(400).json({ message: "Rating must be between 1 and 5" });
-            }
-            feedback.rating = n;
-        }
-        if (comment !== undefined) {
-            const trimmed = String(comment).trim();
-            if (!trimmed) return res.status(400).json({ message: "Comment cannot be empty" });
-            feedback.comment = trimmed;
-        }
-        if (complaintType !== undefined && complaintType) {
-            feedback.complaintType = complaintType;
-        }
+        if (rating !== undefined) feedback.rating = rating;
+        if (comment !== undefined) feedback.comment = comment;
+        if (complaintType) feedback.complaintType = complaintType;
 
         await feedback.save();
         res.status(200).json({ message: "Feedback updated", feedback });
@@ -165,7 +155,7 @@ export async function updateOwnFeedback(req, res) {
     }
 }
 
-// Delete own feedback (same user only)
+// Delete own feedback (user)
 export async function deleteOwnFeedback(req, res) {
     try {
         if (!req.user) return res.status(401).json({ message: "Please login to delete feedback" });
@@ -195,7 +185,7 @@ export async function updateFeedback(req, res) {
         const feedback = await Feedback.findById(req.params.id);
         if (!feedback) return res.status(404).json({ message: "Feedback not found" });
 
-        if (req.user?.role === "owner") {
+        if (req.user?.role === 'owner') {
             const currentUserId = getAuthenticatedUserId(req.user);
             const myCanteen = await Canteen.findOne({ createdBy: currentUserId });
             if (!myCanteen || myCanteen._id.toString() !== feedback.canteenId?.toString()) {

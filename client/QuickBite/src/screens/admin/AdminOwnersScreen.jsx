@@ -25,14 +25,22 @@ export default function AdminOwnersScreen({ navigation }) {
     };
     useEffect(() => { fetch(); }, []);
 
+<<<<<<< HEAD
     const openAdd = () => { 
         setEditingOwner(null);
         setForm({ firstName: '', lastName: '', email: '', phoneNumber: '', password: '', uniId: '' }); 
         setModal(true); 
+=======
+    const openAdd = () => {
+        setEditingOwner(null);
+        setForm({ firstName: '', lastName: '', email: '', phoneNumber: '', password: '', uniId: '' });
+        setModal(true);
+>>>>>>> 08842c65816ab6e17a476811598680b26e2c990e
     };
 
     const openEdit = (owner) => {
         setEditingOwner(owner);
+<<<<<<< HEAD
         setForm({ 
             firstName: owner.firstName, 
             lastName: owner.lastName, 
@@ -40,6 +48,15 @@ export default function AdminOwnersScreen({ navigation }) {
             phoneNumber: owner.phoneNumber, 
             password: '', // Leave blank unless they want to change it
             uniId: owner.uniId || '' 
+=======
+        setForm({
+            firstName: owner.firstName,
+            lastName: owner.lastName,
+            email: owner.email,
+            phoneNumber: owner.phoneNumber,
+            password: '', // Leave blank unless they want to change it
+            uniId: owner.uniId || ''
+>>>>>>> 08842c65816ab6e17a476811598680b26e2c990e
         });
         setModal(true);
     };
@@ -57,13 +74,18 @@ export default function AdminOwnersScreen({ navigation }) {
                 // Remove password from payload if it wasn't entered
                 const payload = { ...form };
                 if (!payload.password) delete payload.password;
+<<<<<<< HEAD
                 
+=======
+
+>>>>>>> 08842c65816ab6e17a476811598680b26e2c990e
                 await API.put(`/users/${editingOwner._id}`, payload);
             } else {
                 await API.post('/users/create-owner', form);
             }
             setModal(false);
             fetch();
+<<<<<<< HEAD
         } catch (e) { 
             Alert.alert('Error', e.response?.data?.message || e.response?.data?.error || 'Failed to save owner'); 
         } finally { 
@@ -71,6 +93,39 @@ export default function AdminOwnersScreen({ navigation }) {
         }
     };
 
+=======
+        } catch (e) {
+            Alert.alert('Error', e.response?.data?.message || e.response?.data?.error || 'Failed to save owner');
+        } finally {
+            setSaving(false);
+        }
+    };
+
+    const deleteOwner = (owner) => {
+        // Show a strong confirmation before deleting — accidental delete of an owner can break canteen assignments
+        Alert.alert(
+            '⚠️ Delete Owner',
+            `Are you sure you want to delete "${owner.firstName} ${owner.lastName}"?\n\nThis action cannot be undone and may affect any canteen assigned to this owner.`,
+            [
+                { text: 'Cancel', style: 'cancel' },
+                {
+                    text: 'Delete',
+                    style: 'destructive',
+                    onPress: async () => {
+                        try {
+                            await API.delete(`/users/${owner._id}`);
+                            fetch();
+                            Alert.alert('Deleted', `${owner.firstName} ${owner.lastName} has been removed.`);
+                        } catch (e) {
+                            Alert.alert('Error', e.response?.data?.message || 'Failed to delete owner');
+                        }
+                    }
+                }
+            ]
+        );
+    };
+
+>>>>>>> 08842c65816ab6e17a476811598680b26e2c990e
     return (
         <View style={styles.container}>
             <View style={styles.header}>
@@ -96,6 +151,12 @@ export default function AdminOwnersScreen({ navigation }) {
                                 <TouchableOpacity style={styles.editBtn} onPress={() => openEdit(item)}>
                                     <Text style={styles.editBtnText}>Edit</Text>
                                 </TouchableOpacity>
+<<<<<<< HEAD
+=======
+                                <TouchableOpacity style={styles.delBtn} onPress={() => deleteOwner(item)}>
+                                    <Text style={styles.delBtnText}>Delete</Text>
+                                </TouchableOpacity>
+>>>>>>> 08842c65816ab6e17a476811598680b26e2c990e
                             </View>
                         </View>
                     )}
@@ -111,21 +172,37 @@ export default function AdminOwnersScreen({ navigation }) {
                     </View>
                     <ScrollView contentContainerStyle={styles.modalScroll}>
                         {[
+<<<<<<< HEAD
                             ['First Name *', 'firstName'], 
                             ['Last Name *', 'lastName'], 
                             ['Email *', 'email'], 
                             ['Phone Number *', 'phoneNumber'], 
+=======
+                            ['First Name *', 'firstName'],
+                            ['Last Name *', 'lastName'],
+                            ['Email *', 'email'],
+                            ['Phone Number *', 'phoneNumber'],
+>>>>>>> 08842c65816ab6e17a476811598680b26e2c990e
                             [editingOwner ? 'New Password (Optional)' : 'Password *', 'password'],
                             ['Owner ID / Registration (Optional)', 'uniId']
                         ].map(([label, k]) => (
                             <View key={k} style={{ marginBottom: 12 }}>
                                 <Text style={styles.label}>{label}</Text>
+<<<<<<< HEAD
                                 <TextInput 
                                     style={styles.input} 
                                     value={form[k]} 
                                     onChangeText={set(k)} 
                                     placeholder={label} 
                                     placeholderTextColor="#aaa" 
+=======
+                                <TextInput
+                                    style={styles.input}
+                                    value={form[k]}
+                                    onChangeText={set(k)}
+                                    placeholder={label}
+                                    placeholderTextColor="#aaa"
+>>>>>>> 08842c65816ab6e17a476811598680b26e2c990e
                                     secureTextEntry={k === 'password'}
                                     autoCapitalize={k === 'email' ? 'none' : 'words'}
                                 />
@@ -143,7 +220,11 @@ export default function AdminOwnersScreen({ navigation }) {
 
 const styles = StyleSheet.create({
     container: { flex: 1, backgroundColor: COLORS.background },
+<<<<<<< HEAD
     header: { 
+=======
+    header: {
+>>>>>>> 08842c65816ab6e17a476811598680b26e2c990e
         backgroundColor: COLORS.primary,
         paddingTop: 52,
         paddingBottom: SPACING.lg,
@@ -152,12 +233,17 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         ...SHADOWS.md,
     },
+<<<<<<< HEAD
     backBtn: { 
+=======
+    backBtn: {
+>>>>>>> 08842c65816ab6e17a476811598680b26e2c990e
         marginRight: SPACING.sm,
         padding: SPACING.xs,
         borderRadius: BORDER_RADIUS.round,
         backgroundColor: 'rgba(255,255,255,0.1)'
     },
+<<<<<<< HEAD
     back: { 
         color: COLORS.textWhite, 
         fontSize: 22, 
@@ -186,12 +272,43 @@ const styles = StyleSheet.create({
         borderRadius: BORDER_RADIUS.lg, 
         padding: SPACING.lg, 
         marginBottom: SPACING.md, 
+=======
+    back: {
+        color: COLORS.textWhite,
+        fontSize: 22,
+        fontWeight: '700'
+    },
+    headerTitle: {
+        flex: 1,
+        color: COLORS.textWhite,
+        fontSize: TYPOGRAPHY.h3.fontSize,
+        fontWeight: TYPOGRAPHY.h3.fontWeight
+    },
+    addBtn: {
+        backgroundColor: 'rgba(255,255,255,0.2)',
+        borderRadius: BORDER_RADIUS.md,
+        paddingHorizontal: SPACING.md,
+        paddingVertical: SPACING.sm
+    },
+    addBtnText: {
+        color: COLORS.textWhite,
+        fontWeight: TYPOGRAPHY.button.fontWeight,
+        fontSize: TYPOGRAPHY.button.fontSize
+    },
+    card: {
+        flexDirection: 'row',
+        backgroundColor: COLORS.surface,
+        borderRadius: BORDER_RADIUS.lg,
+        padding: SPACING.lg,
+        marginBottom: SPACING.md,
+>>>>>>> 08842c65816ab6e17a476811598680b26e2c990e
         ...SHADOWS.md,
         alignItems: 'center',
         borderWidth: 1,
         borderColor: COLORS.borderLight,
     },
     cardInfo: { flex: 1 },
+<<<<<<< HEAD
     cardName: { 
         fontSize: TYPOGRAPHY.body1.fontSize,
         fontWeight: '600', 
@@ -227,6 +344,55 @@ const styles = StyleSheet.create({
     },
     modalContainer: { flex: 1, backgroundColor: COLORS.surface },
     modalHeader: { 
+=======
+    cardName: {
+        fontSize: TYPOGRAPHY.body1.fontSize,
+        fontWeight: '600',
+        color: COLORS.textPrimary,
+        marginBottom: SPACING.xs
+    },
+    cardSub: {
+        fontSize: TYPOGRAPHY.caption.fontSize,
+        color: COLORS.textSecondary,
+        marginBottom: SPACING.xs
+    },
+    cardActions: {
+        justifyContent: 'center',
+        alignItems: 'flex-end',
+        paddingLeft: SPACING.md,
+        gap: SPACING.sm,
+    },
+    editBtn: {
+        backgroundColor: COLORS.info,
+        paddingHorizontal: SPACING.md,
+        paddingVertical: SPACING.sm,
+        borderRadius: BORDER_RADIUS.md
+    },
+    editBtnText: {
+        color: COLORS.textWhite,
+        fontSize: TYPOGRAPHY.caption.fontSize,
+        fontWeight: 'bold'
+    },
+    delBtn: {
+        backgroundColor: COLORS.danger,
+        paddingHorizontal: SPACING.md,
+        paddingVertical: SPACING.sm,
+        borderRadius: BORDER_RADIUS.md,
+    },
+    delBtnText: {
+        color: COLORS.textWhite,
+        fontSize: TYPOGRAPHY.caption.fontSize,
+        fontWeight: 'bold'
+    },
+    empty: {
+        textAlign: 'center',
+        color: COLORS.textTertiary,
+        paddingVertical: SPACING.xxxl,
+        fontSize: TYPOGRAPHY.body2.fontSize
+    },
+    modalContainer: { flex: 1, backgroundColor: COLORS.surface },
+    modalHeader: {
+>>>>>>> 08842c65816ab6e17a476811598680b26e2c990e
         backgroundColor: COLORS.primary,
         paddingTop: 52,
         paddingBottom: SPACING.lg,
@@ -236,6 +402,7 @@ const styles = StyleSheet.create({
         gap: SPACING.md,
         ...SHADOWS.md,
     },
+<<<<<<< HEAD
     modalTitle: { 
         color: COLORS.textWhite, 
         fontSize: TYPOGRAPHY.h3.fontSize, 
@@ -255,23 +422,59 @@ const styles = StyleSheet.create({
         padding: SPACING.md, 
         fontSize: TYPOGRAPHY.body2.fontSize, 
         color: COLORS.textPrimary, 
+=======
+    modalTitle: {
+        color: COLORS.textWhite,
+        fontSize: TYPOGRAPHY.h3.fontSize,
+        fontWeight: TYPOGRAPHY.h3.fontWeight
+    },
+    modalScroll: { padding: SPACING.lg },
+    label: {
+        fontSize: TYPOGRAPHY.label.fontSize,
+        fontWeight: TYPOGRAPHY.label.fontWeight,
+        color: COLORS.textSecondary,
+        marginBottom: SPACING.sm
+    },
+    input: {
+        borderWidth: 1.5,
+        borderColor: COLORS.border,
+        borderRadius: BORDER_RADIUS.md,
+        padding: SPACING.md,
+        fontSize: TYPOGRAPHY.body2.fontSize,
+        color: COLORS.textPrimary,
+>>>>>>> 08842c65816ab6e17a476811598680b26e2c990e
         marginBottom: SPACING.xs,
         backgroundColor: COLORS.surface,
         height: SIZES.inputHeight,
     },
+<<<<<<< HEAD
     saveBtn: { 
         backgroundColor: COLORS.primary,
         borderRadius: BORDER_RADIUS.lg, 
         paddingVertical: SPACING.md, 
         alignItems: 'center', 
+=======
+    saveBtn: {
+        backgroundColor: COLORS.primary,
+        borderRadius: BORDER_RADIUS.lg,
+        paddingVertical: SPACING.md,
+        alignItems: 'center',
+>>>>>>> 08842c65816ab6e17a476811598680b26e2c990e
         marginTop: SPACING.lg,
         height: SIZES.buttonHeight,
         justifyContent: 'center',
         ...SHADOWS.sm,
     },
+<<<<<<< HEAD
     saveBtnText: { 
         color: COLORS.textWhite, 
         fontWeight: 'bold', 
         fontSize: TYPOGRAPHY.button.fontSize 
+=======
+    saveBtnText: {
+        color: COLORS.textWhite,
+        fontWeight: 'bold',
+        fontSize: TYPOGRAPHY.button.fontSize
+>>>>>>> 08842c65816ab6e17a476811598680b26e2c990e
     },
 });
