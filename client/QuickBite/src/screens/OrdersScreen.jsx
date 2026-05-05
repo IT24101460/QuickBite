@@ -104,7 +104,16 @@ export default function OrdersScreen({ navigation }) {
                     
                     <View style={styles.summaryRow}>
                         <Text style={styles.summaryLabel}>📅 Order Date:</Text>
-                        <Text style={styles.summaryValue}>{formatDate(item.createdAt)}</Text>
+                        <Text style={styles.summaryValue}>
+                            {isCustomOrder && item.pickupDate 
+                                ? new Date(item.pickupDate).toLocaleDateString('en-US', { 
+                                    weekday: 'short', 
+                                    year: 'numeric', 
+                                    month: 'short', 
+                                    day: 'numeric' 
+                                })
+                                : formatDate(item.createdAt)}
+                        </Text>
                     </View>
                     
                     {!isCustomOrder && item.pickupTime && (

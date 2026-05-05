@@ -57,7 +57,11 @@ export async function createPromotion(req, res) {
             return res.status(400).json({ message: "End date must be after start date" });
         }
         
-        if (start < now) {
+        // Compare only date portion (year, month, day) to allow start date to be today
+        const startDay = new Date(start.getFullYear(), start.getMonth(), start.getDate());
+        const nowDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        
+        if (startDay < nowDay) {
             return res.status(400).json({ message: "Start date cannot be in the past" });
         }
         
@@ -198,7 +202,11 @@ export async function updatePromotion(req, res) {
                 return res.status(400).json({ message: "End date must be after start date" });
             }
             
-            if (start < now) {
+            // Compare only date portion (year, month, day) to allow start date to be today
+            const startDay = new Date(start.getFullYear(), start.getMonth(), start.getDate());
+            const nowDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+            
+            if (startDay < nowDay) {
                 return res.status(400).json({ message: "Start date cannot be in the past" });
             }
             
