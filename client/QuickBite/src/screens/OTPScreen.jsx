@@ -85,6 +85,7 @@ export default function OTPScreen({ route, navigation }) {
                 // Save to MongoDB Database via API
                 try {
                     console.log('=== MONGODB SAVE DEBUG ===');
+                    console.log('New card object:', newCard);
                     console.log('Saving card to MongoDB:', {
                         paymentType: newCard.paymentType || 'card',
                         cardholderName: newCard.cardholderName || 'Cardholder',
@@ -94,23 +95,35 @@ export default function OTPScreen({ route, navigation }) {
                         isDefault: cards.length === 1
                     });
                     
-                    const response = await API.post('/user-payments', {
+                    const payload = {
                         paymentType: newCard.paymentType || 'card',
                         cardholderName: newCard.cardholderName || 'Cardholder',
                         cardNumber: newCard.cardNumber,
                         expiryMonth: newCard.expiryMonth,
                         expiryYear: newCard.expiryYear,
                         isDefault: cards.length === 1
-                    });
+                    };
+                    
+                    console.log('API payload:', payload);
+                    
+                    const response = await API.post('/user-payments', payload);
                     
                     console.log('MongoDB save successful:', response.data);
                     console.log('=== END MONGODB SAVE DEBUG ===');
                 } catch (apiError) {
-                    console.error('MongoDB save error:', apiError?.response?.data || apiError.message);
-                    console.error('Full error:', apiError);
+                    console.error('=== MONGODB SAVE ERROR DEBUG ===');
+                    console.error('Error object:', apiError);
+                    console.error('Error message:', apiError.message);
+                    console.error('Error response:', apiError.response);
+                    console.error('Error response data:', apiError.response?.data);
+                    console.error('Error response status:', apiError.response?.status);
+                    console.error('Error response status text:', apiError.response?.statusText);
+                    console.error('Error config:', apiError.config);
+                    console.error('Error code:', apiError.code);
+                    console.error('=== END ERROR DEBUG ===');
                     
                     // Show error to user
-                    const errorMessage = apiError?.response?.data?.message || apiError.message || 'Failed to save card to server';
+                    const errorMessage = apiError?.response?.data?.message || apiError.message || apiError.response?.statusText || 'Failed to save card to server';
                     Alert.alert(
                         'Server Save Failed',
                         `Card saved locally but could not be saved to server: ${errorMessage}. Please try again later.`,
