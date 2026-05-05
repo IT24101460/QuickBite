@@ -236,7 +236,13 @@ export async function addPaymentOption(req, res) {
         }
 
     } catch (error) {
-        console.error("Error adding payment option:", error);
+        console.error("=== ERROR ADDING PAYMENT OPTION ===");
+        console.error("Error details:", error);
+        console.error("Error message:", error.message);
+        console.error("Error stack:", error.stack);
+        console.error("Request body:", req.body);
+        console.error("User:", req.user);
+        console.error("=== END ERROR DEBUG ===");
         res.status(500).json({ 
             message: "Error adding payment option", 
             error: error.message 
