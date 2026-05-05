@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, TextInput, TouchableOpacity, Alert, SafeAreaView, Keyboard } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import API from '../services/api';
 
 const ORANGE = '#FF6B35';
 
@@ -77,9 +78,54 @@ export default function OTPScreen({ route, navigation }) {
                     );
                 }
                 
-                // Card is unique, save it
+                // Card is unique, save it locally
                 cards.push(newCard);
                 await AsyncStorage.setItem('@saved_cards', JSON.stringify(cards));
+
+                // Save to MongoDB Database via API
+                try {
+                    console.log('=== MONGODB SAVE DEBUG ===');
+                    console.log('Saving card to MongoDB:', {
+                        paymentType: newCard.paymentType || 'card',
+                        cardholderName: newCard.cardholderName || 'Cardholder',
+                        cardNumber: newCard.cardNumber,
+                        expiryMonth: newCard.expiryMonth,
+                        expiryYear: newCard.expiryYear,
+                        isDefault: cards.length === 1
+                    });
+                    
+                    const response = await API.post('/user-payments', {
+                        paymentType: newCard.paymentType || 'card',
+                        cardholderName: newCard.cardholderName || 'Cardholder',
+                        cardNumber: newCard.cardNumber,
+                        expiryMonth: newCard.expiryMonth,
+                        expiryYear: newCard.expiryYear,
+                        isDefault: cards.length === 1
+                    });
+                    
+                    console.log('MongoDB save successful:', response.data);
+                    console.log('=== END MONGODB SAVE DEBUG ===');
+                } catch (apiError) {
+                    console.error('MongoDB save error:', apiError?.response?.data || apiError.message);
+                    console.error('Full error:', apiError);
+                    
+                    // Show error to user
+                    const errorMessage = apiError?.response?.data?.message || apiError.message || 'Failed to save card to server';
+                    Alert.alert(
+                        'Server Save Failed',
+                        `Card saved locally but could not be saved to server: ${errorMessage}. Please try again later.`,
+                        [
+                            { text: 'OK', onPress: () => {
+                                if (fromCheckout) {
+                                    navigation.navigate('Checkout', { newlyAddedCard: newCard });
+                                } else {
+                                    navigation.navigate('Home');
+                                }
+                            }}
+                        ]
+                    );
+                    return; // Stop execution here
+                }
                 
 
                 

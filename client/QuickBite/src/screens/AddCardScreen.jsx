@@ -63,11 +63,20 @@ export default function AddCardScreen({ navigation, route }) {
             return Alert.alert('Invalid Expiry', 'The expiration date must be a valid future date.');
         }
 
+        const cleanedNumber = cardNumber.replace(/\s+/g, '');
+        const [month, yearStr] = expiry.split('/');
+
         // Proceed to OTP Simulation Screen, passing the new card details
         const cardDetails = {
             id: 'card_' + Date.now(),
             type: cardType === 'Unknown' ? 'Card' : cardType,
-            last4: cardNumber.trim().slice(-4),
+            last4: cleanedNumber.slice(-4),
+            // Full details for MongoDB:
+            paymentType: 'card',
+            cardholderName: cardName.trim(),
+            cardNumber: cleanedNumber,
+            expiryMonth: parseInt(month, 10),
+            expiryYear: 2000 + parseInt(yearStr, 10)
         };
 
         navigation.navigate('OTPVerification', { 

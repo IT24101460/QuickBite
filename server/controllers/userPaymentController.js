@@ -107,7 +107,22 @@ export async function addPaymentOption(req, res) {
                 isActive: true
             });
 
+            console.log('=== MONGODB SAVE DEBUG ===');
+            console.log('Saving payment option:', {
+                userId,
+                paymentType: "card",
+                last4: lastFour,
+                cardholderName,
+                expiryMonth,
+                expiryYear,
+                isDefault,
+                isActive: true
+            });
+            
             await paymentOption.save();
+            
+            console.log('Payment option saved successfully with ID:', paymentOption._id);
+            console.log('=== END MONGODB SAVE DEBUG ===');
 
             return res.status(201).json({
                 message: "Card saved successfully",
@@ -241,10 +256,24 @@ export async function getUserPaymentOptions(req, res) {
 
         const userId = req.user._id || req.user.id;
 
+        console.log('=== GET PAYMENT OPTIONS DEBUG ===');
+        console.log('User ID:', userId);
+        console.log('Full user object:', req.user);
+
         const paymentOptions = await UserPaymentOption.find({
             userId,
             isDeleted: false
         }).sort({ isDefault: -1, createdAt: -1 });
+
+        console.log('Found payment options:', paymentOptions.length);
+        console.log('Payment options:', paymentOptions.map(p => ({
+            _id: p._id,
+            userId: p.userId,
+            paymentType: p.paymentType,
+            last4: p.last4,
+            isDeleted: p.isDeleted
+        })));
+        console.log('=== END GET PAYMENT OPTIONS DEBUG ===');
 
         // Sanitize and return
         const sanitized = paymentOptions.map(sanitizePaymentOption);

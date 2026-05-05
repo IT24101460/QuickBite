@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Image, Animated, Dimensions } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Image, Animated, Dimensions, Alert } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useAuth } from '../context/AuthContext';
 import { getImageUrl } from '../utils/imageUtils';
@@ -187,6 +187,33 @@ export default function SidebarMenu({ navigation }) {
         }
     };
 
+    const removeCard = async (indexToRemove) => {
+        Alert.alert(
+            'Delete Card',
+            'Are you sure you want to remove this card?',
+            [
+                { text: 'Cancel', style: 'cancel' },
+                {
+                    text: 'Delete',
+                    style: 'destructive',
+                    onPress: async () => {
+                        try {
+                            const updatedCards = savedCards.filter((_, index) => index !== indexToRemove);
+                            await AsyncStorage.setItem('@saved_cards', JSON.stringify(updatedCards));
+                            setSavedCards(updatedCards);
+                        } catch (e) {
+                            console.error(e);
+                        }
+                    }
+                }
+            ]
+        );
+    };
+
+    const handleEditCard = () => {
+        Alert.alert("Edit Card", "To edit this card's details, please delete it and add a new one.", [{ text: "OK" }]);
+    };
+
     return (
         <View style={styles.container}>
             <View style={styles.header}>
@@ -237,16 +264,22 @@ export default function SidebarMenu({ navigation }) {
                         {item.isAccordion && showPaymentOptions && (
                             <View>
                                 {savedCards.map((card, idx) => (
-                                    <TouchableOpacity 
-                                        key={`card-${idx}`}
-                                        style={styles.subMenuItem} 
-                                        onPress={() => {}}
-                                    >
-                                        <Text style={styles.subMenuIcon}>
-                                            {card.type === 'Visa' ? '💳' : card.type === 'Mastercard' ? '🔴🟡' : card.type === 'Amex' ? '💠' : '💳'}
-                                        </Text>
-                                        <Text style={styles.subMenuText}>{card.type} •••• {card.last4}</Text>
-                                    </TouchableOpacity>
+                                    <View key={`card-${idx}`} style={[styles.subMenuItem, { paddingRight: 15, paddingLeft: 60, justifyContent: 'space-between' }]}>
+                                        <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
+                                            <Text style={styles.subMenuIcon}>
+                                                {card.type === 'Visa' ? '💳' : card.type === 'Mastercard' ? '🔴🟡' : card.type === 'Amex' ? '💠' : '💳'}
+                                            </Text>
+                                            <Text style={styles.subMenuText}>{card.type} •••• {card.last4}</Text>
+                                        </View>
+                                        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                                            <TouchableOpacity style={{ padding: 5, marginRight: 8 }} onPress={handleEditCard}>
+                                                <Text style={{ fontSize: 16 }}>✏️</Text>
+                                            </TouchableOpacity>
+                                            <TouchableOpacity style={{ padding: 5 }} onPress={() => removeCard(idx)}>
+                                                <Text style={{ fontSize: 16 }}>🗑️</Text>
+                                            </TouchableOpacity>
+                                        </View>
+                                    </View>
                                 ))}
                                 <TouchableOpacity 
                                     style={styles.subMenuItem} 
