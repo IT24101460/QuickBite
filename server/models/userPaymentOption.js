@@ -120,7 +120,7 @@ const userPaymentOptionSchema = new mongoose.Schema(
 );
 
 // Ensure only one default payment method per user
-userPaymentOptionSchema.pre('save', async function(next) {
+userPaymentOptionSchema.pre('save', async function() {
     if (this.isDefault && !this.isDeleted) {
         // Remove default flag from other payment methods for this user
         await this.constructor.updateMany(
@@ -132,7 +132,6 @@ userPaymentOptionSchema.pre('save', async function(next) {
             { isDefault: false }
         );
     }
-    next();
 });
 
 const UserPaymentOption = mongoose.model("UserPaymentOption", userPaymentOptionSchema);
