@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {
     View, Text, StyleSheet, FlatList, TouchableOpacity,
-    TextInput, Alert, Image, ScrollView,
+    TextInput, Alert, Image, ScrollView, ActivityIndicator,
 } from 'react-native';
 import { useCart } from '../context/CartContext';
 import API from '../services/api';
@@ -14,12 +14,14 @@ export default function CartScreen({ navigation }) {
     const {
         cartItems, removeFromCart, updateQty, updateItemNote, cartTotal, finalTotal,
         appliedPromotion, discountAmount, applyPromotion, removePromotion,
+        promotionRemovedMessage, clearPromotionRemovedMessage,
     } = useCart();
     const [promoCode, setPromoCode] = useState('');
     const [promoLoading, setPromoLoading] = useState(false);
     const [pickupTime, setPickupTime] = useState('');
     const [pickupSlots, setPickupSlots] = useState([]);
     const [canteen, setCanteen] = useState(null);
+    const [loadingCanteen, setLoadingCanteen] = useState(false);
 
     const validatePromoCode = (code) => {
         if (!code || !code.trim()) {
@@ -174,14 +176,44 @@ export default function CartScreen({ navigation }) {
 
     useEffect(() => {
         // Fetch canteen info for the first item in cart
-        if (cartItems.length > 0) {
-            API.get('/canteens').then(res => {
-                const canteens = res.data?.canteens || [];
-                const matching = canteens.find(c => String(c._id) === String(cartItems[0]?.canteenId)) || canteens[0];
-                if (matching) {
-                    setCanteen(matching);
+        if (cartItems.length > 0 && cartItems[0]?.canteenId) {
+            setLoadingCanteen(true);
+            const canteenId = cartItems[0].canteenId;
+            
+            API.get(`/canteens/${canteenId}`).then(res => {
+                if (res.data?.canteen) {
+                    setCanteen(res.data.canteen);
+                } else {
+                    // Fallback: fetch all canteens and find the matching one
+                    API.get('/canteens').then(allRes => {
+                        const canteens = allRes.data?.canteens || [];
+                        const matching = canteens.find(c => String(c._id) === String(canteenId));
+                        if (matching) {
+                            setCanteen(matching);
+                        }
+                    }).catch(err => {
+                        console.error('Failed to fetch canteen information:', err);
+                    });
                 }
-            }).catch(ignore => {});
+            }).catch(err => {
+                console.error('Failed to fetch specific canteen:', err);
+                // Fallback: fetch all canteens and find the matching one
+                API.get('/canteens').then(allRes => {
+                    const canteens = allRes.data?.canteens || [];
+                    const matching = canteens.find(c => String(c._id) === String(canteenId));
+                    if (matching) {
+                        setCanteen(matching);
+                    }
+                }).catch(fallbackErr => {
+                    console.error('Failed to fetch canteens as fallback:', fallbackErr);
+                });
+            }).finally(() => {
+                setLoadingCanteen(false);
+            });
+        } else if (cartItems.length === 0) {
+            // Reset canteen when cart is empty
+            setCanteen(null);
+            setLoadingCanteen(false);
         }
     }, [cartItems]);
 
@@ -195,6 +227,15 @@ export default function CartScreen({ navigation }) {
             }
         }
     }, [canteen, pickupTime]);
+
+    // Show promotion removed message
+    useEffect(() => {
+        if (promotionRemovedMessage) {
+            Alert.alert('Promotion Removed', promotionRemovedMessage, [
+                { text: 'OK', onPress: clearPromotionRemovedMessage }
+            ]);
+        }
+    }, [promotionRemovedMessage, clearPromotionRemovedMessage]);
 
     const renderItem = ({ item }) => {
         if (item.isCustomOrder) {
@@ -211,16 +252,30 @@ export default function CartScreen({ navigation }) {
                         </View>
                         <View style={styles.itemRight}>
                             <View style={styles.qtyControl}>
-                                <TouchableOpacity style={styles.qtyBtn} onPress={() => updateQty(item._id, item.quantity - 1)}>
+                                <TouchableOpacity style={styles.qtyBtn} onPress={() => {
+                                    console.log('=== QUANTITY DECREASE DEBUG ===');
+                                    console.log('Decreasing quantity for item:', item.name);
+                                    console.log('Item ID being passed:', item.promotionUniqueId || item._id);
+                                    console.log('Current quantity:', item.quantity);
+                                    console.log('New quantity:', item.quantity - 1);
+                                    updateQty(item.promotionUniqueId || item._id, item.quantity - 1);
+                                }}>
                                     <Text style={styles.qtyBtnText}>−</Text>
                                 </TouchableOpacity>
                                 <Text style={styles.qtyNum}>{item.quantity}</Text>
-                                <TouchableOpacity style={styles.qtyBtn} onPress={() => updateQty(item._id, item.quantity + 1)}>
+                                <TouchableOpacity style={styles.qtyBtn} onPress={() => {
+                                    console.log('=== QUANTITY INCREASE DEBUG ===');
+                                    console.log('Increasing quantity for item:', item.name);
+                                    console.log('Item ID being passed:', item.promotionUniqueId || item._id);
+                                    console.log('Current quantity:', item.quantity);
+                                    console.log('New quantity:', item.quantity + 1);
+                                    updateQty(item.promotionUniqueId || item._id, item.quantity + 1);
+                                }}>
                                     <Text style={styles.qtyBtnText}>+</Text>
                                 </TouchableOpacity>
                             </View>
                             <Text style={styles.lineTotal}>LKR {(item.price * item.quantity).toFixed(2)}</Text>
-                            <TouchableOpacity onPress={() => removeFromCart(item._id)}>
+                            <TouchableOpacity onPress={() => removeFromCart(item.promotionUniqueId || item._id)}>
                                 <Text style={styles.removeBtn}>🗑</Text>
                             </TouchableOpacity>
                         </View>
@@ -239,7 +294,7 @@ export default function CartScreen({ navigation }) {
                             placeholder="Add special instructions for this custom order..."
                             placeholderTextColor="#999"
                             value={item.note || ''}
-                            onChangeText={(text) => updateItemNote(item._id, text)}
+                            onChangeText={(text) => updateItemNote(item.promotionUniqueId || item._id, text)}
                         />
                     </View>
                 </View>
@@ -258,16 +313,30 @@ export default function CartScreen({ navigation }) {
                     </View>
                     <View style={styles.itemRight}>
                         <View style={styles.qtyControl}>
-                            <TouchableOpacity style={styles.qtyBtn} onPress={() => updateQty(item._id || item.foodItemId, item.quantity - 1)}>
+                            <TouchableOpacity style={styles.qtyBtn} onPress={() => {
+                                console.log('=== QUANTITY DECREASE DEBUG (REGULAR ITEM) ===');
+                                console.log('Decreasing quantity for item:', item.name);
+                                console.log('Item ID being passed:', item.promotionUniqueId || item._id || item.foodItemId);
+                                console.log('Current quantity:', item.quantity);
+                                console.log('New quantity:', item.quantity - 1);
+                                updateQty(item.promotionUniqueId || item._id || item.foodItemId, item.quantity - 1);
+                            }}>
                                 <Text style={styles.qtyBtnText}>−</Text>
                             </TouchableOpacity>
                             <Text style={styles.qtyNum}>{item.quantity}</Text>
-                            <TouchableOpacity style={styles.qtyBtn} onPress={() => updateQty(item._id || item.foodItemId, item.quantity + 1)}>
+                            <TouchableOpacity style={styles.qtyBtn} onPress={() => {
+                                console.log('=== QUANTITY INCREASE DEBUG (REGULAR ITEM) ===');
+                                console.log('Increasing quantity for item:', item.name);
+                                console.log('Item ID being passed:', item.promotionUniqueId || item._id || item.foodItemId);
+                                console.log('Current quantity:', item.quantity);
+                                console.log('New quantity:', item.quantity + 1);
+                                updateQty(item.promotionUniqueId || item._id || item.foodItemId, item.quantity + 1);
+                            }}>
                                 <Text style={styles.qtyBtnText}>+</Text>
                             </TouchableOpacity>
                         </View>
                         <Text style={styles.lineTotal}>LKR {(item.price * item.quantity).toFixed(2)}</Text>
-                        <TouchableOpacity onPress={() => removeFromCart(item._id || item.foodItemId)}>
+                        <TouchableOpacity onPress={() => removeFromCart(item.promotionUniqueId || item._id || item.foodItemId)}>
                             <Text style={styles.removeBtn}>🗑</Text>
                         </TouchableOpacity>
                     </View>
@@ -278,7 +347,7 @@ export default function CartScreen({ navigation }) {
                         placeholder="Add note (e.g. extra cheese, less sugar)..."
                         placeholderTextColor="#999"
                         value={item.note || ''}
-                        onChangeText={(text) => updateItemNote(item._id || item.foodItemId, text)}
+                        onChangeText={(text) => updateItemNote(item.promotionUniqueId || item._id || item.foodItemId, text)}
                     />
                 </View>
             </View>
@@ -306,6 +375,10 @@ export default function CartScreen({ navigation }) {
         navigation.navigate('Checkout', { pickupTime });
     };
 
+    console.log('=== CART SCREEN DEBUG ===');
+    console.log('Cart items in screen:', cartItems.length);
+    console.log('Cart items details:', cartItems.map(i => ({ name: i.name, _id: i._id, foodItemId: i.foodItemId })));
+
     return (
         <View style={styles.container}>
             <TopNavBar navigation={navigation} hideBottomRow={true} />
@@ -314,7 +387,7 @@ export default function CartScreen({ navigation }) {
                 <FlatList
                     data={cartItems}
                     renderItem={renderItem}
-                    keyExtractor={i => i._id || i.foodItemId}
+                    keyExtractor={i => i.promotionUniqueId || i._id || i.foodItemId}
                     scrollEnabled={false}
                     contentContainerStyle={styles.list}
                 />
@@ -351,7 +424,12 @@ export default function CartScreen({ navigation }) {
                     <Text style={styles.canteenHours}>
                         Canteen Hours: {canteen?.openingTime || '08:00 AM'} - {canteen?.closingTime || '05:00 PM'}
                     </Text>
-                    {pickupSlots.length > 0 ? (
+                    {loadingCanteen ? (
+                        <View style={styles.noSlotsContainer}>
+                            <ActivityIndicator size="small" color={ORANGE} />
+                            <Text style={styles.noSlotsText}>Loading pickup times...</Text>
+                        </View>
+                    ) : pickupSlots.length > 0 ? (
                         <FlatList
                             data={pickupSlots}
                             horizontal
@@ -369,7 +447,7 @@ export default function CartScreen({ navigation }) {
                     ) : (
                         <View style={styles.noSlotsContainer}>
                             <Text style={styles.noSlotsText}>
-                                {canteen ? 'No available pickup slots for today. Canteen may be closed or all slots have passed.' : 'Loading canteen information...'}
+                                {canteen ? 'No available pickup slots for today. Canteen may be closed or all slots have passed.' : 'No canteen information available'}
                             </Text>
                         </View>
                     )}

@@ -72,7 +72,12 @@ export default function FoodDetailScreen({ navigation, route }) {
 
     const handleAddToCart = () => {
         setAdding(true);
-        addToCart(food, quantity);
+        // Ensure canteenId is included
+        const itemToAdd = {
+            ...food,
+            canteenId: food.canteenId?._id || food.canteenId
+        };
+        addToCart(itemToAdd, quantity);
         setTimeout(() => {
             setAdding(false);
             Alert.alert('Added! 🛒', `${food.name} × ${quantity} added to cart`, [

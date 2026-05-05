@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { useFocusEffect } from '@react-navigation/native';
 import {
     View, Text, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator, ScrollView, Image, Dimensions, RefreshControl, Alert
 } from 'react-native';
@@ -74,6 +75,13 @@ export default function CanteenDetailScreen({ navigation, route }) {
         setLoading(true);
         fetchData();
     }, [fetchData]);
+
+    // Refresh data when screen comes into focus
+    useFocusEffect(
+        useCallback(() => {
+            fetchData();
+        }, [fetchData])
+    );
 
     const onRefresh = () => {
         setRefreshing(true);
@@ -156,14 +164,37 @@ export default function CanteenDetailScreen({ navigation, route }) {
             const cartHasApplicableItem = cartItems.some(item => applicableIds.includes(String(item.foodItemId || item._id)));
 
             if (!cartHasApplicableItem) {
-                const promoItem = promotionItems[0];
-                const itemToAdd = {
-                    ...promoItem,
-                    canteenId: promotion.canteenId?._id || promotion.canteenId || canteen._id,
-                };
-
-                addToCart(itemToAdd, 1);
-                nextCartItems = [...cartItems, { ...itemToAdd, quantity: 1 }];
+                // Add ALL applicable items to cart with quantity 1
+                const addedItems = [];
+                promotionItems.forEach((promoItem, index) => {
+                    const itemToAdd = {
+                        ...promoItem,
+                        canteenId: promotion.canteenId?._id || promotion.canteenId || canteen._id,
+                        // Add unique identifier to distinguish promotion items
+                        promotionUniqueId: `${promoItem._id || promoItem.foodItemId}_promo_${promotion._id}_${index}`,
+                    };
+                    addToCart(itemToAdd, 1);
+                    addedItems.push(promoItem.name || 'Item');
+                });
+                
+                // Show confirmation message
+                Alert.alert(
+                    'Items Added to Cart', 
+                    `Added ${addedItems.length} item(s) to your cart:\n${addedItems.join('\n')}`,
+                    [
+                        { text: 'OK', style: 'default' }
+                    ]
+                );
+                
+                // Update nextCartItems to reflect all added items
+                nextCartItems = [
+                    ...cartItems,
+                    ...promotionItems.map(promoItem => ({
+                        ...promoItem,
+                        canteenId: promotion.canteenId?._id || promotion.canteenId || canteen._id,
+                        quantity: 1
+                    }))
+                ];
                 nextCartTotal = nextCartItems.reduce((sum, item) => sum + (item.price || 0) * item.quantity, 0);
             }
         } else if (cartItems.length === 0) {
@@ -316,7 +347,13 @@ export default function CanteenDetailScreen({ navigation, route }) {
                                 <View style={{ padding: 8 }}>
                                     <Text style={styles.foodName} numberOfLines={1}>{item.name}</Text>
                                     <Text style={styles.foodPrice}>LKR {item.price ? item.price.toFixed(2) : '0.00'}</Text>
-                                    <TouchableOpacity style={styles.addBtn} onPress={() => addToCart(item, 1)}>
+                                    <TouchableOpacity style={styles.addBtn} onPress={() => {
+                                            const itemToAdd = {
+                                                ...item,
+                                                canteenId: item.canteenId?._id || item.canteenId || canteen._id
+                                            };
+                                            addToCart(itemToAdd, 1);
+                                        }}>
                                         <Text style={styles.addBtnText}>+ Add to Cart</Text>
                                     </TouchableOpacity>
                                 </View>

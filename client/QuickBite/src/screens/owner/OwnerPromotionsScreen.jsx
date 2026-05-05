@@ -190,7 +190,7 @@ export default function OwnerPromotionsScreen({ route, navigation }) {
         try {
             const payload = {
                 title, description, discountType, discountValue: Number(discountValue),
-                canteenId: myCanteenId, startDate: startDate.toISOString(), endDate: endDate.toISOString(),
+                canteenId: myCanteenId, startDate: formatDate(startDate), endDate: formatDate(endDate),
                 applicableTo, foodItems: applicableTo === 'specific' ? selectedFoods : []
             };
 

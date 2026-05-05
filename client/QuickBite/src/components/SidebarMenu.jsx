@@ -279,7 +279,7 @@ export default function SidebarMenu({ navigation }) {
 }
 
 const styles = StyleSheet.create({
-    container: { flex: 1, backgroundColor: COLORS.primaryUltraLight, borderRightWidth: 3, borderRightColor: COLORS.primaryLight },
+    container: { flex: 1, backgroundColor: '#FFFFFF', borderRightWidth: 3, borderRightColor: COLORS.primaryLight },
     header: { 
         position: 'relative',
         backgroundColor: '#000', 
@@ -372,7 +372,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'space-between',
         paddingHorizontal: 15,
-        backgroundColor: 'rgba(255,107,53,0.45)',
+        backgroundColor: 'rgba(255,107,53,0.15)',
     },
     menuIcon: { fontSize: 22, marginRight: 20 },
     menuText: { fontSize: 16, fontWeight: '600', color: '#fff' },
@@ -385,9 +385,9 @@ const styles = StyleSheet.create({
         paddingLeft: 65,
         paddingRight: 25,
         marginHorizontal: 10,
-        backgroundColor: COLORS.primaryUltraLight,
+        backgroundColor: '#FFFFFF',
         borderBottomWidth: 1,
-        borderBottomColor: 'rgba(255,107,53,0.15)'
+        borderBottomColor: '#E1E8ED'
     },
     subMenuIcon: { fontSize: 16, marginRight: 15 },
     subMenuText: { fontSize: 14, fontWeight: '500', color: '#555' },
@@ -397,8 +397,8 @@ const styles = StyleSheet.create({
         paddingHorizontal: 15,
         marginHorizontal: 1,
         borderTopWidth: 1, 
-        borderTopColor: 'rgba(255,107,53,0.15)',
-        backgroundColor: COLORS.primaryUltraLight
+        borderTopColor: '#E1E8ED',
+        backgroundColor: '#F8F9FA'
     },
     logoutBtn: { flexDirection: 'row', alignItems: 'center' },
     logoutIcon: { fontSize: 20, marginRight: 15 },

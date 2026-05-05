@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { useFocusEffect } from '@react-navigation/native';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, Modal, TextInput, ActivityIndicator, Alert, KeyboardAvoidingView, Platform, Image } from 'react-native';
 import API from '../../services/api';
 import { getImageUrl } from '../../utils/imageUtils';
@@ -16,6 +17,13 @@ export default function OwnerFeedbacksScreen({ route, navigation }) {
     useEffect(() => {
         fetchFeedbacks();
     }, []);
+
+    // Refresh feedbacks when screen comes into focus
+    useFocusEffect(
+        useCallback(() => {
+            fetchFeedbacks();
+        }, [passedCanteenId])
+    );
 
     const fetchFeedbacks = async () => {
         try {
