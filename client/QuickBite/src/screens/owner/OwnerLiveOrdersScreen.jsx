@@ -17,9 +17,7 @@ export default function OwnerLiveOrdersScreen({ route, navigation }) {
         try {
             const url = passedCanteenId ? `/orders?canteenId=${passedCanteenId}` : '/orders';
             const res = await API.get(url);
-            const orders = res.data.orders || [];
-            console.log('Fetched orders:', orders.map(o => ({ id: o._id, status: o.status })));
-            setOrders(orders);
+            setOrders(res.data.orders || []);
         } catch (error) {
             console.log("Error loading queue:", error);
         } finally {
@@ -39,7 +37,11 @@ export default function OwnerLiveOrdersScreen({ route, navigation }) {
         try {
             console.log('Updating order', orderId, 'to status:', newStatus);
             await API.patch(`/orders/${orderId}/status`, { status: newStatus });
-            fetchOrders();
+            await fetchOrders();
+            // Auto-switch to Completed tab when order is completed
+            if (newStatus === 'completed') {
+                setActiveTab('Completed');
+            }
         } catch (error) {
             Alert.alert("Update Failed", "Could not shift order tracking status.");
         } finally {
@@ -74,7 +76,6 @@ export default function OwnerLiveOrdersScreen({ route, navigation }) {
 
     // Derived states
     const filteredOrders = orders.filter(o => o.status === activeTab.toLowerCase());
-    console.log('Active Tab:', activeTab, 'Filtered Orders:', filteredOrders.length, 'Total Orders:', orders.length);
 
     return (
         <View style={styles.container}>
