@@ -271,12 +271,11 @@ export async function cancelOrder(req, res) {
             });
         }
 
-        order.status = "cancelled";
-        await order.save();
+        await Order.findByIdAndDelete(req.params.id);
 
-        res.status(200).json({ message: "Order cancelled successfully", order });
+        res.status(200).json({ message: "Order deleted successfully" });
     } catch (error) {
-        res.status(500).json({ message: "Error cancelling order", error: error.message });
+        res.status(500).json({ message: "Error deleting order", error: error.message });
     }
 }
 
