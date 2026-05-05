@@ -117,14 +117,44 @@ export default function HomeScreen({ navigation }) {
       const cartHasApplicableItem = cartItems.some(item => applicableIds.includes(String(item.foodItemId || item._id)));
 
       if (!cartHasApplicableItem) {
-        const promoItem = promotionItems[0];
-        const itemToAdd = {
-          ...promoItem,
-          canteenId: promotion.canteenId?._id || promotion.canteenId || promoItem.canteenId,
-        };
-
-        addToCart(itemToAdd, 1);
-        nextCartItems = [...cartItems, { ...itemToAdd, quantity: 1 }];
+        // Add ALL applicable items to cart with quantity 1
+        const addedItems = [];
+        console.log('=== PROMOTION DEBUG ===');
+        console.log('Number of promotion items:', promotionItems.length);
+        console.log('Promotion items:', promotionItems.map(i => ({ name: i.name, _id: i._id, foodItemId: i.foodItemId })));
+        
+        promotionItems.forEach((promoItem, index) => {
+          console.log(`Processing item ${index + 1}:`, promoItem.name);
+          const itemToAdd = {
+            ...promoItem,
+            canteenId: promotion.canteenId?._id || promotion.canteenId || promoItem.canteenId,
+            // Add unique identifier to distinguish promotion items
+            promotionUniqueId: `${promoItem._id || promoItem.foodItemId}_promo_${promotion._id}_${index}`,
+          };
+          console.log('Item to add:', { name: itemToAdd.name, _id: itemToAdd._id, foodItemId: itemToAdd.foodItemId, promotionUniqueId: itemToAdd.promotionUniqueId });
+          addToCart(itemToAdd, 1);
+          addedItems.push(promoItem.name || 'Item');
+        });
+        console.log('=== END PROMOTION DEBUG ===');
+        
+        // Show confirmation message
+        Alert.alert(
+          'Items Added to Cart', 
+          `Added ${addedItems.length} item(s) to your cart:\n${addedItems.join('\n')}`,
+          [
+            { text: 'OK', style: 'default' }
+          ]
+        );
+        
+        // Update nextCartItems to reflect all added items
+        nextCartItems = [
+          ...cartItems,
+          ...promotionItems.map(promoItem => ({
+            ...promoItem,
+            canteenId: promotion.canteenId?._id || promotion.canteenId || promoItem.canteenId,
+            quantity: 1
+          }))
+        ];
         nextCartTotal = nextCartItems.reduce((sum, item) => sum + (item.price || 0) * item.quantity, 0);
       }
     } else if (cartItems.length === 0) {

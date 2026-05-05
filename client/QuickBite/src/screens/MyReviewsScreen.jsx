@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { useFocusEffect } from '@react-navigation/native';
 import {
     View, Text, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator,
     Alert, RefreshControl, Image, ScrollView
@@ -30,6 +31,13 @@ export default function MyReviewsScreen({ navigation }) {
     useEffect(() => {
         fetchReviews();
     }, []);
+
+    // Refresh reviews when screen comes into focus
+    useFocusEffect(
+        useCallback(() => {
+            fetchReviews();
+        }, [])
+    );
 
     const handleEditReview = (review) => {
         navigation.navigate('Feedback', {

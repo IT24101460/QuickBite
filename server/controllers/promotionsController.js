@@ -383,7 +383,9 @@ export async function applyPromotion(req, res) {
                 _id: promotion._id,
                 title: promotion.title,
                 discountType: promotion.discountType,
-                discountValue: promotion.discountValue
+                discountValue: promotion.discountValue,
+                applicableTo: promotion.applicableTo,
+                foodItems: promotion.foodItems
             }
         });
     } catch (error) {

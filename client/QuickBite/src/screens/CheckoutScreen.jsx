@@ -88,14 +88,14 @@ export default function CheckoutScreen({ route, navigation }) {
             // The item object might contain canteen context populated in fetching.
             // If the user's requested bank details is directly at /canteens/foodId,
             // we will just pull canteens globally and match if possible, or gracefully mock if backend isn't ready.
-            API.get('/canteens').then(res => {
-                const canteens = res.data?.canteens || [];
-                const matching = canteens.find(c => String(c._id) === String(cartItems[0]?.canteenId)) || canteens[0];
-                if (matching) {
-                    setCanteen(matching);
-                    setCanteenBankDetails(matching.bankDetails || "Bank: BOC\nAcc No: 123456789\nName: SLIIT Canteen");
-                }
-            }).catch(ignore => { });
+            if (cartItems[0]?.canteenId) {
+                API.get(`/canteens/${cartItems[0].canteenId}`).then(res => {
+                    if (res.data?.canteen) {
+                        setCanteen(res.data.canteen);
+                        setCanteenBankDetails(res.data.canteen.bankDetails || "Bank: BOC\nAcc No: 123456789\nName: SLIIT Canteen");
+                    }
+                }).catch(ignore => { });
+            }
         }
     }, [cartItems]);
 

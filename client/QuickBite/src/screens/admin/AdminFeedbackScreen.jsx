@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { useFocusEffect } from '@react-navigation/native';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator, Alert, Image, RefreshControl } from 'react-native';
 import API from '../../services/api';
 import { getImageUrl } from '../../utils/imageUtils';
@@ -25,6 +26,13 @@ export default function AdminFeedbackScreen({ navigation }) {
     useEffect(() => {
         fetchAllFeedback();
     }, []);
+
+    // Refresh feedbacks when screen comes into focus
+    useFocusEffect(
+        useCallback(() => {
+            fetchAllFeedback();
+        }, [])
+    );
 
     const deleteFeedback = (id) => {
         Alert.alert("Delete Feedback", "Are you sure you want to remove this feedback from the system?", [
