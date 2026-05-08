@@ -1,6 +1,6 @@
 import React, { useState, useCallback } from 'react';
 import {
-    View, Text, StyleSheet, TouchableOpacity, ScrollView, ActivityIndicator, Alert, Modal, TextInput
+    View, Text, StyleSheet, TouchableOpacity, ScrollView, ActivityIndicator, Alert
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { useAuth } from '../context/AuthContext';
@@ -13,9 +13,6 @@ export default function PaymentOptionsScreen({ navigation }) {
     const [paymentOptions, setPaymentOptions] = useState([]);
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
-    const [editModal, setEditModal] = useState(false);
-    const [editingOption, setEditingOption] = useState(null);
-    const [cardholderName, setCardholderName] = useState('');
 
     const loadPaymentOptions = useCallback(async (showErrorAlert = false) => {
         try {
@@ -70,31 +67,6 @@ export default function PaymentOptionsScreen({ navigation }) {
                 }
             ]
         );
-    };
-
-    const handleEdit = (option) => {
-        setEditingOption(option);
-        setCardholderName(option.cardholderName);
-        setEditModal(true);
-    };
-
-    const handleSaveEdit = async () => {
-        if (!cardholderName.trim()) {
-            return Alert.alert('Error', 'Cardholder name cannot be empty');
-        }
-
-        try {
-            await API.patch(
-                `/user-payments/${editingOption._id}`,
-                { cardholderName: cardholderName.trim() },
-                { headers: { Authorization: `Bearer ${token}` } }
-            );
-            Alert.alert('Success', 'Payment option updated');
-            setEditModal(false);
-            loadPaymentOptions();
-        } catch (error) {
-            Alert.alert('Error', error.response?.data?.message || 'Failed to update');
-        }
     };
 
     const handleDelete = (optionId, displayName) => {
@@ -177,12 +149,6 @@ export default function PaymentOptionsScreen({ navigation }) {
                     </TouchableOpacity>
                 )}
                 <TouchableOpacity
-                    style={[styles.actionBtn, styles.editBtn]}
-                    onPress={() => handleEdit(option)}
-                >
-                    <Text style={styles.actionBtnText}>✏️ Edit</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
                     style={[styles.actionBtn, styles.deleteBtn]}
                     onPress={() => handleDelete(option._id, getPaymentDisplay(option))}
                 >
@@ -241,46 +207,6 @@ export default function PaymentOptionsScreen({ navigation }) {
                     </TouchableOpacity>
                 </>
             )}
-
-            {/* Edit Modal */}
-            <Modal
-                visible={editModal}
-                transparent
-                animationType="fade"
-                onRequestClose={() => setEditModal(false)}
-            >
-                <View style={styles.modalOverlay}>
-                    <View style={styles.modalContent}>
-                        <Text style={styles.modalTitle}>Edit Payment Option</Text>
-
-                        <View style={styles.modalForm}>
-                            <Text style={styles.modalLabel}>Cardholder Name</Text>
-                            <TextInput
-                                style={styles.modalInput}
-                                placeholder="Enter name"
-                                placeholderTextColor="#aaa"
-                                value={cardholderName}
-                                onChangeText={setCardholderName}
-                            />
-                        </View>
-
-                        <View style={styles.modalButtons}>
-                            <TouchableOpacity
-                                style={[styles.modalBtn, styles.cancelBtn]}
-                                onPress={() => setEditModal(false)}
-                            >
-                                <Text style={styles.modalBtnText}>Cancel</Text>
-                            </TouchableOpacity>
-                            <TouchableOpacity
-                                style={[styles.modalBtn, styles.saveBtn]}
-                                onPress={handleSaveEdit}
-                            >
-                                <Text style={[styles.modalBtnText, { color: '#fff' }]}>Save</Text>
-                            </TouchableOpacity>
-                        </View>
-                    </View>
-                </View>
-            </Modal>
         </View>
     );
 }
@@ -356,40 +282,5 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         elevation: 5
     },
-    addButtonText: { color: '#fff', fontSize: 16, fontWeight: 'bold' },
-
-    // Modal styles
-    modalOverlay: {
-        flex: 1,
-        backgroundColor: 'rgba(0, 0, 0, 0.5)',
-        justifyContent: 'center',
-        alignItems: 'center'
-    },
-    modalContent: {
-        backgroundColor: '#fff',
-        borderRadius: 16,
-        padding: 24,
-        width: '85%',
-        elevation: 10
-    },
-    modalTitle: { fontSize: 18, fontWeight: 'bold', color: '#333', marginBottom: 20 },
-
-    modalForm: { marginBottom: 20 },
-    modalLabel: { fontSize: 13, fontWeight: '600', color: '#555', marginBottom: 8 },
-    modalInput: {
-        backgroundColor: '#F5F5F5',
-        borderRadius: 8,
-        paddingHorizontal: 12,
-        paddingVertical: 10,
-        fontSize: 14,
-        color: '#333',
-        borderWidth: 1,
-        borderColor: '#e0e0e0'
-    },
-
-    modalButtons: { flexDirection: 'row', gap: 12, justifyContent: 'flex-end' },
-    modalBtn: { paddingHorizontal: 16, paddingVertical: 10, borderRadius: 8 },
-    cancelBtn: { backgroundColor: '#e0e0e0' },
-    saveBtn: { backgroundColor: ORANGE },
-    modalBtnText: { fontSize: 14, fontWeight: '600', color: '#333' }
+    addButtonText: { color: '#fff', fontSize: 16, fontWeight: 'bold' }
 });

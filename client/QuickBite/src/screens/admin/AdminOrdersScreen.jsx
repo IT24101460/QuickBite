@@ -34,6 +34,25 @@ export default function AdminOrdersScreen({ navigation }) {
         },
     ]);
 
+    const verifyPayment = (id, paymentStatus) => Alert.alert(
+        paymentStatus === 'verified' ? 'Verify Payment' : 'Reject Payment',
+        `Are you sure you want to mark this payment as ${paymentStatus}?`,
+        [
+            { text: 'Cancel', style: 'cancel' },
+            {
+                text: paymentStatus === 'verified' ? 'Verify' : 'Reject',
+                onPress: async () => {
+                    try {
+                        await API.patch(`/orders/${id}/verify-payment`, { paymentStatus });
+                        fetch();
+                    } catch (e) {
+                        Alert.alert('Error', e.response?.data?.message || 'Failed to update payment status');
+                    }
+                }
+            },
+        ]
+    );
+
     return (
         <View style={styles.container}>
             <View style={styles.header}>
@@ -90,10 +109,27 @@ export default function AdminOrdersScreen({ navigation }) {
                             </View>
                             <Text style={styles.amount}>LKR {(item.finalAmount || item.totalAmount || 0).toFixed(2)}</Text>
                             {item.pickupTime ? <Text style={styles.pickup}>⏰ {item.pickupTime}</Text> : null}
-                            {item.paymentProof ? (
+                            {item.bankSlip ? (
                                 <View style={styles.slipBox}>
-                                    <Image source={{ uri: getImageUrl(item.paymentProof) }} style={styles.slip} resizeMode="contain" />
-                                    <Text style={styles.slipLabel}>Payment Verification Slip</Text>
+                                    <Image source={{ uri: getImageUrl(item.bankSlip) }} style={styles.slip} resizeMode="contain" />
+                                    <Text style={styles.slipLabel}>Payment Verification Slip ({item.paymentStatus})</Text>
+
+                                    {item.paymentStatus === 'pending' && (
+                                        <View style={styles.verifyBtnRow}>
+                                            <TouchableOpacity
+                                                style={[styles.verifyBtn, styles.rejectBtn]}
+                                                onPress={() => verifyPayment(item._id, 'rejected')}
+                                            >
+                                                <Text style={styles.verifyBtnText}>Reject</Text>
+                                            </TouchableOpacity>
+                                            <TouchableOpacity
+                                                style={[styles.verifyBtn, styles.approveBtn]}
+                                                onPress={() => verifyPayment(item._id, 'verified')}
+                                            >
+                                                <Text style={styles.verifyBtnText}>Verify</Text>
+                                            </TouchableOpacity>
+                                        </View>
+                                    )}
                                 </View>
                             ) : null}
                             <FlatList
@@ -288,6 +324,28 @@ const styles = StyleSheet.create({
         textAlign: 'center', 
         marginTop: SPACING.xs, 
         fontWeight: 'bold' 
+    },
+    verifyBtnRow: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        marginTop: SPACING.sm,
+    },
+    verifyBtn: {
+        flex: 0.48,
+        paddingVertical: SPACING.xs,
+        borderRadius: BORDER_RADIUS.md,
+        alignItems: 'center',
+    },
+    approveBtn: {
+        backgroundColor: '#2ecc71',
+    },
+    rejectBtn: {
+        backgroundColor: '#e74c3c',
+    },
+    verifyBtnText: {
+        color: COLORS.textWhite,
+        fontWeight: 'bold',
+        fontSize: TYPOGRAPHY.caption.fontSize,
     },
 });
 

@@ -160,7 +160,7 @@ export default function OrdersScreen({ navigation }) {
                 </View>
 
                 {/* Payment Slip Display */}
-                {item.paymentMethod === 'bank' && item.paymentProof && (
+                {item.paymentMethod === 'bank' && item.bankSlip && (
                     <View style={styles.paymentSlipSection}>
                         <Text style={styles.sectionTitle}>💳 Payment Slip</Text>
                         <TouchableOpacity 
@@ -173,7 +173,7 @@ export default function OrdersScreen({ navigation }) {
                                     [
                                         { text: 'View', onPress: () => {
                                             navigation.navigate('ImagePreview', { 
-                                                imageUrl: getImageUrl(item.paymentProof),
+                                                imageUrl: getImageUrl(item.bankSlip),
                                                 title: 'Payment Slip'
                                             });
                                         }},
@@ -183,7 +183,7 @@ export default function OrdersScreen({ navigation }) {
                             }}
                         >
                             <Image 
-                                source={{ uri: getImageUrl(item.paymentProof) }} 
+                                source={{ uri: getImageUrl(item.bankSlip) }}
                                 style={styles.paymentSlipImage} 
                                 resizeMode="cover" 
                             />

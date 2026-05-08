@@ -49,6 +49,18 @@ export default function OwnerLiveOrdersScreen({ route, navigation }) {
         }
     };
 
+    const verifyPayment = async (id, paymentStatus) => {
+        setUpdatingId(id);
+        try {
+            await API.patch(`/orders/${id}/verify-payment`, { paymentStatus });
+            await fetchOrders();
+        } catch (error) {
+            Alert.alert("Verification Failed", error.response?.data?.message || "Could not verify payment.");
+        } finally {
+            setUpdatingId(null);
+        }
+    };
+
     const StatusButton = ({ order }) => {
         if (order.status === 'pending' || order.status === 'confirmed') {
             return (
@@ -128,10 +140,32 @@ export default function OwnerLiveOrdersScreen({ route, navigation }) {
                                 ))}
                             </View>
 
-                            {item.paymentProof ? (
+                            {item.bankSlip ? (
+                                <View style={styles.slipBox}>
+                                    <Image source={{ uri: getImageUrl(item.bankSlip) }} style={styles.slip} resizeMode="contain" />
+                                    <Text style={styles.slipLabel}>Payment Receipt ({item.paymentStatus})</Text>
+
+                                    {item.paymentStatus === 'pending' && (
+                                        <View style={styles.verifyBtnRow}>
+                                            <TouchableOpacity
+                                                style={[styles.verifyBtn, { backgroundColor: '#e74c3c' }]}
+                                                onPress={() => verifyPayment(item._id, 'rejected')}
+                                            >
+                                                <Text style={styles.verifyBtnText}>Reject</Text>
+                                            </TouchableOpacity>
+                                            <TouchableOpacity
+                                                style={[styles.verifyBtn, { backgroundColor: '#2ecc71' }]}
+                                                onPress={() => verifyPayment(item._id, 'verified')}
+                                            >
+                                                <Text style={styles.verifyBtnText}>Verify</Text>
+                                            </TouchableOpacity>
+                                        </View>
+                                    )}
+                                </View>
+                            ) : item.paymentProof ? (
                                 <View style={styles.slipBox}>
                                     <Image source={{ uri: getImageUrl(item.paymentProof) }} style={styles.slip} resizeMode="contain" />
-                                    <Text style={styles.slipLabel}>Payment Receipt (Customer Upload)</Text>
+                                    <Text style={styles.slipLabel}>Payment Receipt (Legacy)</Text>
                                 </View>
                             ) : null}
 
@@ -144,7 +178,7 @@ export default function OwnerLiveOrdersScreen({ route, navigation }) {
 
                             <View style={styles.footerRow}>
                                 <View>
-                                    <Text style={styles.paymentMetric}>Paid: Rs {item.finalAmount}</Text>
+                                    <Text style={styles.paymentMetric}>Total: Rs {item.finalAmount}</Text>
                                     {item.pickupTime ? <Text style={styles.pickupAlert}>Pickup: {item.pickupTime}</Text> : null}
                                 </View>
                                 {updatingId === item._id ? <ActivityIndicator color={ORANGE} /> : <StatusButton order={item} />}
@@ -200,6 +234,10 @@ const styles = StyleSheet.create({
     slipBox: { marginVertical: 10, backgroundColor: '#f8f9fa', borderRadius: 10, padding: 10, borderWidth: 1, borderColor: '#e0e0e0' },
     slip: { width: '100%', height: 150, borderRadius: 8 },
     slipLabel: { fontSize: 11, color: '#7f8c8d', textAlign: 'center', marginTop: 6, fontWeight: '600' },
+
+    verifyBtnRow: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 10 },
+    verifyBtn: { flex: 0.48, paddingVertical: 8, borderRadius: 6, alignItems: 'center' },
+    verifyBtnText: { color: '#fff', fontWeight: 'bold', fontSize: 12 },
 
     empty: { textAlign: 'center', color: '#888', marginTop: 40 }
 });

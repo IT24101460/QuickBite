@@ -33,6 +33,12 @@ const orderSchema = new mongoose.Schema(
         promotionId: { type: mongoose.Schema.Types.ObjectId, ref: "Promotions", default: null },
         pickupTime: { type: String, default: "" },
         requestImage: { type: String, default: "" },
+        bankSlip: { type: String, default: "" },
+        paymentStatus: {
+            type: String,
+            enum: ["pending", "verified", "rejected"],
+            default: "pending"
+        },
         queueNumber: { type: Number },
         status: {
             type: String,
