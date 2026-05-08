@@ -42,6 +42,8 @@ export default function FeedbackScreen({ navigation, route }) {
   const handleSubmit = async () => {
     if (rating === 0) return Alert.alert('Error', 'Please select a rating');
     if (!comment.trim()) return Alert.alert('Error', 'Please enter a comment');
+    if (comment.trim().length < 10) return Alert.alert('Error', 'Review must be at least 10 characters long');
+    if (comment.trim().length > 50) return Alert.alert('Error', 'Review must be at shorter than 50 characters long');
 
     setLoading(true);
     try {

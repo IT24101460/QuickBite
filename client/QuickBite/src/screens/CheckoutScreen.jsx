@@ -53,7 +53,7 @@ export default function CheckoutScreen({ route, navigation }) {
         loadCards();
     }, [user]);
 
-    const [paymentProof, setPaymentProof] = useState(null);
+    const [bankSlip, setBankSlip] = useState(null);
     const [loading, setLoading] = useState(false);
     const [canteen, setCanteen] = useState(null);
     const [canteenBankDetails, setCanteenBankDetails] = useState('');
@@ -102,7 +102,7 @@ export default function CheckoutScreen({ route, navigation }) {
     const pickProof = () => {
         launchImageLibrary({ mediaType: 'photo', quality: 0.7 }, (res) => {
             if (!res.didCancel && res.assets?.length > 0) {
-                setPaymentProof(res.assets[0]);
+                setBankSlip(res.assets[0]);
             }
         });
     };
@@ -112,7 +112,7 @@ export default function CheckoutScreen({ route, navigation }) {
         if (!isCustomOrder && !pickupTime) {
             return Alert.alert('Pickup Time Required', 'Please go back to your cart and choose a pickup time.');
         }
-        if (method === 'bank' && !paymentProof) {
+        if (method === 'bank' && !bankSlip) {
             return Alert.alert('Payment Slip Required', 'Please upload your bank transfer slip before placing the order.');
         }
 
@@ -168,18 +168,31 @@ export default function CheckoutScreen({ route, navigation }) {
             // Check if any item has a custom cake design image
             const cakeWithImage = cartItems.find(i => i.designImage);
 
-            if (cakeWithImage) {
+            if (cakeWithImage || (method === 'bank' && bankSlip)) {
                 const fd = new FormData();
                 fd.append('items', JSON.stringify(orderPayload.items));
                 fd.append('pickupTime', orderPayload.pickupTime);
                 fd.append('discountAmount', String(orderPayload.discountAmount));
                 fd.append('promotionId', orderPayload.promotionId || "");
                 fd.append('canteenId', orderPayload.canteenId || "");
-                fd.append('requestImage', {
-                    uri: cakeWithImage.designImage.uri,
-                    name: cakeWithImage.designImage.name,
-                    type: cakeWithImage.designImage.type,
-                });
+                fd.append('note', orderPayload.note || "");
+
+                if (cakeWithImage) {
+                    fd.append('requestImage', {
+                        uri: cakeWithImage.designImage.uri,
+                        name: cakeWithImage.designImage.fileName || 'design.jpg',
+                        type: cakeWithImage.designImage.type || 'image/jpeg',
+                    });
+                }
+
+                if (method === 'bank' && bankSlip) {
+                    fd.append('bankSlip', {
+                        uri: bankSlip.uri,
+                        name: bankSlip.fileName || 'slip.jpg',
+                        type: bankSlip.type || 'image/jpeg',
+                    });
+                }
+
                 orderRes = await API.post('/orders', fd, {
                     headers: { 'Content-Type': 'multipart/form-data' }
                 });
@@ -188,33 +201,20 @@ export default function CheckoutScreen({ route, navigation }) {
             }
             const order = orderRes.data.order;
 
-            // 2. Create payment
+            // 2. Handle additional payment processing if needed
             if (method === 'card') {
-                // Mock Card Gateway API Hit
                 await API.post('/payments', {
                     orderId: order._id,
                     paymentMethod: method
                 });
-
-            } else if (method !== 'cash') {
-                if (paymentProof) {
-                    const payFormData = new FormData();
-                    payFormData.append('orderId', order._id);
-                    payFormData.append('paymentMethod', method);
-                    payFormData.append('paymentProof', {
-                        uri: paymentProof.uri,
-                        name: paymentProof.fileName || 'proof.jpg',
-                        type: paymentProof.type || 'image/jpeg',
-                    });
-                    await API.post('/payments', payFormData, {
-                        headers: { 'Content-Type': 'multipart/form-data' },
-                    });
-                } else {
-                    await API.post('/payments', {
-                        orderId: order._id,
-                        paymentMethod: method
-                    });
-                }
+            } else if (method === 'bank' || method === 'wallet') {
+                // We've already uploaded the slip for 'bank' via the order endpoint.
+                // But we still create a payment record for tracking.
+                await API.post('/payments', {
+                    orderId: order._id,
+                    paymentMethod: method,
+                    // If we had other data to send, we'd do it here
+                });
             }
 
             clearCart();
@@ -371,7 +371,7 @@ export default function CheckoutScreen({ route, navigation }) {
 
                             <TouchableOpacity style={styles.uploadBtn} onPress={pickProof}>
                                 <Text style={styles.uploadBtnText}>
-                                    {paymentProof ? `✅ Selected: ${paymentProof.fileName || 'Screenshot.png'}` : '📸 Upload Payment Slip / Screenshot'}
+                                    {bankSlip ? `✅ Selected: ${bankSlip.fileName || 'Screenshot.png'}` : '📸 Upload Payment Slip / Screenshot'}
                                 </Text>
                             </TouchableOpacity>
                         </View>

@@ -2,6 +2,7 @@ import Order from "../models/orders.js";
 import User from "../models/user.js";
 import Canteen from "../models/Canteen.js";
 import FoodItem from "../models/foodItems.js";
+import { supabase } from "../config/supabase.js";
 
 const STATUS_MESSAGES = {
     pending: "Your order is waiting for the canteen to accept it.",
@@ -108,7 +109,38 @@ export async function placeOrder(req, res) {
 
         const discount = parseFloat(discountAmount) || 0;
         const finalAmount = parseFloat((totalAmount - discount).toFixed(2));
-        const requestImage = req.file ? `/uploads/${req.file.filename}` : "";
+
+        let requestImage = "";
+        let bankSlip = "";
+
+        // Handle File Uploads to Supabase
+        if (req.files) {
+            if (req.files.requestImage) {
+                const file = req.files.requestImage[0];
+                const fileName = `request_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
+                const { data, error } = await supabase.storage
+                    .from('quickbite-images')
+                    .upload(fileName, file.buffer, { contentType: file.mimetype });
+
+                if (!error) {
+                    const { data: urlData } = supabase.storage.from('quickbite-images').getPublicUrl(fileName);
+                    requestImage = urlData.publicUrl;
+                }
+            }
+
+            if (req.files.bankSlip) {
+                const file = req.files.bankSlip[0];
+                const fileName = `slip_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
+                const { data, error } = await supabase.storage
+                    .from('quickbite-images')
+                    .upload(fileName, file.buffer, { contentType: file.mimetype });
+
+                if (!error) {
+                    const { data: urlData } = supabase.storage.from('quickbite-images').getPublicUrl(fileName);
+                    bankSlip = urlData.publicUrl;
+                }
+            }
+        }
 
         const newOrder = new Order({
             userId: user._id,
@@ -122,6 +154,7 @@ export async function placeOrder(req, res) {
             promotionId: promotionId || null,
             pickupTime: pickupTime || "",
             requestImage,
+            bankSlip,
             note: note || ""
         });
 
@@ -306,5 +339,39 @@ export async function getAllOrders(req, res) {
         res.status(200).json({ orders: await attachItemCategories(orders) });
     } catch (error) {
         res.status(500).json({ message: "Error fetching orders", error: error.message });
+    }
+}
+
+// ─── Verify payment (Admin/Owner) ───────────────────────────────────
+export async function verifyPayment(req, res) {
+    try {
+        if (!req.user?.isAdmin && req.user?.role !== "owner") {
+            return res.status(403).json({ message: "Access required" });
+        }
+
+        const { paymentStatus } = req.body; // "verified" or "rejected"
+        const order = await Order.findById(req.params.id);
+
+        if (!order) return res.status(404).json({ message: "Order not found" });
+
+        order.paymentStatus = paymentStatus;
+
+        // Auto-confirm order if payment is verified
+        if (paymentStatus === "verified" && order.status === "pending") {
+            order.status = "confirmed";
+            order.lastStatusMessage = STATUS_MESSAGES.confirmed;
+            order.statusUpdatedAt = new Date();
+            order.statusHistory.push({
+                status: "confirmed",
+                message: "Payment verified. Your order has been confirmed.",
+                updatedBy: req.user._id || req.user.id,
+                updatedByRole: req.user.role || (req.user.isAdmin ? "admin" : ""),
+            });
+        }
+
+        await order.save();
+        res.status(200).json({ message: `Payment ${paymentStatus}`, order });
+    } catch (error) {
+        res.status(500).json({ message: "Error verifying payment", error: error.message });
     }
 }
