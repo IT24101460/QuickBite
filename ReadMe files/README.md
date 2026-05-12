@@ -1,30 +1,12 @@
 # 🍽️ UniEats — Smart Multi-Canteen Pre-Order Management System
 
-> A university canteen pre-ordering platform that eliminates long queues, streamlines food ordering, and empowers canteen owners with real-time management tools.
-
----
+: A university canteen pre-ordering platform that eliminates long queues, streamlines food ordering, and empowers canteen owners with real-time management tools.
 
 ## 🔗 Repository & Deployment
 
-| Resource | Link |
-|---|---|
-| GitHub Repository | https://github.com/IT24101460/QuickBite |
-| Live Backend API | https://quickbite-production-cc3e.up.railway.app |
-
----
-
-## 👥 Team — WMT_AI_KU_03
-
-| Student ID | Name | Module Responsibility |
-|---|---|---|
-| IT24101176 | Widumini D.G.N.S. | Order Management |
-| IT241013606 | Rathnayake R.M.P.T. | Payment Management |
-| IT24101559 | Bandara I.R.G.R.M. | Feedback Management |
-| IT24100120 | Ranasinghe K.H. | Canteen Management |
-| IT24100382 | Herath H.M.P.C.B. | Food Item Management |
-| IT24101460 | Rajapaksha R.D.C.N. | Promotions & Discounts Management |
-
----
+ Resource Links
+ GitHub Repository : https://github.com/IT24101460/QuickBite
+Live Backend API : https://quickbite-production-cc3e.up.railway.app 
 
 ## 📖 About the Project
 
@@ -160,31 +142,8 @@ npm run android
 
 ## 👤 User Roles
 
-| Role | Capabilities |
-|---|---|
-| **Student / User** | Register, browse canteens & menus, place pre-orders, make payments, track order status, submit ratings and feedback |
-| **Canteen Owner** | Manage canteen profile, add/edit food items, view and process live orders, create promotions, respond to feedback |
-| **Admin** | Manage all users and canteens, monitor system activity, view platform-wide reports, configure app branding |
+ **Student / User** ; Register, browse canteens & menus, place pre-orders, make payments, track order status, submit ratings and feedback 
+ **Canteen Owner** : Manage canteen profile, add/edit food items, view and process live orders, create promotions, respond to feedback 
+ **Admin** : Manage all users and canteens, monitor system activity, view platform-wide reports, configure app branding 
 
----
-
-## 📁 Submission Information
-
-```
-ZIP File Name : WDDS01_Group_WMT_AI_KU_03_Submission.zip
-Folder Name   : SE2020_Group_WMT_AI_KU_03_Submission
-```
-
-**Files Included:**
-- `Problem_Statement.pdf`
-- `System_Architecture_Diagram.png`
-- `Database_Schema_Diagram.png`
-- `API_Endpoint_Table.pdf`
-- `Team_Responsibility.pdf`
-- `README.txt`
-
-> ⚠️ Source code is not included in the ZIP. All code is available via the GitHub repository link above.
-
----
-
-*UniEats — Built with ❤️ by Group WMT_AI_KU_03*
+*QuickBite — Built with ❤️*
